@@ -28,6 +28,7 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !employee) {
+      console.error('DB query error:', error, 'Employee:', employee);
       return fail(res, 401, 'Invalid credentials.');
     }
 
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
     // Verify password hash
     const isValid = await bcrypt.compare(password, employee.password_hash);
     if (!isValid) {
+      console.error('Bcrypt compare failed.');
       return fail(res, 401, 'Invalid credentials.');
     }
 

@@ -31,6 +31,7 @@ BEGIN;
 -- 0. SCHEMA DEFINITION (DDL)
 -- ============================================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS crm_employees (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -407,19 +408,8 @@ INSERT INTO dt_role_permissions (role_id, permission) VALUES
 --    `role` MUST match a dt_roles2.name so permissions resolve.
 -- ---------------------------------------------------------------------------
 INSERT INTO crm_employees (id, employee_name, role, phone, email, password_hash, status, is_manager) VALUES
-  ('b0000000-0000-0000-0000-000000000001','Admin User','Administrator','+1 415 555 0100','admin@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',true),
-  -- Sales team
-  ('b0000000-0000-0000-0000-000000000002','Aarav Mehta','Sales Director','+1 415 555 0142','aarav.mehta@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',true),
-  ('b0000000-0000-0000-0000-000000000003','Priya Nair','Sales Manager','+1 628 555 0165','priya.nair@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',true),
-  ('b0000000-0000-0000-0000-000000000004','Emma Rossi','Account Executive','+1 510 555 0133','emma.rossi@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',false),
-  ('b0000000-0000-0000-0000-000000000005','Noah Kim','Business Development Manager','+1 510 555 0198','noah.kim@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',true),
-  ('b0000000-0000-0000-0000-000000000006','Sofia Alvarez','Sales Executive','+1 415 555 0187','sofia.alvarez@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',false),
-  -- Engineering team
-  ('b0000000-0000-0000-0000-000000000007','Liam O''Brien','Engineering Manager','+1 628 555 0110','liam.obrien@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',true),
-  ('b0000000-0000-0000-0000-000000000008','David Chen','Solutions Architect','+1 669 555 0176','david.chen@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',true),
-  ('b0000000-0000-0000-0000-000000000009','Fatima Zahra','Frontend Developer','+1 669 555 0154','fatima.zahra@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',false),
-  ('b0000000-0000-0000-0000-00000000000a','Marco Bianchi','Backend Developer','+1 312 555 0191','marco.bianchi@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',false),
-  ('b0000000-0000-0000-0000-00000000000b','Aisha Khan','QA Engineer','+1 312 555 0122','aisha.khan@dtactics.io','$2b$10$MvQzbmvCxursdtsVyvOOkOOmrHmDK74W0lBqbqwKwTEAHEm7kFPsa','active',false);
+  ('b0000000-0000-0000-0000-000000000001','Admin User','Administrator','+1 415 555 0100','admin@dtactics.io', crypt('password123', gen_salt('bf')), 'active', true);
+  
 
 -- ---------------------------------------------------------------------------
 -- 5. LEADS (dt_leads3)
@@ -432,42 +422,42 @@ INSERT INTO dt_leads3
    lead_received_date, next_follow_up, remarks)
 VALUES
   ('c0000000-0000-0000-0000-000000000001','26-LD-001','Marcus Thompson','Northwind Analytics',
-   'b0000000-0000-0000-0000-000000000003','b0000000-0000-0000-0000-000000000004','Referral - Nikhil Rao',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Referral - Nikhil Rao',
    '+1 212 555 0101',NULL,'marcus@northwind.io','dashboard','website',85000,'proposal_sent','high',
    '2026-01-05 09:00:00+00','2026-02-20 10:00:00+00','Interested in a full analytics dashboard rebuild.'),
 
   ('c0000000-0000-0000-0000-000000000002','26-LD-002','Isabella Ferrari','Meridian Finance',
-   'b0000000-0000-0000-0000-000000000002','b0000000-0000-0000-0000-000000000006','Priya Nair',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Priya Nair',
    '+1 312 555 0122',NULL,'isabella@meridianfin.com','erp','referral',210000,'negotiation','critical',
    '2026-01-10 11:45:00+00','2026-02-15 14:30:00+00','Proposal sent for ERP modernization. Strong intent.'),
 
   ('c0000000-0000-0000-0000-000000000003','26-LD-003','James Whitfield','Apex Health Systems',
-   'b0000000-0000-0000-0000-000000000004',NULL,NULL,
+   'b0000000-0000-0000-0000-000000000001',NULL,NULL,
    '+1 617 555 0143',NULL,'jwhitfield@apexhealth.org','hospital_website','linkedin',64000,'contacted','medium',
    '2026-01-12 08:30:00+00','2026-02-22 09:00:00+00','Exploring a HIPAA-compliant patient portal.'),
 
   ('c0000000-0000-0000-0000-000000000004','26-LD-004','Chloe Bennett','Urban Retail Co',
-   'b0000000-0000-0000-0000-000000000006',NULL,NULL,
+   'b0000000-0000-0000-0000-000000000001',NULL,NULL,
    '+1 213 555 0164',NULL,'chloe@urbanretail.com','ecommerce_website','google',32000,'new','low',
    '2026-01-18 15:20:00+00','2026-02-18 13:00:00+00','Inbound from ad campaign. Needs an e-commerce revamp.'),
 
   ('c0000000-0000-0000-0000-000000000005','26-LD-005','Rohan Gupta','Skyline Logistics',
-   'b0000000-0000-0000-0000-000000000002','b0000000-0000-0000-0000-000000000004','Aarav Mehta',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Aarav Mehta',
    '+1 469 555 0175',NULL,'rohan@skylinelog.com','automation','walk_in',148000,'won','high',
    '2025-12-10 10:00:00+00',NULL,'Closed! Fleet tracking + route optimization platform.'),
 
   ('c0000000-0000-0000-0000-000000000006','26-LD-006','Olivia Martins','BrightEdu Group',
-   'b0000000-0000-0000-0000-000000000003','b0000000-0000-0000-0000-000000000006','Priya Nair',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Priya Nair',
    '+1 305 555 0186',NULL,'olivia@brightedu.com','lms','referral',96000,'negotiation','high',
    '2025-12-28 09:40:00+00','2026-02-16 11:00:00+00','Negotiating LMS platform scope and support tier.'),
 
   ('c0000000-0000-0000-0000-000000000007','26-LD-007','Ava Robinson','Coastal Bank',
-   'b0000000-0000-0000-0000-000000000002','b0000000-0000-0000-0000-000000000004','David Chen',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','David Chen',
    '+1 786 555 0108',NULL,'ava@coastalbank.com','saas','referral',320000,'won','critical',
    '2025-11-22 09:00:00+00',NULL,'Multi-year SaaS platform engagement signed.'),
 
   ('c0000000-0000-0000-0000-000000000008','26-LD-008','Grace Sullivan','PureLeaf Organics',
-   'b0000000-0000-0000-0000-000000000006',NULL,NULL,
+   'b0000000-0000-0000-0000-000000000001',NULL,NULL,
    '+1 720 555 0130',NULL,'grace@pureleaf.com','landing_page','instagram',12000,'lost','low',
    '2025-12-05 10:15:00+00',NULL,'Went with a cheaper freelancer. Keep warm.');
 
@@ -483,7 +473,7 @@ INSERT INTO dt_projects
 VALUES
   ('d0000000-0000-0000-0000-000000000001','26-PRJ-001','Fleet Intelligence Platform','Skyline Logistics',
    'c0000000-0000-0000-0000-000000000005','26-LD-005','automation',
-   'b0000000-0000-0000-0000-000000000007','b0000000-0000-0000-0000-00000000000a',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001',
    '["react","nodejs","postgresql","docker"]'::jsonb,
    '[{"type":"demo_url","url":"https://demo.skyline-fleet.dtactics.io"},{"type":"github_url","url":"https://github.com/dtactics/skyline-fleet"}]'::jsonb,
    148000,'active','high',62,'2025-12-15 00:00:00+00','2026-06-30 00:00:00+00',
@@ -491,7 +481,7 @@ VALUES
 
   ('d0000000-0000-0000-0000-000000000002','26-PRJ-002','Coastal SaaS Banking','Coastal Bank',
    'c0000000-0000-0000-0000-000000000007','26-LD-007','saas',
-   'b0000000-0000-0000-0000-000000000008','b0000000-0000-0000-0000-00000000000a',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001',
    '["angular","spring_boot","postgresql","aws"]'::jsonb,
    '[{"type":"live_url","url":"https://app.coastalbank.com"}]'::jsonb,
    320000,'active','critical',38,'2025-12-01 00:00:00+00','2026-09-15 00:00:00+00',
@@ -499,7 +489,7 @@ VALUES
 
   ('d0000000-0000-0000-0000-000000000003','26-PRJ-003','GreenGrid Analytics Dashboard','GreenGrid Utilities',
    NULL,NULL,'dashboard',
-   'b0000000-0000-0000-0000-000000000007','b0000000-0000-0000-0000-000000000009',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001',
    '["react","python","mongodb","azure"]'::jsonb,
    '[{"type":"live_url","url":"https://dashboard.greengrid.com"}]'::jsonb,
    205000,'completed','high',100,'2025-08-01 00:00:00+00','2025-12-01 00:00:00+00',
@@ -507,14 +497,14 @@ VALUES
 
   ('d0000000-0000-0000-0000-000000000004','26-PRJ-004','Vertex Inventory System','Vertex Manufacturing',
    NULL,NULL,'inventory',
-   'b0000000-0000-0000-0000-000000000008','b0000000-0000-0000-0000-00000000000a',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001',
    '["vue","laravel","mysql"]'::jsonb,'[]'::jsonb,
    120000,'on_hold','high',25,'2026-02-15 00:00:00+00','2026-08-15 00:00:00+00',
    'IoT sensor network with real-time inventory tracking.'),
 
   ('d0000000-0000-0000-0000-000000000005','26-PRJ-005','Apex Patient Portal','Apex Health Systems',
    NULL,NULL,'hospital_website',
-   'b0000000-0000-0000-0000-000000000007','b0000000-0000-0000-0000-000000000009',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001',
    '["react","nestjs","postgresql","firebase"]'::jsonb,
    '[{"type":"demo_url","url":"https://demo.apexhealth.org/portal"}]'::jsonb,
    64000,'active','medium',45,'2026-01-10 00:00:00+00','2026-05-10 00:00:00+00',
@@ -522,7 +512,7 @@ VALUES
 
   ('d0000000-0000-0000-0000-000000000006','26-PRJ-006','BrightEdu LMS','BrightEdu Group',
    NULL,NULL,'lms',
-   'b0000000-0000-0000-0000-000000000007','b0000000-0000-0000-0000-000000000009',
+   'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001',
    '["flutter","nodejs","mongodb","supabase"]'::jsonb,'[]'::jsonb,
    96000,'cancelled','medium',15,'2025-12-01 00:00:00+00','2026-06-01 00:00:00+00',
    'Client paused indefinitely due to budget cuts.');
