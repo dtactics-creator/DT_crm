@@ -5,10 +5,13 @@ import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import { SearchableSelect } from '../ui/SearchableSelect';
+import { Plus, Trash2, Link2 } from 'lucide-react';
 import { toOptions } from '../../hooks/useMasters';
 import { useNextNo } from '../../hooks/useNextNo';
-import { collect, required, minLen, maxLen, email, phone, nonNegativeNumber, notFutureDate, isBlank } from '../../lib/validators';
-import type { Lead, MasterItem, Employee } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import { useEmployees } from '../../hooks/useEmployees';
+import { collect, required, minLen, maxLen, email, phone, nonNegativeNumber, notFutureDate, isBlank, url as urlValid } from '../../lib/validators';
+import type { Lead, MasterItem, Employee, ProjectUrl } from '../../types';
 
 export interface LeadFormValues {
   id?: string;
@@ -17,6 +20,7 @@ export interface LeadFormValues {
   primary_phone: string; secondary_phone: string; tertiary_phone: string; primary_email: string; secondary_email: string;
   project_type: string; source: string; budget: string;
   status: string; priority: string; lead_received_date: string; next_follow_up: string; remarks: string;
+  urls: ProjectUrl[];
 }
 
 const empty: LeadFormValues = {
@@ -24,6 +28,7 @@ const empty: LeadFormValues = {
   primary_phone: '', secondary_phone: '', tertiary_phone: '', primary_email: '', secondary_email: '',
   project_type: '', source: '', budget: '', status: '', priority: 'medium',
   lead_received_date: '', next_follow_up: '', remarks: '',
+  urls: [],
 };
 
 const toDateInput = (v: string | null) => (v ? new Date(v).toISOString().slice(0, 10) : '');
@@ -40,6 +45,13 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
 }) {
   const [v, setV] = useState<LeadFormValues>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { user } = useAuth();
+  const emailStr = user?.email ?? '';
+  const fallbackName = user?.user_metadata?.full_name || user?.user_metadata?.name || emailStr.split('@')[0];
+  const { data: allEmployees } = useEmployees();
+  const actualEmployee = (allEmployees || []).find((e) => e.email === emailStr);
+  const displayUserName = actualEmployee?.employee_name || fallbackName;
 
   // Preview the next auto-generated lead number for new leads.
   const { data: nextNo } = useNextNo('lead', open && !initial);
@@ -65,16 +77,24 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
           project_type: initial.project_type ?? '', source: initial.source, budget: String(initial.budget ?? ''),
           status: initial.status, priority: initial.priority,
           lead_received_date: toDateInput(initial.lead_received_date), next_follow_up: toDateInput(initial.next_follow_up),
+          urls: Array.isArray(initial.urls) ? initial.urls : [],
           remarks: initial.remarks ?? '',
         });
       } else {
-        setV({ ...empty, source: sourceOpts[0]?.value ?? '', status: statusOpts[0]?.value ?? '', lead_received_date: today() });
+        setV({ ...empty, source: sourceOpts[0]?.value ?? '', status: statusOpts[0]?.value ?? '', lead_received_date: today(), sales_manager_id: actualEmployee?.id ?? '' });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
 
-  const set = (k: keyof LeadFormValues, val: string) => setV((p) => ({ ...p, [k]: val }));
+  const set = (k: keyof LeadFormValues, val: string | ProjectUrl[]) => setV((p) => ({ ...p, [k]: val }));
+
+  // Dynamic URL row helpers
+  const urlTypeOpts = toOptions(masters, 'url_type');
+  const addUrl = () => setV((p) => ({ ...p, urls: [...p.urls, { type: urlTypeOpts[0]?.value ?? '', url: '' }] }));
+  const removeUrl = (i: number) => setV((p) => ({ ...p, urls: p.urls.filter((_, idx) => idx !== i) }));
+  const updateUrl = (i: number, patch: Partial<ProjectUrl>) =>
+    setV((p) => ({ ...p, urls: p.urls.map((row, idx) => (idx === i ? { ...row, ...patch } : row)) }));
 
   const validate = () => {
     const e = collect({
@@ -92,6 +112,14 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
       lead_received_date: notFutureDate(v.lead_received_date, 'Received date'),
       remarks: maxLen(v.remarks, 4000, 'Remarks'),
     });
+
+    v.urls.forEach((row, i) => {
+      if (!row.type && !row.url.trim()) return; // ignore fully-empty row
+      if (!row.type) e[`url_type_${i}`] = 'Select a type.';
+      const urlErr = required(row.url, 'URL') || urlValid(row.url, 'URL');
+      if (urlErr) e[`url_${i}`] = urlErr;
+    });
+
     // At least one contact method helps qualify a lead.
     if (isBlank(v.primary_phone) && isBlank(v.primary_email)) {
       e.primary_phone = 'Provide at least a phone number or an email.';
@@ -100,11 +128,15 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
     return Object.keys(e).length === 0;
   };
 
-  const submit = () => { if (validate()) onSubmit(v); };
+  const submit = () => {
+    if (!validate()) return;
+    onSubmit({ ...v, urls: v.urls.filter((r) => r.type || r.url.trim()) });
+  };
 
   return (
     <Drawer
       open={open} onClose={onClose}
+      width="max-w-[70%]"
       title={initial ? 'Edit lead' : 'New lead'}
       subtitle={initial ? `${initial.lead_no} · ${initial.company || initial.customer_name}` : 'Add a new opportunity to your pipeline'}
       footer={
@@ -130,14 +162,19 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
             <Field label="Company" error={errors.company}>
               <Input value={v.company} onChange={(e) => set('company', e.target.value)} invalid={!!errors.company} placeholder="Acme Inc." />
             </Field>
-            <Field label="Sales Manager">
-              <SearchableSelect value={v.sales_manager_id} onChange={(x) => set('sales_manager_id', x)} options={empOpts} placeholder="Unassigned" clearable />
+            <Field label="Lead cordinator">
+              <Input
+                value={initial ? ((allEmployees || []).find(e => e.id === v.sales_manager_id)?.employee_name || displayUserName) : displayUserName}
+                readOnly
+                disabled
+                className="opacity-80 cursor-not-allowed font-semibold"
+              />
             </Field>
             <Field label="Assigned Employee">
               <SearchableSelect value={v.assigned_employee_id} onChange={(x) => set('assigned_employee_id', x)} options={empOpts} placeholder="Unassigned" clearable />
             </Field>
             <Field label="Source Person" hint="Who brought / referred this lead" error={errors.source_person}>
-              <Input value={v.source_person} onChange={(e) => set('source_person', e.target.value)} invalid={!!errors.source_person} placeholder="e.g. Priya Nair" />
+              <Input value={v.source_person} onChange={(e) => set('source_person', e.target.value)} invalid={!!errors.source_person} placeholder="e.g. Priya" />
             </Field>
           </div>
         </section>
@@ -185,6 +222,52 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
               <Input type="date" value={v.next_follow_up} onChange={(e) => set('next_follow_up', e.target.value)} />
             </Field>
           </div>
+        </section>
+
+        {/* Dynamic Project URLs */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Project URLs</p>
+            <Button type="button" variant="secondary" size="sm" icon={<Plus className="h-3.5 w-3.5" />} onClick={addUrl}>Add URL</Button>
+          </div>
+
+          {v.urls.length === 0 ? (
+            <button type="button" onClick={addUrl}
+              className="w-full rounded-xl border border-dashed border-strong px-4 py-5 flex flex-col items-center gap-1.5 text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
+              <Link2 className="h-5 w-5" />
+              <span className="text-[13px] font-medium">Add demo, live, GitHub and other links</span>
+            </button>
+          ) : (
+            <div className="space-y-2.5">
+              {v.urls.map((row, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <div className="w-40 shrink-0">
+                    <SearchableSelect
+                      value={row.type}
+                      onChange={(val) => updateUrl(i, { type: val })}
+                      options={urlTypeOpts}
+                      placeholder="Type"
+                      invalid={!!errors[`url_type_${i}`]}
+                    />
+                    {errors[`url_type_${i}`] && <p className="text-[11.5px] font-medium text-red-500 mt-1">{errors[`url_type_${i}`]}</p>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Input
+                      value={row.url}
+                      onChange={(e) => updateUrl(i, { url: e.target.value })}
+                      invalid={!!errors[`url_${i}`]}
+                      placeholder="https://example.com"
+                    />
+                    {errors[`url_${i}`] && <p className="text-[11.5px] font-medium text-red-500 mt-1">{errors[`url_${i}`]}</p>}
+                  </div>
+                  <button type="button" onClick={() => removeUrl(i)}
+                    className="h-10 w-10 shrink-0 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <Field label="Remarks">

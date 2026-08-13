@@ -66,6 +66,7 @@ export interface Lead extends AuditFields {
   remarks: string | null;
   converted_project_id: string | null;
   converted_at: string | null;
+  urls?: ProjectUrl[];
   sales_manager?: Employee | null;
   assigned_employee?: Employee | null;
 }
@@ -90,6 +91,7 @@ export interface Project extends AuditFields {
   remarks: string | null;
   manager?: Employee | null;
   assigned_employee?: Employee | null;
+  lead_coordinator?: Employee | null;
   lead?: { id: string; lead_no: string | null; customer_name: string; company: string | null } | null;
 }
 

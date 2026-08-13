@@ -1,5 +1,5 @@
 import { supabase, preflight, fail, V } from './_lib.js';
-import { requirePermission, methodPermission } from './_permissions.js';
+import { requirePermission, methodPermission, getEffectivePermissions } from './_permissions.js';
 import { employeeMap, leadMap, nextProjectNo } from './_join.js';
 
 export default async function handler(req, res) {
@@ -9,14 +9,18 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
+      const { isAdmin, employee } = await getEffectivePermissions(user);
       const [{ data, error }, emps, leads] = await Promise.all([
         supabase.from('dt_projects').select('*').is('deleted_at', null).order('created_at', { ascending: false }),
         employeeMap(),
         leadMap(),
       ]);
       if (error) throw error;
-      const rows = (data || []).map((p) => enrichRow(p, emps, leads));
-      return res.status(200).json(rows);
+      let rows = data || [];
+      if (!isAdmin && employee) {
+        rows = rows.filter((p) => p.project_manager_id === employee.id || p.assigned_employee_id === employee.id || (p.lead_id && leads[p.lead_id]?.sales_manager_id === employee.id));
+      }
+      return res.status(200).json(rows.map((p) => enrichRow(p, emps, leads)));
     }
 
     if (req.method === 'POST') {
@@ -58,6 +62,7 @@ function enrichRow(p, emps, leads) {
     ...p,
     manager: p.project_manager_id ? emps[p.project_manager_id] || null : null,
     assigned_employee: p.assigned_employee_id ? emps[p.assigned_employee_id] || null : null,
+    lead_coordinator: (p.lead_id && leads[p.lead_id]?.sales_manager_id) ? emps[leads[p.lead_id].sales_manager_id] || null : null,
     lead: p.lead_id ? leads[p.lead_id] || null : null,
   };
 }

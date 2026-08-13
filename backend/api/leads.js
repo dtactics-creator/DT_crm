@@ -1,5 +1,5 @@
 import { supabase, preflight, fail, V } from './_lib.js';
-import { requirePermission, methodPermission } from './_permissions.js';
+import { requirePermission, methodPermission, getEffectivePermissions } from './_permissions.js';
 import { employeeMap, nextLeadNo } from './_join.js';
 
 function attach(lead, emps) {
@@ -17,12 +17,17 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
+      const { isAdmin, employee } = await getEffectivePermissions(user);
       const [{ data, error }, emps] = await Promise.all([
         supabase.from('dt_leads3').select('*').is('deleted_at', null).order('created_at', { ascending: false }),
         employeeMap(),
       ]);
       if (error) throw error;
-      return res.status(200).json((data || []).map((l) => attach(l, emps)));
+      let rows = data || [];
+      if (!isAdmin && employee) {
+        rows = rows.filter((l) => l.sales_manager_id === employee.id || l.assigned_employee_id === employee.id);
+      }
+      return res.status(200).json(rows.map((l) => attach(l, emps)));
     }
 
     if (req.method === 'POST') {
@@ -61,6 +66,21 @@ export default async function handler(req, res) {
   }
 }
 
+function sanitizeUrls(input) {
+  if (!Array.isArray(input)) return [];
+  const out = [];
+  for (const row of input) {
+    const type = (row?.type ?? '').toString().trim();
+    const url = (row?.url ?? '').toString().trim();
+    if (!type && !url) continue; // skip empty rows
+    if (!type) throw new Error('Each URL row must have a URL type');
+    if (!url) throw new Error('Each URL row must have a URL');
+    if (!/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(url)) throw new Error(`"${url}" is not a valid URL (must start with http:// or https://)`);
+    out.push({ type, url });
+  }
+  return out;
+}
+
 function validate(body) {
   return {
     lead_no: V.str(body.lead_no, { field: 'Lead No', max: 40 }),
@@ -81,6 +101,7 @@ function validate(body) {
     priority: V.str(body.priority, { field: 'Priority' }) || 'medium',
     lead_received_date: V.date(body.lead_received_date, { field: 'Lead received date' }),
     next_follow_up: V.date(body.next_follow_up, { field: 'Follow-up date' }),
+    urls: sanitizeUrls(body.urls),
     remarks: V.str(body.remarks, { field: 'Remarks', max: 4000 }),
   };
 }

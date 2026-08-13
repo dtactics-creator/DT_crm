@@ -133,22 +133,30 @@ export default function Projects() {
     { key: 'lead_no', header: 'Lead Ref', sortValue: (r) => r.lead_no ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{r.lead_no || '—'}</span> },
     { key: 'type', header: 'Type', sortValue: (r) => r.project_type ?? '', render: (r) => <span className="text-muted-fg">{lookup.label('project_type', r.project_type)}</span> },
     {
-      key: 'manager', header: 'Manager', sortValue: (r) => r.manager?.employee_name ?? '',
+      key: 'manager', header: 'Project Manager', sortValue: (r) => r.manager?.employee_name ?? '',
       render: (r) => r.manager ? <div className="flex items-center gap-2"><Avatar name={r.manager.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.manager.employee_name}</span></div> : <span className="text-subtle-fg text-[12.5px]">—</span>,
     },
     {
-      key: 'stack', header: 'Tech Stack',
-      render: (r) => {
-        const stack = Array.isArray(r.technology_stack) ? r.technology_stack : [];
-        return stack.length ? (
-          <div className="flex items-center gap-1">
-            {stack.slice(0, 3).map((s) => <Badge key={s} label={lookup.label('technology_stack', s)} color={lookup.color('technology_stack', s)} />)}
-            {stack.length > 3 && <span className="text-[11px] font-semibold text-subtle-fg">+{stack.length - 3}</span>}
-          </div>
-        ) : <span className="text-subtle-fg text-[12.5px]">—</span>;
-      },
+      key: 'assigned', header: 'Assigned Employee', sortValue: (r) => r.assigned_employee?.employee_name ?? '',
+      render: (r) => r.assigned_employee ? <div className="flex items-center gap-2"><Avatar name={r.assigned_employee.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.assigned_employee.employee_name}</span></div> : <span className="text-subtle-fg text-[12.5px]">—</span>,
     },
-    { key: 'cost', header: 'Cost', sortValue: (r) => Number(r.project_cost), className: 'tabular font-semibold', render: (r) => formatCurrency(r.project_cost) },
+    {
+      key: 'coordinator', header: 'Lead cordinator', sortValue: (r) => r.lead_coordinator?.employee_name ?? '',
+      render: (r) => r.lead_coordinator ? <div className="flex items-center gap-2"><Avatar name={r.lead_coordinator.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.lead_coordinator.employee_name}</span></div> : <span className="text-subtle-fg text-[12.5px]">—</span>,
+    },
+    // {
+    //   key: 'stack', header: 'Tech Stack',
+    //   render: (r) => {
+    //     const stack = Array.isArray(r.technology_stack) ? r.technology_stack : [];
+    //     return stack.length ? (
+    //       <div className="flex items-center gap-1">
+    //         {stack.slice(0, 3).map((s) => <Badge key={s} label={lookup.label('technology_stack', s)} color={lookup.color('technology_stack', s)} />)}
+    //         {stack.length > 3 && <span className="text-[11px] font-semibold text-subtle-fg">+{stack.length - 3}</span>}
+    //       </div>
+    //     ) : <span className="text-subtle-fg text-[12.5px]">—</span>;
+    //   },
+    // },
+    ...(can('projects.view_cost') ? [{ key: 'cost', header: 'Cost', sortValue: (r) => Number(r.project_cost), className: 'tabular font-semibold', render: (r) => formatCurrency(r.project_cost) } as Column<Project>] : []),
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={lookup.label('project_status', r.status)} color={lookup.color('project_status', r.status)} dot /> },
     { key: 'delivery', header: 'Delivery', sortValue: (r) => r.expected_delivery ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.expected_delivery)}</span> },
     {
@@ -177,21 +185,21 @@ export default function Projects() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:flex gap-4 mb-6">
         {[
           { label: 'Total projects', value: (projects?.length ?? 0).toString() },
           { label: 'Active', value: (projects?.filter((p) => p.status === 'active').length ?? 0).toString() },
-          { label: 'Total cost', value: formatCurrency(totalBudget) },
+          ...(can('projects.view_cost') ? [{ label: 'Total cost', value: formatCurrency(totalBudget) }] : []),
           { label: 'Completed', value: (projects?.filter((p) => p.status === 'completed').length ?? 0).toString() },
         ].map((s) => (
-          <div key={s.label} className="bg-surface border border-app rounded-xl card-shadow px-4 py-3.5">
+          <div key={s.label} className="flex-1 min-w-[140px] bg-surface border border-app rounded-xl card-shadow px-4 py-3.5">
             <p className="text-[12px] font-semibold text-muted-fg">{s.label}</p>
             <p className="text-[20px] font-extrabold text-base-fg mt-0.5 tabular">{s.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" className="pl-10" />
@@ -247,7 +255,9 @@ export default function Projects() {
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-app">
-                  <span className="text-[15px] font-extrabold text-base-fg tabular">{formatCurrency(p.project_cost)}</span>
+                  {can('projects.view_cost') ? (
+                    <span className="text-[15px] font-extrabold text-base-fg tabular">{formatCurrency(p.project_cost)}</span>
+                  ) : <div />}
                   {p.manager ? (
                     <div className="flex items-center gap-1.5"><Avatar name={p.manager.employee_name} size={24} /><span className="text-[11.5px] text-muted-fg">{p.manager.employee_name.split(' ')[0]}</span></div>
                   ) : <span className="text-[11.5px] text-subtle-fg">{formatDate(p.expected_delivery)}</span>}

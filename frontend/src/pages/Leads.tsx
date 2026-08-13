@@ -182,7 +182,7 @@ export default function Leads() {
     { key: 'type', header: 'Project Type', sortValue: (r) => r.project_type ?? '', render: (r) => <span className="text-muted-fg">{lookup.label('project_type', r.project_type)}</span> },
     { key: 'source', header: 'Source', sortValue: (r) => r.source, render: (r) => <Badge label={lookup.label('lead_source', r.source)} color={lookup.color('lead_source', r.source)} /> },
     {
-      key: 'manager', header: 'Sales Manager', sortValue: (r) => r.sales_manager?.employee_name ?? '',
+      key: 'manager', header: 'Lead cordinator', sortValue: (r) => r.sales_manager?.employee_name ?? '',
       render: (r) => r.sales_manager ? (
         <div className="flex items-center gap-2"><Avatar name={r.sales_manager.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.sales_manager.employee_name}</span></div>
       ) : <span className="text-subtle-fg text-[12.5px]">Unassigned</span>,
@@ -194,7 +194,7 @@ export default function Leads() {
       ) : <span className="text-subtle-fg text-[12.5px]">Unassigned</span>,
     },
     { key: 'source_person', header: 'Source Person', sortValue: (r) => r.source_person ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{r.source_person || '—'}</span> },
-    { key: 'budget', header: 'Budget', sortValue: (r) => Number(r.budget), className: 'tabular font-semibold', render: (r) => formatCurrency(r.budget) },
+    ...(can('leads.view_budget') ? [{ key: 'budget', header: 'Budget', sortValue: (r) => Number(r.budget), className: 'tabular font-semibold', render: (r) => formatCurrency(r.budget) } as Column<Lead>] : []),
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={lookup.label('lead_status', r.status)} color={lookup.color('lead_status', r.status)} dot /> },
     { key: 'received', header: 'Received', sortValue: (r) => r.lead_received_date ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.lead_received_date)}</span> },
     { key: 'follow', header: 'Follow-up', sortValue: (r) => r.next_follow_up ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.next_follow_up)}</span> },
@@ -225,14 +225,14 @@ export default function Leads() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:flex gap-4 mb-6">
         {[
           { label: 'Total leads', value: (leads?.length ?? 0).toString() },
-          { label: 'Pipeline value', value: formatCurrency(totalValue) },
+          ...(can('leads.view_budget') ? [{ label: 'Pipeline value', value: formatCurrency(totalValue) }] : []),
           { label: 'Won', value: (leads?.filter((l) => l.status === 'won').length ?? 0).toString() },
           { label: 'Lost', value: (leads?.filter((l) => l.status === 'lost').length ?? 0).toString() },
         ].map((s) => (
-          <div key={s.label} className="bg-surface border border-app rounded-xl card-shadow px-4 py-3.5">
+          <div key={s.label} className="flex-1 min-w-[140px] bg-surface border border-app rounded-xl card-shadow px-4 py-3.5">
             <p className="text-[12px] font-semibold text-muted-fg">{s.label}</p>
             <p className="text-[20px] font-extrabold text-base-fg mt-0.5 tabular">{s.value}</p>
           </div>
@@ -240,7 +240,7 @@ export default function Leads() {
       </div>
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex flex-col sm:flex-row gap-3 p-4 border-b border-app">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-app">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, company, email, lead no…" className="pl-10" />

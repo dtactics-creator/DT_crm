@@ -15,7 +15,7 @@ export async function employeeMap() {
 export async function leadMap() {
   const { data, error } = await supabase
     .from('dt_leads3')
-    .select('id, lead_no, customer_name, company')
+    .select('id, lead_no, customer_name, company, sales_manager_id')
     .is('deleted_at', null);
   if (error) throw error;
   const map = {};

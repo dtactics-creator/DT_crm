@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS dt_leads3 (
     priority TEXT DEFAULT 'medium',
     lead_received_date DATE,
     next_follow_up DATE,
+    urls JSONB DEFAULT '[]',
     remarks TEXT,
     converted_project_id UUID,
     converted_at TIMESTAMP WITH TIME ZONE,

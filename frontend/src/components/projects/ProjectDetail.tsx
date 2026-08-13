@@ -28,7 +28,7 @@ export default function ProjectDetail({ open, onClose, project, masters, onEdit,
     { icon: Hash, label: 'Project No', value: project.project_no || '—' },
     { icon: Link2, label: 'Lead reference', value: project.lead_no || project.lead?.lead_no || '—' },
     { icon: Layers, label: 'Type', value: lookup.label('project_type', project.project_type) },
-    { icon: DollarSign, label: 'Cost', value: formatCurrency(project.project_cost) },
+    ...(can('projects.view_cost') ? [{ icon: DollarSign, label: 'Cost', value: formatCurrency(project.project_cost) }] : []),
     { icon: Calendar, label: 'Start date', value: formatDate(project.start_date) },
     { icon: Calendar, label: 'Expected delivery', value: formatDate(project.expected_delivery) },
   ];
@@ -54,7 +54,7 @@ export default function ProjectDetail({ open, onClose, project, masters, onEdit,
               <p className="text-[16px] font-bold text-base-fg">{project.project_name}</p>
               <p className="text-[13px] text-muted-fg mt-0.5">{project.project_no || 'No code'} · {lookup.label('project_type', project.project_type)}</p>
             </div>
-            <span className="text-[16px] font-extrabold text-base-fg tabular shrink-0">{formatCurrency(project.project_cost)}</span>
+            {can('projects.view_cost') && <span className="text-[16px] font-extrabold text-base-fg tabular shrink-0">{formatCurrency(project.project_cost)}</span>}
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-4">
             <Badge label={lookup.label('project_status', project.status)} color={statusColor} dot />

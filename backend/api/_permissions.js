@@ -13,8 +13,8 @@ import { supabase } from './_lib.js';
 export const PERMISSION_CATALOG = [
   // Dashboard is available to every authenticated user, so it is intentionally
   // NOT listed here as a grantable permission.
-  { module: 'leads', label: 'Leads', actions: ['view', 'create', 'edit', 'delete', 'convert', 'import', 'export'] },
-  { module: 'projects', label: 'Projects', actions: ['view', 'create', 'edit', 'delete', 'import', 'export'] },
+  { module: 'leads', label: 'Leads', actions: ['view', 'create', 'edit', 'delete', 'convert', 'import', 'export', 'view_budget'] },
+  { module: 'projects', label: 'Projects', actions: ['view', 'create', 'edit', 'delete', 'import', 'export', 'view_cost'] },
   { module: 'masters', label: 'Masters', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'employees', label: 'Employees', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'roles', label: 'Roles & Permissions', actions: ['view', 'create', 'edit', 'delete'] },
@@ -24,7 +24,7 @@ export const PERMISSION_CATALOG = [
 
 const ACTION_LABELS = {
   view: 'View', create: 'Create', edit: 'Edit', delete: 'Delete', convert: 'Convert',
-  import: 'Import', export: 'Export',
+  import: 'Import', export: 'Export', view_budget: 'View Budget', view_cost: 'View Cost',
 };
 
 export function actionLabel(a) { return ACTION_LABELS[a] || a; }

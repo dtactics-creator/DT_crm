@@ -36,6 +36,7 @@ export default async function handler(req, res) {
       project_manager_id: V.uuid(req.body.project_manager_id),
       assigned_employee_id: lead.assigned_employee_id || lead.sales_manager_id || V.uuid(req.body.assigned_employee_id),
       technology_stack: Array.isArray(req.body.technology_stack) ? req.body.technology_stack : [],
+      urls: Array.isArray(lead.urls) ? lead.urls : [],
       project_cost: V.num(req.body.project_cost ?? lead.budget, { field: 'Project cost', min: 0, def: 0 }),
       status: 'active',
       priority: lead.priority || 'medium',

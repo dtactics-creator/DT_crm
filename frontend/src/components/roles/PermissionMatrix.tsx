@@ -91,9 +91,9 @@ export default function PermissionMatrix({ open, onClose, role, canEdit }: {
 
   return (
     <Drawer open={open} onClose={onClose}
+      width="max-w-[70%]"
       title="Manage permissions"
       subtitle={role ? `${role.name} · ${selectedCount === 'All' ? 'Full access' : `${selectedCount} permission${selectedCount === 1 ? '' : 's'}`}` : ''}
-      width="max-w-2xl"
       footer={
         <div className="flex items-center justify-between gap-2">
           <p className="text-[12px] text-muted-fg">{canEdit ? 'Changes apply to everyone with this role.' : 'Read-only — you lack roles.edit permission.'}</p>

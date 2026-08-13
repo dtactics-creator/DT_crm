@@ -77,7 +77,7 @@ export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDel
           <div className="flex flex-wrap items-center gap-2 mt-4">
             <Badge label={lookup.label('lead_status', lead.status)} color={lookup.color('lead_status', lead.status)} dot />
             <Badge label={`${lookup.label('priority', lead.priority)} priority`} color={lookup.color('priority', lead.priority)} />
-            <span className="ml-auto text-[15px] font-extrabold text-base-fg tabular">{formatCurrency(lead.budget)}</span>
+            {can('leads.view_budget') && <span className="ml-auto text-[15px] font-extrabold text-base-fg tabular">{formatCurrency(lead.budget)}</span>}
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDel
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {lead.sales_manager && (
               <div>
-                <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-2">Sales Manager</p>
+                <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-2">Lead cordinator</p>
                 <div className="flex items-center gap-3 rounded-xl border border-app p-3">
                   <Avatar name={lead.sales_manager.employee_name} size={36} />
                   <div className="min-w-0">

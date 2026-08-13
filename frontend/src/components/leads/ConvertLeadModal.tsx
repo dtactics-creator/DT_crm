@@ -8,6 +8,7 @@ import { toOptions } from '../../hooks/useMasters';
 import { required, minLen, maxLen, nonNegativeNumber, dateOrder } from '../../lib/validators';
 import { ArrowRightLeft, Sparkles } from 'lucide-react';
 import type { Lead, MasterItem, Employee } from '../../types';
+import { usePermissions } from '../../contexts/PermissionContext';
 
 export default function ConvertLeadModal({ open, onClose, onConfirm, lead, masters, managers, saving }: {
   open: boolean;
@@ -29,6 +30,7 @@ export default function ConvertLeadModal({ open, onClose, onConfirm, lead, maste
   const [delivery, setDelivery] = useState('');
   const [error, setError] = useState('');
 
+  const { can } = usePermissions();
   const stackOpts = toOptions(masters, 'technology_stack');
   const managerOpts = (managers || []).map((m) => ({ value: m.id, label: m.employee_name, hint: m.role }));
 
@@ -81,9 +83,11 @@ export default function ConvertLeadModal({ open, onClose, onConfirm, lead, maste
           <Field label="Project manager">
             <SearchableSelect value={managerId} onChange={setManagerId} options={managerOpts} placeholder="Assign manager" clearable />
           </Field>
-          <Field label="Project cost (₹)">
-            <Input type="number" min="0" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="50000" />
-          </Field>
+          {can('projects.view_cost') && (
+            <Field label="Project cost (₹)">
+              <Input type="number" min="0" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="50000" />
+            </Field>
+          )}
           <Field label="Start date">
             <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
           </Field>

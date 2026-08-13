@@ -4,6 +4,7 @@ import { Menu, Search, Bell, Sun, Moon, ChevronRight, LogOut, Settings, User as 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEmployees } from '../../hooks/useEmployees';
 import Avatar from '../ui/Avatar';
 import { cn } from '../../lib/utils';
 import type { Crumb } from './crumbs';
@@ -32,8 +33,11 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
     return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
   }, []);
 
+  const { data: allEmployees } = useEmployees();
   const email = user?.email ?? 'user@dtactics.io';
-  const name = user?.user_metadata?.full_name || user?.user_metadata?.name || email.split('@')[0];
+  const fallbackName = user?.user_metadata?.full_name || user?.user_metadata?.name || email.split('@')[0];
+  const actualEmployee = (allEmployees || []).find((e) => e.email === email);
+  const name = actualEmployee?.employee_name || fallbackName;
 
   const notifications = [
     { title: 'New lead assigned', desc: 'Marcus Thompson · Northwind Analytics', color: '#3366ff', time: '2h' },
