@@ -148,7 +148,7 @@ export default function ImportDialog({ open, onClose, title, entity, columns, te
 
   const downloadTemplate = () => {
     // Template headers === export headers === import headers (single schema).
-    const headers = columns.map((c) => c.label);
+    const headers = columns.map((c) => (c.required ? `* ${c.label}` : c.label));
     const example = columns.map((c) => c.example ?? '');
     downloadCsv(templateName, toCsv(headers, [example]));
   };

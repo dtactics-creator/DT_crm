@@ -27,7 +27,7 @@ import { usePermissions } from '../contexts/PermissionContext';
 import { useToast } from '../components/ui/Toast';
 import { api } from '../lib/api';
 import { downloadCsv } from '../lib/csv';
-import { leadImportColumns, makeLeadRowMapper, buildLeadsCsv, employeeIndex } from '../lib/importConfig';
+import { getLeadImportColumns, makeLeadRowMapper, buildLeadsCsv, employeeIndex } from '../lib/importConfig';
 import { formatCurrency, formatDate } from '../lib/utils';
 import type { Lead } from '../types';
 
@@ -64,15 +64,17 @@ export default function Leads() {
   const [toConvert, setToConvert] = useState<Lead | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
+  const urlTypes = useMemo(() => (masters || []).filter(m => m.category === 'url_type').map(m => m.value), [masters]);
+
   // Import mapper resolves master labels/values and employee names -> ids.
   const resolveEmp = useMemo(() => employeeIndex(employees), [employees]);
-  const mapLeadRow = useMemo(() => makeLeadRowMapper(resolve, resolveEmp, lookup.label), [masters, resolveEmp]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mapLeadRow = useMemo(() => makeLeadRowMapper(resolve, resolveEmp, lookup.label, urlTypes), [masters, resolveEmp, urlTypes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = () => {
     const rows = filtered.length ? filtered : (leads || []);
     if (!rows.length) { toast('No leads to export.', 'info'); return; }
     // Export uses the same schema as import, so the file is re-importable.
-    downloadCsv(`leads-${new Date().toISOString().slice(0, 10)}.csv`, buildLeadsCsv(rows, lookup.label, resolve, resolveEmp));
+    downloadCsv(`leads-${new Date().toISOString().slice(0, 10)}.csv`, buildLeadsCsv(rows, lookup.label, resolve, resolveEmp, urlTypes));
     toast(`Exported ${rows.length} leads`, 'success');
   };
 
@@ -286,9 +288,9 @@ export default function Leads() {
         onClose={() => setImportOpen(false)}
         title="Import leads"
         entity="leads"
-        columns={leadImportColumns}
+        columns={getLeadImportColumns(urlTypes)}
         templateName="leads-import-template.csv"
-        duplicateKeyHint="Lead No or email"
+        duplicateKeyHint="email"
         dedupeKeys={(v) => {
           const keys: string[] = [];
           const no = ((v.lead_no as string) || '').trim().toLowerCase();

@@ -25,6 +25,7 @@ export default async function handler(req, res) {
       .from('crm_employees')
       .select('id, email, password_hash, status')
       .eq('email', email)
+      .is('deleted_at', null)
       .single();
 
     if (error || !employee) {

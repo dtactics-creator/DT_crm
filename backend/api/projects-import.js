@@ -1,4 +1,4 @@
-import { supabase, preflight, fail, V } from './_lib.js';
+import { supabase, preflight, fail, V, sanitizeUrls } from './_lib.js';
 import { requirePermission } from './_permissions.js';
 import { nextProjectNo } from './_join.js';
 
@@ -134,7 +134,7 @@ function validateRow(body, ctx) {
     project_manager_id: mgr,
     assigned_employee_id: assigned,
     technology_stack: stack,
-    urls: [],
+    urls: sanitizeUrls(body.urls),
     project_cost: V.num(body.project_cost, { field: 'Project cost', min: 0, def: 0 }),
     status,
     priority: prio,

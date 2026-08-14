@@ -26,7 +26,7 @@ import { useCrud } from '../hooks/useCrud';
 import { useToast } from '../components/ui/Toast';
 import { api } from '../lib/api';
 import { downloadCsv } from '../lib/csv';
-import { projectImportColumns, makeProjectRowMapper, buildProjectsCsv, employeeIndex } from '../lib/importConfig';
+import { getProjectImportColumns, makeProjectRowMapper, buildProjectsCsv, employeeIndex } from '../lib/importConfig';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
 import type { Project } from '../types';
 
@@ -59,15 +59,16 @@ export default function Projects() {
   const [detail, setDetail] = useState<Project | null>(null);
   const [toDelete, setToDelete] = useState<Project | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const urlTypes = useMemo(() => (masters || []).filter(m => m.category === 'url_type').map(m => m.value), [masters]);
 
   const resolveEmp = useMemo(() => employeeIndex(employees), [employees]);
-  const mapProjectRow = useMemo(() => makeProjectRowMapper(resolve, resolveEmp, lookup.label), [masters, resolveEmp]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mapProjectRow = useMemo(() => makeProjectRowMapper(resolve, resolveEmp, lookup.label, urlTypes), [masters, resolveEmp, urlTypes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = () => {
     const rows = filtered.length ? filtered : (projects || []);
     if (!rows.length) { toast('No projects to export.', 'info'); return; }
     // Export uses the same schema as import, so the file is re-importable.
-    downloadCsv(`projects-${new Date().toISOString().slice(0, 10)}.csv`, buildProjectsCsv(rows, lookup.label, resolve, resolveEmp));
+    downloadCsv(`projects-${new Date().toISOString().slice(0, 10)}.csv`, buildProjectsCsv(rows, lookup.label, resolve, resolveEmp, urlTypes));
     toast(`Exported ${rows.length} projects`, 'success');
   };
 
@@ -286,9 +287,9 @@ export default function Projects() {
         onClose={() => setImportOpen(false)}
         title="Import projects"
         entity="projects"
-        columns={projectImportColumns}
+        columns={getProjectImportColumns(urlTypes)}
         templateName="projects-import-template.csv"
-        duplicateKeyHint="Project No or project name + client"
+        duplicateKeyHint="project name + client"
         dedupeKeys={(v) => {
           const keys: string[] = [];
           const no = ((v.project_no as string) || '').trim().toLowerCase();

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, UserCog, Mail, Phone, Pencil, Trash2, ShieldCheck } from 'lucide-react';
+import { Plus, Search, UserCog, Mail, Phone, Pencil, Trash2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -34,6 +34,7 @@ export default function Employees() {
   const [editing, setEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [toDelete, setToDelete] = useState<Employee | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Role options come from the Roles module (active roles + the current value if it's inactive).
   const roleOptions = (roles || [])
@@ -164,7 +165,12 @@ export default function Employees() {
             </Field>
             <Field label={editing ? 'Password' : 'Password'} required={!editing} error={errors.password}
               hint={editing ? 'Leave blank to keep current password' : 'Employee uses this to sign in'}>
-              <Input type="password" value={form.password} onChange={(e) => set('password', e.target.value)} invalid={!!errors.password} placeholder={editing ? '••••••••' : 'Min 6 characters'} />
+              <div className="relative">
+                <Input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => set('password', e.target.value)} invalid={!!errors.password} placeholder={editing ? '••••••••' : 'Min 6 characters'} className="pr-10" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle-fg hover:text-base-fg transition-colors">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </Field>
             <Field label="Status">
               <SearchableSelect value={form.status} onChange={(v) => set('status', v)} options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />

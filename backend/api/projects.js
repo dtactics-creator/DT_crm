@@ -1,4 +1,4 @@
-import { supabase, preflight, fail, V } from './_lib.js';
+import { supabase, preflight, fail, V, sanitizeUrls } from './_lib.js';
 import { requirePermission, methodPermission, getEffectivePermissions } from './_permissions.js';
 import { employeeMap, leadMap, nextProjectNo } from './_join.js';
 
@@ -72,21 +72,7 @@ async function enrich(p) {
   return enrichRow(p, emps, leads);
 }
 
-// Validate and clean the dynamic URL rows. Each must have a type and a valid URL.
-function sanitizeUrls(input) {
-  if (!Array.isArray(input)) return [];
-  const out = [];
-  for (const row of input) {
-    const type = (row?.type ?? '').toString().trim();
-    const url = (row?.url ?? '').toString().trim();
-    if (!type && !url) continue; // skip empty rows
-    if (!type) throw new Error('Each URL row must have a URL type');
-    if (!url) throw new Error('Each URL row must have a URL');
-    if (!/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(url)) throw new Error(`"${url}" is not a valid URL (must start with http:// or https://)`);
-    out.push({ type, url });
-  }
-  return out;
-}
+
 
 function validate(body) {
   return {

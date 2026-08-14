@@ -169,39 +169,60 @@ export function employeeIndex(employees: Employee[] | undefined): EmpResolver {
 
 /* ============================== LEADS SCHEMA ============================== */
 
-const leadFields: FieldSpec<Lead>[] = [
-  textField('lead_no', 'Lead No', (r) => r.lead_no ?? '', { hint: 'Auto-generated if blank', aliases: ['lead number', 'lead ref'] }),
-  textField('customer_name', 'Customer', (r) => r.customer_name, { required: true, min: 2, max: 120, hint: 'Customer / contact name (required)', example: 'Jane Cooper', aliases: ['customer name', 'name', 'contact'] }),
-  textField('company', 'Company', (r) => r.company ?? '', { max: 200, example: 'Acme Inc.' }),
-  emailField('primary_email', 'Email', (r) => r.primary_email ?? '', { aliases: ['primary email', 'email address'], payloadKey: 'primary_email' }),
-  emailField('secondary_email', 'Secondary Email', (r) => r.secondary_email ?? '', { payloadKey: 'secondary_email' }),
-  textField('primary_phone', 'Phone', (r) => r.primary_phone ?? '', { max: 40, example: '+91 98765 43210', aliases: ['primary phone', 'phone number', 'mobile'] }),
-  textField('secondary_phone', 'Telephone', (r) => r.secondary_phone ?? '', { max: 40, aliases: ['telephone', 'telephone number', 'secondary phone'] }),
-  textField('tertiary_phone', 'Alt Phone', (r) => r.tertiary_phone ?? '', { max: 40, aliases: ['alt phone', 'alternate phone', 'tertiary phone'] }),
-  masterField('source', 'Source', 'lead_source', (r) => r.source, { required: true, hint: 'Lead source (required)', example: 'Website', aliases: ['lead source'] }),
-  masterField('status', 'Status', 'lead_status', (r) => r.status, { required: true, hint: 'Lead status (required)', example: 'New', aliases: ['lead status'] }),
-  masterField('priority', 'Priority', 'priority', (r) => r.priority, { defaultValue: 'medium', hint: 'Low / Medium / High / Critical', example: 'Medium' }),
-  masterField('project_type', 'Project Type', 'project_type', (r) => r.project_type, { hint: 'Project type', example: 'CRM', aliases: ['project type', 'type'] }),
-  numberField('budget', 'Budget', (r) => Number(r.budget || 0), { min: 0, hint: 'Numeric budget (INR)', example: '50000', aliases: ['estimated value', 'value'] }),
-  textField('source_person', 'Source Person', (r) => r.source_person ?? '', { max: 200, aliases: ['source person', 'referred by'] }),
-  employeeField('sales_manager', 'Sales Manager', (r) => r.sales_manager?.employee_name ?? '', { aliases: ['sales manager', 'manager'] }),
-  employeeField('assigned_employee', 'Assigned Employee', (r) => r.assigned_employee?.employee_name ?? '', { aliases: ['assigned employee', 'assignee', 'owner'] }),
-  dateField('lead_received_date', 'Received Date', (r) => r.lead_received_date, { aliases: ['received date', 'lead received date'] }),
-  dateField('next_follow_up', 'Follow-up Date', (r) => r.next_follow_up, { aliases: ['follow-up date', 'follow up date'], example: '' }),
-  textField('remarks', 'Remarks', (r) => r.remarks ?? '', { max: 4000, aliases: ['notes'] }),
-];
+function getLeadFields(urlTypes: string[]): FieldSpec<Lead>[] {
+  const fields: FieldSpec<Lead>[] = [
+    textField('customer_name', 'Customer', (r) => r.customer_name, { required: true, min: 2, max: 120, hint: 'Customer / contact name (required)', example: 'Jane Cooper', aliases: ['customer name', 'name', 'contact'] }),
+    textField('company', 'Company', (r) => r.company ?? '', { max: 200, example: 'Acme Inc.' }),
+    emailField('primary_email', 'Email', (r) => r.primary_email ?? '', { aliases: ['primary email', 'email address'], payloadKey: 'primary_email' }),
+    emailField('secondary_email', 'Secondary Email', (r) => r.secondary_email ?? '', { payloadKey: 'secondary_email' }),
+    textField('primary_phone', 'Phone', (r) => r.primary_phone ?? '', { max: 40, example: '+91 98765 43210', aliases: ['primary phone', 'phone number', 'mobile'] }),
+    textField('secondary_phone', 'Telephone', (r) => r.secondary_phone ?? '', { max: 40, aliases: ['telephone', 'telephone number', 'secondary phone'] }),
+    textField('tertiary_phone', 'Alt Phone', (r) => r.tertiary_phone ?? '', { max: 40, aliases: ['alt phone', 'alternate phone', 'tertiary phone'] }),
+    masterField('source', 'Source', 'lead_source', (r) => r.source, { required: true, hint: 'Lead source (required)', example: 'Website', aliases: ['lead source'] }),
+    masterField('status', 'Status', 'lead_status', (r) => r.status, { required: true, hint: 'Lead status (required)', example: 'New', aliases: ['lead status'] }),
+    masterField('priority', 'Priority', 'priority', (r) => r.priority, { defaultValue: 'medium', hint: 'Low / Medium / High / Critical', example: 'Medium' }),
+    masterField('project_type', 'Project Type', 'project_type', (r) => r.project_type, { hint: 'Project type', example: 'CRM', aliases: ['project type', 'type'] }),
+    numberField('budget', 'Budget', (r) => Number(r.budget || 0), { min: 0, hint: 'Numeric budget (INR)', example: '50000', aliases: ['estimated value', 'value'] }),
+    textField('source_person', 'Source Person', (r) => r.source_person ?? '', { max: 200, aliases: ['source person', 'referred by'] }),
+    employeeField('sales_manager', 'Sales Manager', (r) => r.sales_manager?.employee_name ?? '', { aliases: ['sales manager', 'manager'] }),
+    employeeField('assigned_employee', 'Assigned Employee', (r) => r.assigned_employee?.employee_name ?? '', { aliases: ['assigned employee', 'assignee', 'owner'] }),
+    dateField('lead_received_date', 'Received Date', (r) => r.lead_received_date, { aliases: ['received date', 'lead received date'] }),
+    dateField('next_follow_up', 'Follow-up Date', (r) => r.next_follow_up, { aliases: ['follow-up date', 'follow up date'], example: '' }),
+    textField('remarks', 'Remarks', (r) => r.remarks ?? '', { max: 4000, aliases: ['notes'] }),
+  ];
 
-// Fix payloadKey for employee fields (name column -> *_id payload).
-leadFields.find((f) => f.key === 'sales_manager')!.payloadKey = 'sales_manager_id';
-leadFields.find((f) => f.key === 'assigned_employee')!.payloadKey = 'assigned_employee_id';
+  for (const t of urlTypes) {
+    fields.push(textField(`url_${t}`, `${t} URL`, (r) => r.urls?.find((u) => u.type === t)?.url ?? '', { hint: `URL for ${t}`, aliases: [`${t} url`, t] }));
+  }
 
-const leadsIO = buildModuleIO(leadFields);
-export const leadImportColumns = leadsIO.columns;
-export function makeLeadRowMapper(resolve: Resolver, resolveEmp: EmpResolver, label: Labeler) {
-  return leadsIO.makeMapper({ resolve, resolveEmp, label });
+  fields.find((f) => f.key === 'sales_manager')!.payloadKey = 'sales_manager_id';
+  fields.find((f) => f.key === 'assigned_employee')!.payloadKey = 'assigned_employee_id';
+  return fields;
 }
-export function buildLeadsCsv(leads: Lead[], label: Labeler, resolve: Resolver, resolveEmp: EmpResolver): string {
-  return leadsIO.buildCsv(leads, { label, resolve, resolveEmp });
+
+export function getLeadImportColumns(urlTypes: string[]): ImportColumn[] {
+  return buildModuleIO(getLeadFields(urlTypes)).columns;
+}
+
+export function makeLeadRowMapper(resolve: Resolver, resolveEmp: EmpResolver, label: Labeler, urlTypes: string[]) {
+  const mapper = buildModuleIO(getLeadFields(urlTypes)).makeMapper({ resolve, resolveEmp, label });
+  return (raw: Record<string, string>): MappedRow => {
+    const res = mapper(raw);
+    const urls: { type: string; url: string }[] = [];
+    for (const t of urlTypes) {
+      const val = res.values[`url_${t}`];
+      if (val && typeof val === 'string' && val.trim()) {
+        urls.push({ type: t, url: val.trim() });
+      }
+      delete res.values[`url_${t}`];
+    }
+    res.values.urls = urls;
+    return res;
+  };
+}
+
+export function buildLeadsCsv(leads: Lead[], label: Labeler, resolve: Resolver, resolveEmp: EmpResolver, urlTypes: string[]): string {
+  return buildModuleIO(getLeadFields(urlTypes)).buildCsv(leads, { label, resolve, resolveEmp });
 }
 
 /* ============================= PROJECTS SCHEMA =========================== */
@@ -224,34 +245,56 @@ const techStackField: FieldSpec<Project> = {
   },
 };
 
-const projectFields: FieldSpec<Project>[] = [
-  textField('project_no', 'Project No', (r) => r.project_no ?? '', { hint: 'Auto-generated if blank', aliases: ['project number'] }),
-  textField('project_name', 'Project', (r) => r.project_name, { required: true, min: 2, max: 150, hint: 'Project name (required)', example: 'Acme CRM Platform', aliases: ['project name'] }),
-  textField('client', 'Client', (r) => r.client, { required: true, min: 1, max: 150, hint: 'Client name (required)', example: 'Acme Corp', aliases: ['client name'] }),
-  masterField('project_type', 'Type', 'project_type', (r) => r.project_type, { hint: 'Project type', example: 'CRM', aliases: ['project type'] }),
-  masterField('status', 'Status', 'project_status', (r) => r.status, { required: true, hint: 'Project status (required)', example: 'Active', aliases: ['project status'] }),
-  masterField('priority', 'Priority', 'priority', (r) => r.priority, { defaultValue: 'medium', hint: 'Low / Medium / High / Critical', example: 'High' }),
-  numberField('project_cost', 'Cost', (r) => Number(r.project_cost || 0), { min: 0, hint: 'Numeric cost (INR)', example: '120000', aliases: ['project cost', 'budget'] }),
-  numberField('progress', 'Progress', (r) => r.progress ?? 0, { min: 0, max: 100, int: true, hint: '0 - 100', example: '0' }),
-  employeeField('project_manager', 'Manager', (r) => r.manager?.employee_name ?? '', { aliases: ['project manager'] }),
-  employeeField('assigned_employee', 'Assigned', (r) => r.assigned_employee?.employee_name ?? '', { aliases: ['assigned employee', 'assignee'] }),
-  techStackField,
-  textField('lead_no', 'Lead Ref', (r) => r.lead_no ?? '', { max: 40, hint: 'Originating lead number', aliases: ['lead ref', 'lead no'] }),
-  dateField('start_date', 'Start Date', (r) => r.start_date, { aliases: ['start date'] }),
-  dateField('expected_delivery', 'Delivery Date', (r) => r.expected_delivery, { aliases: ['delivery date', 'expected delivery'], example: '' }),
-  textField('remarks', 'Remarks', (r) => r.remarks ?? '', { max: 4000, aliases: ['notes'] }),
-];
+function getProjectFields(urlTypes: string[]): FieldSpec<Project>[] {
+  const fields: FieldSpec<Project>[] = [
+    textField('project_name', 'Project', (r) => r.project_name, { required: true, min: 2, max: 150, hint: 'Project name (required)', example: 'Acme CRM Platform', aliases: ['project name'] }),
+    textField('client', 'Client', (r) => r.client, { required: true, min: 1, max: 150, hint: 'Client name (required)', example: 'Acme Corp', aliases: ['client name'] }),
+    masterField('project_type', 'Type', 'project_type', (r) => r.project_type, { hint: 'Project type', example: 'CRM', aliases: ['project type'] }),
+    masterField('status', 'Status', 'project_status', (r) => r.status, { required: true, hint: 'Project status (required)', example: 'Active', aliases: ['project status'] }),
+    masterField('priority', 'Priority', 'priority', (r) => r.priority, { defaultValue: 'medium', hint: 'Low / Medium / High / Critical', example: 'High' }),
+    numberField('project_cost', 'Cost', (r) => Number(r.project_cost || 0), { min: 0, hint: 'Numeric cost (INR)', example: '120000', aliases: ['project cost', 'budget'] }),
+    numberField('progress', 'Progress', (r) => r.progress ?? 0, { min: 0, max: 100, int: true, hint: '0 - 100', example: '0' }),
+    employeeField('project_manager', 'Manager', (r) => r.manager?.employee_name ?? '', { aliases: ['project manager'] }),
+    employeeField('assigned_employee', 'Assigned', (r) => r.assigned_employee?.employee_name ?? '', { aliases: ['assigned employee', 'assignee'] }),
+    techStackField,
+    textField('lead_no', 'Lead Ref', (r) => r.lead_no ?? '', { max: 40, hint: 'Originating lead number', aliases: ['lead ref', 'lead no'] }),
+    dateField('start_date', 'Start Date', (r) => r.start_date, { aliases: ['start date'] }),
+    dateField('expected_delivery', 'Delivery Date', (r) => r.expected_delivery, { aliases: ['delivery date', 'expected delivery'], example: '' }),
+    textField('remarks', 'Remarks', (r) => r.remarks ?? '', { max: 4000, aliases: ['notes'] }),
+  ];
 
-projectFields.find((f) => f.key === 'project_manager')!.payloadKey = 'project_manager_id';
-projectFields.find((f) => f.key === 'assigned_employee')!.payloadKey = 'assigned_employee_id';
+  for (const t of urlTypes) {
+    fields.push(textField(`url_${t}`, `${t} URL`, (r) => r.urls?.find((u) => u.type === t)?.url ?? '', { hint: `URL for ${t}`, aliases: [`${t} url`, t] }));
+  }
 
-const projectsIO = buildModuleIO(projectFields);
-export const projectImportColumns = projectsIO.columns;
-export function makeProjectRowMapper(resolve: Resolver, resolveEmp: EmpResolver, label: Labeler) {
-  return projectsIO.makeMapper({ resolve, resolveEmp, label });
+  fields.find((f) => f.key === 'project_manager')!.payloadKey = 'project_manager_id';
+  fields.find((f) => f.key === 'assigned_employee')!.payloadKey = 'assigned_employee_id';
+  return fields;
 }
-export function buildProjectsCsv(projects: Project[], label: Labeler, resolve: Resolver, resolveEmp: EmpResolver): string {
-  return projectsIO.buildCsv(projects, { label, resolve, resolveEmp });
+
+export function getProjectImportColumns(urlTypes: string[]): ImportColumn[] {
+  return buildModuleIO(getProjectFields(urlTypes)).columns;
+}
+
+export function makeProjectRowMapper(resolve: Resolver, resolveEmp: EmpResolver, label: Labeler, urlTypes: string[]) {
+  const mapper = buildModuleIO(getProjectFields(urlTypes)).makeMapper({ resolve, resolveEmp, label });
+  return (raw: Record<string, string>): MappedRow => {
+    const res = mapper(raw);
+    const urls: { type: string; url: string }[] = [];
+    for (const t of urlTypes) {
+      const val = res.values[`url_${t}`];
+      if (val && typeof val === 'string' && val.trim()) {
+        urls.push({ type: t, url: val.trim() });
+      }
+      delete res.values[`url_${t}`];
+    }
+    res.values.urls = urls;
+    return res;
+  };
+}
+
+export function buildProjectsCsv(projects: Project[], label: Labeler, resolve: Resolver, resolveEmp: EmpResolver, urlTypes: string[]): string {
+  return buildModuleIO(getProjectFields(urlTypes)).buildCsv(projects, { label, resolve, resolveEmp });
 }
 
 export type { MasterItem };

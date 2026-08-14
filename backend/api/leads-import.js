@@ -1,4 +1,4 @@
-import { supabase, preflight, fail, V } from './_lib.js';
+import { supabase, preflight, fail, V, sanitizeUrls } from './_lib.js';
 import { requirePermission } from './_permissions.js';
 import { nextLeadNo } from './_join.js';
 
@@ -147,6 +147,7 @@ function validateRow(body, ctx) {
     priority: prio,
     lead_received_date: V.date(body.lead_received_date, { field: 'Lead received date' }),
     next_follow_up: V.date(body.next_follow_up, { field: 'Follow-up date' }),
+    urls: sanitizeUrls(body.urls),
     remarks: V.str(body.remarks, { field: 'Remarks', max: 4000 }),
   };
 }
