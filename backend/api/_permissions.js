@@ -49,12 +49,16 @@ export async function getEffectivePermissions(user) {
   // Find the employee linked to this auth account (by email).
   const { data: emp } = await supabase
     .from('crm_employees')
-    .select('id, role, status')
+    .select('id, role, status, deleted_at')
     .ilike('email', email)
-    .is('deleted_at', null)
     .maybeSingle();
 
-  // Owner / bootstrap accounts that aren't tied to an employee are admins.
+  if (emp && emp.deleted_at) {
+    // If the employee was soft-deleted, immediately revoke all access
+    return { isAdmin: false, permissions: [], employee: null, role: null };
+  }
+
+  // Owner / bootstrap accounts that aren't tied to an employee at all are admins.
   if (!emp) {
     return { isAdmin: true, permissions: ALL_PERMISSIONS, employee: null, role: null };
   }

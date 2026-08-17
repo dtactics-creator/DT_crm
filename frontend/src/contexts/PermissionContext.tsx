@@ -32,8 +32,9 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [roleName, setRoleName] = useState<string | null>(null);
 
+  const userId = user?.id;
   const load = useCallback(async () => {
-    if (!user) { setPermissions([]); setIsAdmin(false); setRoleName(null); setLoading(false); return; }
+    if (!userId) { setPermissions([]); setIsAdmin(false); setRoleName(null); setLoading(false); return; }
     setLoading(true);
     try {
       const me = await api.get<MeResponse>('/api/me');
@@ -47,7 +48,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     if (authLoading) return;
