@@ -1,3 +1,3 @@
-* Customer,Company,Email,Secondary Email,Phone,Telephone,Alt Phone,* Source,* Status,Priority,Project Type,Budget,Source Person,Sales Manager,Assigned Employee,Received Date,Follow-up Date,Remarks,Website URL,LinkedIn URL
-"Acme Corp","Acme Inc.","john@acme.com","jane@acme.com","+1 555-0100","+1 555-0101","+1 555-0102","Website","New","High","CRM","50000","John Doe","Admin User","Admin User","14/08/26","20/08/26","Interested in a full CRM implementation.","https://acme.com","https://linkedin.com/company/acme"
-"Minimal Lead",,,,,,,,"Referral","New",,,,,,,,,,
+* Customer,Company,Email,Secondary Email,Phone,Telephone,Alt Phone,* Source,* Status,Priority,Project Type,Budget,Source Person,Sales Manager,Assigned Employee,Received Date,Follow-up Date,Remarks,Address,Website URL,LinkedIn URL
+"Acme Corp","Acme Inc.","john@acme.com","jane@acme.com","+1 555-0100","+1 555-0101","+1 555-0102","Website","New","High","CRM","50000","John Doe",,,"14/08/26","20/08/26","Interested in a full CRM implementation.","123 Tech Lane","https://acme.com","https://linkedin.com/company/acme"
+"Minimal Lead",,,,,,,"Website","New",,,,,,,,,,,,

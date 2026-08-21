@@ -4,7 +4,7 @@ import { supabase } from './_lib.js';
 export async function employeeMap() {
   const { data, error } = await supabase
     .from('crm_employees')
-    .select('id, employee_name, email, role, status, is_manager')
+    .select('id, employee_name, email, role, status')
     .is('deleted_at', null);
   if (error) throw error;
   const map = {};
@@ -26,39 +26,45 @@ export async function leadMap() {
 // Generate the next lead number in the format YY-LD-001.
 // The sequence resets each calendar year (based on lead_no prefix).
 export async function nextLeadNo() {
-  const yy = String(new Date().getFullYear()).slice(-2);
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yymm = `${yy}${mm}`;
   const { data, error } = await supabase
     .from('dt_leads3')
     .select('lead_no')
-    .like('lead_no', `${yy}-LD-%`)
+    .like('lead_no', `${yymm}%`)
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) throw error;
   let max = 0;
   for (const row of data || []) {
-    const m = String(row.lead_no || '').match(/^\d{2}-LD-(\d+)$/);
+    const m = String(row.lead_no || '').match(new RegExp(`^${yymm}(\\d+)$`));
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
-  return `${yy}-LD-${String(max + 1).padStart(3, '0')}`;
+  return `${yymm}${String(max + 1).padStart(3, '0')}`;
 }
 
 // Generate the next project number in the format YY-PRJ-001.
 // The sequence resets each calendar year (based on project_no prefix).
 export async function nextProjectNo() {
-  const yy = String(new Date().getFullYear()).slice(-2);
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yymm = `${yy}${mm}`;
   const { data, error } = await supabase
     .from('dt_projects')
     .select('project_no')
-    .like('project_no', `${yy}-PRJ-%`)
+    .like('project_no', `${yymm}PJ%`)
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) throw error;
   let max = 0;
   for (const row of data || []) {
-    const m = String(row.project_no || '').match(/^\d{2}-PRJ-(\d+)$/);
+    const m = String(row.project_no || '').match(new RegExp(`^${yymm}PJ(\\d+)$`));
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
-  return `${yy}-PRJ-${String(max + 1).padStart(3, '0')}`;
+  return `${yymm}PJ${String(max + 1).padStart(3, '0')}`;
 }
 
 // Generate the next sequential document number, e.g. LD-1001 or PRJ-2001.

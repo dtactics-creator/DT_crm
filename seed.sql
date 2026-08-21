@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS crm_employees (
     email TEXT NOT NULL,
     password_hash TEXT,
     status TEXT DEFAULT 'active',
-    is_manager BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMP WITH TIME ZONE,
     deleted_at TIMESTAMP WITH TIME ZONE
@@ -99,6 +98,7 @@ CREATE TABLE IF NOT EXISTS dt_leads3 (
     lead_received_date DATE,
     next_follow_up DATE,
     urls JSONB DEFAULT '[]',
+    address TEXT,
     remarks TEXT,
     converted_project_id UUID,
     converted_at TIMESTAMP WITH TIME ZONE,
@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS dt_projects (
     progress NUMERIC DEFAULT 0,
     start_date DATE,
     expected_delivery DATE,
+    next_follow_up DATE,
     remarks TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMP WITH TIME ZONE,
@@ -148,9 +149,13 @@ CREATE TABLE IF NOT EXISTS dt_templates (
 -- 0.5. ALTER EXISTING TABLES TO ADD MISSING COLUMNS
 -- ============================================================================
 ALTER TABLE crm_employees ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE dt_projects ADD COLUMN IF NOT EXISTS next_follow_up DATE;
 
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS tertiary_phone TEXT;
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS secondary_email TEXT;
+ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS industry TEXT;
+ALTER TABLE dt_projects ADD COLUMN IF NOT EXISTS industry TEXT;
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS converted_project_id UUID REFERENCES dt_projects(id);
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP WITH TIME ZONE;
 
@@ -300,6 +305,11 @@ INSERT INTO masters (category, label, value, color, sort_order, is_active) VALUE
   ('template_category','Billing','billing','#ef4444',5,true),
   ('template_category','General','general','#64748b',6,true);
 
+-- Role Types
+INSERT INTO masters (category, label, value, color, sort_order, is_active) VALUES
+  ('role_type','Sales','sales','#3366ff',1,true),
+  ('role_type','Developer','developer','#8b5cf6',2,true);
+
 -- ---------------------------------------------------------------------------
 -- 2. ROLES (dt_roles2) — sales + developer, plus an Administrator
 -- ---------------------------------------------------------------------------
@@ -408,8 +418,8 @@ INSERT INTO dt_role_permissions (role_id, permission) VALUES
 -- 4. EMPLOYEES (crm_employees)
 --    `role` MUST match a dt_roles2.name so permissions resolve.
 -- ---------------------------------------------------------------------------
-INSERT INTO crm_employees (id, employee_name, role, phone, email, password_hash, status, is_manager) VALUES
-  ('b0000000-0000-0000-0000-000000000001','Admin User','Administrator','+1 415 555 0100','admin@dtactics.io', crypt('password123', gen_salt('bf')), 'active', true);
+INSERT INTO crm_employees (id, employee_name, role, phone, email, password_hash, status) VALUES
+  ('b0000000-0000-0000-0000-000000000001','Admin User','Administrator','+1 415 555 0100','admin@dtactics.io', crypt('password123', gen_salt('bf')), 'active');
   
 
 -- ---------------------------------------------------------------------------
@@ -420,47 +430,47 @@ INSERT INTO crm_employees (id, employee_name, role, phone, email, password_hash,
 INSERT INTO dt_leads3
   (id, lead_no, customer_name, company, sales_manager_id, assigned_employee_id, source_person,
    primary_phone, secondary_phone, primary_email, project_type, source, budget, status, priority,
-   lead_received_date, next_follow_up, remarks)
+   lead_received_date, next_follow_up, remarks, address)
 VALUES
   ('c0000000-0000-0000-0000-000000000001','26-LD-001','Marcus Thompson','Northwind Analytics',
    'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Referral - Nikhil Rao',
    '+1 212 555 0101',NULL,'marcus@northwind.io','dashboard','website',85000,'proposal_sent','high',
-   '2026-01-05 09:00:00+00','2026-02-20 10:00:00+00','Interested in a full analytics dashboard rebuild.'),
+   '2026-01-05 09:00:00+00','2026-02-20 10:00:00+00','Interested in a full analytics dashboard rebuild.', '123 Analytics Way, NY'),
 
   ('c0000000-0000-0000-0000-000000000002','26-LD-002','Isabella Ferrari','Meridian Finance',
    'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Priya Nair',
    '+1 312 555 0122',NULL,'isabella@meridianfin.com','erp','referral',210000,'negotiation','critical',
-   '2026-01-10 11:45:00+00','2026-02-15 14:30:00+00','Proposal sent for ERP modernization. Strong intent.'),
+   '2026-01-10 11:45:00+00','2026-02-15 14:30:00+00','Proposal sent for ERP modernization. Strong intent.', '45 Finance St, Chicago'),
 
   ('c0000000-0000-0000-0000-000000000003','26-LD-003','James Whitfield','Apex Health Systems',
    'b0000000-0000-0000-0000-000000000001',NULL,NULL,
    '+1 617 555 0143',NULL,'jwhitfield@apexhealth.org','hospital_website','linkedin',64000,'contacted','medium',
-   '2026-01-12 08:30:00+00','2026-02-22 09:00:00+00','Exploring a HIPAA-compliant patient portal.'),
+   '2026-01-12 08:30:00+00','2026-02-22 09:00:00+00','Exploring a HIPAA-compliant patient portal.', '100 Health Ave, Boston'),
 
   ('c0000000-0000-0000-0000-000000000004','26-LD-004','Chloe Bennett','Urban Retail Co',
    'b0000000-0000-0000-0000-000000000001',NULL,NULL,
    '+1 213 555 0164',NULL,'chloe@urbanretail.com','ecommerce_website','google',32000,'new','low',
-   '2026-01-18 15:20:00+00','2026-02-18 13:00:00+00','Inbound from ad campaign. Needs an e-commerce revamp.'),
+   '2026-01-18 15:20:00+00','2026-02-18 13:00:00+00','Inbound from ad campaign. Needs an e-commerce revamp.', '50 Retail Blvd, LA'),
 
   ('c0000000-0000-0000-0000-000000000005','26-LD-005','Rohan Gupta','Skyline Logistics',
    'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Aarav Mehta',
    '+1 469 555 0175',NULL,'rohan@skylinelog.com','automation','walk_in',148000,'won','high',
-   '2025-12-10 10:00:00+00',NULL,'Closed! Fleet tracking + route optimization platform.'),
+   '2025-12-10 10:00:00+00',NULL,'Closed! Fleet tracking + route optimization platform.', '88 Logistics Rd, Dallas'),
 
   ('c0000000-0000-0000-0000-000000000006','26-LD-006','Olivia Martins','BrightEdu Group',
    'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','Priya Nair',
    '+1 305 555 0186',NULL,'olivia@brightedu.com','lms','referral',96000,'negotiation','high',
-   '2025-12-28 09:40:00+00','2026-02-16 11:00:00+00','Negotiating LMS platform scope and support tier.'),
+   '2025-12-28 09:40:00+00','2026-02-16 11:00:00+00','Negotiating LMS platform scope and support tier.', '200 Education Center, Miami'),
 
   ('c0000000-0000-0000-0000-000000000007','26-LD-007','Ava Robinson','Coastal Bank',
    'b0000000-0000-0000-0000-000000000001','b0000000-0000-0000-0000-000000000001','David Chen',
    '+1 786 555 0108',NULL,'ava@coastalbank.com','saas','referral',320000,'won','critical',
-   '2025-11-22 09:00:00+00',NULL,'Multi-year SaaS platform engagement signed.'),
+   '2025-11-22 09:00:00+00',NULL,'Multi-year SaaS platform engagement signed.', '75 Banking District, SF'),
 
   ('c0000000-0000-0000-0000-000000000008','26-LD-008','Grace Sullivan','PureLeaf Organics',
    'b0000000-0000-0000-0000-000000000001',NULL,NULL,
    '+1 720 555 0130',NULL,'grace@pureleaf.com','landing_page','instagram',12000,'lost','low',
-   '2025-12-05 10:15:00+00',NULL,'Went with a cheaper freelancer. Keep warm.');
+   '2025-12-05 10:15:00+00',NULL,'Went with a cheaper freelancer. Keep warm.', '10 Organic Lane, Denver');
 
 -- ---------------------------------------------------------------------------
 -- 6. PROJECTS (dt_projects)

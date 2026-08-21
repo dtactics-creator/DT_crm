@@ -82,6 +82,7 @@ function validate(body) {
     lead_id: V.uuid(body.lead_id),
     lead_no: V.str(body.lead_no, { field: 'Lead reference', max: 40 }),
     project_type: V.str(body.project_type, { field: 'Project type' }),
+    industry: V.str(body.industry, { field: 'Industry' }),
     project_manager_id: V.uuid(body.project_manager_id),
     assigned_employee_id: V.uuid(body.assigned_employee_id),
     technology_stack: Array.isArray(body.technology_stack) ? body.technology_stack : [],
@@ -92,6 +93,7 @@ function validate(body) {
     progress: V.num(body.progress, { field: 'Progress', min: 0, max: 100, def: 0 }),
     start_date: V.date(body.start_date, { field: 'Start date' }),
     expected_delivery: V.date(body.expected_delivery, { field: 'Expected delivery' }),
+    next_follow_up: V.date(body.next_follow_up, { field: 'Next follow-up' }),
     remarks: V.str(body.remarks, { field: 'Remarks', max: 4000 }),
   };
 }

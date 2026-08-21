@@ -33,6 +33,7 @@ export default async function handler(req, res) {
       lead_id: lead.id,
       lead_no: lead.lead_no,
       project_type: lead.project_type || null,
+      industry: lead.industry || null,
       project_manager_id: V.uuid(req.body.project_manager_id),
       assigned_employee_id: lead.assigned_employee_id || lead.sales_manager_id || V.uuid(req.body.assigned_employee_id),
       technology_stack: Array.isArray(req.body.technology_stack) ? req.body.technology_stack : [],
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
     if (projErr) throw projErr;
 
     const { error: updErr } = await supabase.from('dt_leads3')
-      .update({ status: 'won', converted_project_id: project.id, converted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .update({ converted_project_id: project.id, converted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', lead.id);
     if (updErr) throw updErr;
 

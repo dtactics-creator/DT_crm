@@ -82,6 +82,7 @@ function validate(body) {
     primary_email: V.email(body.primary_email, { field: 'Primary email' }),
     secondary_email: V.email(body.secondary_email, { field: 'Secondary email' }),
     project_type: V.str(body.project_type, { field: 'Project type' }),
+    industry: V.str(body.industry, { field: 'Industry' }),
     source: V.str(body.source, { field: 'Source', required: true }),
     budget: V.num(body.budget, { field: 'Budget', min: 0, def: 0 }),
     status: V.str(body.status, { field: 'Status', required: true }),
@@ -89,6 +90,7 @@ function validate(body) {
     lead_received_date: V.date(body.lead_received_date, { field: 'Lead received date' }),
     next_follow_up: V.date(body.next_follow_up, { field: 'Follow-up date' }),
     urls: sanitizeUrls(body.urls),
+    address: V.str(body.address, { field: 'Address', max: 1000 }),
     remarks: V.str(body.remarks, { field: 'Remarks', max: 4000 }),
   };
 }

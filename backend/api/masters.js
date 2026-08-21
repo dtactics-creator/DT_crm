@@ -18,6 +18,13 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const payload = validate(req.body);
+      
+      const { count } = await supabase.from('masters').select('*', { count: 'exact', head: true })
+        .eq('category', payload.category)
+        .eq('sort_order', payload.sort_order)
+        .is('deleted_at', null);
+      if (count > 0) return fail(res, 400, 'Sort order must be unique within this category');
+
       const { data, error } = await supabase.from('masters').insert(payload).select().single();
       if (error) throw error;
       return res.status(201).json(data);
@@ -27,6 +34,14 @@ export default async function handler(req, res) {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Master id is required');
       const payload = validate(req.body);
+      
+      const { count } = await supabase.from('masters').select('*', { count: 'exact', head: true })
+        .eq('category', payload.category)
+        .eq('sort_order', payload.sort_order)
+        .neq('id', id)
+        .is('deleted_at', null);
+      if (count > 0) return fail(res, 400, 'Sort order must be unique within this category');
+
       payload.updated_at = new Date().toISOString();
       const { data, error } = await supabase.from('masters').update(payload).eq('id', id).select().single();
       if (error) throw error;

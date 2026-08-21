@@ -8,9 +8,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const managersOnly = req.query?.managers === '1';
       let q = supabase.from('crm_employees').select('*').is('deleted_at', null);
-      if (managersOnly) q = q.eq('is_manager', true);
       const { data, error } = await q.order('created_at', { ascending: false });
       if (error) throw error;
       // Never leak whether a login exists beyond a boolean-ish hint; strip nothing sensitive here
@@ -123,6 +121,5 @@ function validate(body) {
     phone: V.str(body.phone, { field: 'Phone', max: 40 }),
     email: V.email(body.email, { field: 'Email', required: true }),
     status: V.str(body.status, { field: 'Status' }) || 'active',
-    is_manager: body.is_manager === undefined ? false : Boolean(body.is_manager),
   };
 }

@@ -1,3 +1,3 @@
-* Project,* Client,Type,* Status,Priority,Cost,Progress,Manager,Assigned,Tech Stack,Lead Ref,Start Date,Delivery Date,Remarks,Website URL,LinkedIn URL
-"Full CRM Rewrite","Acme Corp","CRM","Active","High","120000","10","Admin User","Admin User","React, Node.js","LD-0001","14/08/26","01/12/26","Initial phase started. Needs frequent check-ins.","https://crm.acme.com","https://linkedin.com/company/acme"
-"Minimal Project","Startup Inc",,"Planned",,,,,,,,,,,,
+* Project,* Client,Type,* Status,Priority,Budget,Progress,Manager,Assigned,Tech Stack,Lead Ref,Start Date,Delivery Date,Remarks,Website URL,LinkedIn URL
+"Full CRM Rewrite","Acme Corp","CRM","Active","High","120000","10",,,"React, Node.js","LD-0001","14/08/26","01/12/26","Initial phase started. Needs frequent check-ins.","https://crm.acme.com","https://linkedin.com/company/acme"
+"Minimal Project","Startup Inc",,"Active",,,,,,,,,,,,

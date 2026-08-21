@@ -24,7 +24,7 @@ export const PERMISSION_CATALOG = [
 
 const ACTION_LABELS = {
   view: 'View', create: 'Create', edit: 'Edit', delete: 'Delete', convert: 'Convert',
-  import: 'Import', export: 'Export', view_budget: 'View Budget', view_cost: 'View Cost',
+  import: 'Import', export: 'Export', view_budget: 'View Budget', view_cost: 'View Budget',
 };
 
 export function actionLabel(a) { return ACTION_LABELS[a] || a; }

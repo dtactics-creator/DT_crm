@@ -149,5 +149,6 @@ function validateRow(body, ctx) {
     next_follow_up: V.date(body.next_follow_up, { field: 'Follow-up date' }),
     urls: sanitizeUrls(body.urls),
     remarks: V.str(body.remarks, { field: 'Remarks', max: 4000 }),
+    address: V.str(body.address, { field: 'Address', max: 1000 }),
   };
 }
