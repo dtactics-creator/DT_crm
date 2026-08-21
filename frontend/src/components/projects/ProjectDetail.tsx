@@ -39,6 +39,7 @@ export default function ProjectDetail({ open, onClose, project, masters, onEdit,
   return (
     <Drawer
       open={open} onClose={onClose}
+      width="max-w-[70%]"
       title={project.project_name}
       subtitle={`${project.project_no || 'Project'} · ${project.client}`}
       footer={
