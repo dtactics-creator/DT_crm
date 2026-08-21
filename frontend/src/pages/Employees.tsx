@@ -18,8 +18,8 @@ import { collect, required, minLen, maxLen, email, phone, password } from '../li
 import { cn } from '../lib/utils';
 import type { Employee } from '../types';
 
-interface FormState { id?: string; employee_name: string; role: string; phone: string; email: string; password: string; status: string; is_manager: boolean; }
-const empty: FormState = { employee_name: '', role: '', phone: '', email: '', password: '', status: 'active', is_manager: false };
+interface FormState { id?: string; employee_name: string; role: string; phone: string; email: string; password: string; status: string; }
+const empty: FormState = { employee_name: '', role: '', phone: '', email: '', password: '', status: 'active' };
 
 export default function Employees() {
   const { can } = usePermissions();
@@ -43,14 +43,12 @@ export default function Employees() {
 
   const filtered = useMemo(() => (employees || []).filter((e) => {
     const q = search.toLowerCase();
-    const matchQ = !q || [e.employee_name, e.email, e.role].some((x) => x.toLowerCase().includes(q));
-    const matchRole = !roleFilter || (roleFilter === 'manager' ? e.is_manager : !e.is_manager);
-    return matchQ && matchRole;
-  }), [employees, search, roleFilter]);
+    return !q || [e.employee_name, e.email, e.role].some((x) => x.toLowerCase().includes(q));
+  }), [employees, search]);
 
   const openNew = () => { setForm(empty); setEditing(false); setErrors({}); setModalOpen(true); };
   const openEdit = (e: Employee) => {
-    setForm({ id: e.id, employee_name: e.employee_name, role: e.role, phone: e.phone ?? '', email: e.email, password: '', status: e.status, is_manager: e.is_manager });
+    setForm({ id: e.id, employee_name: e.employee_name, role: e.role, phone: e.phone ?? '', email: e.email, password: '', status: e.status });
     setEditing(true); setErrors({}); setModalOpen(true);
   };
 
@@ -72,7 +70,7 @@ export default function Employees() {
     const payload = {
       ...(form.id ? { id: form.id } : {}),
       employee_name: form.employee_name, role: form.role, phone: form.phone || null,
-      email: form.email, status: form.status, is_manager: form.is_manager,
+      email: form.email, status: form.status,
       ...(form.password ? { password: form.password } : {}),
     };
     try {
@@ -93,10 +91,6 @@ export default function Employees() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search team members…" className="pl-10" />
-        </div>
-        <div className="w-48">
-          <SearchableSelect value={roleFilter} onChange={setRoleFilter} placeholder="All roles"
-            options={[{ value: '', label: 'All roles' }, { value: 'manager', label: 'Project Managers' }, { value: 'employee', label: 'Employees' }]} />
         </div>
       </div>
 
@@ -126,11 +120,6 @@ export default function Employees() {
               </div>
 
               <div className="flex items-center gap-2 mt-4">
-                {e.is_manager && (
-                  <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold px-2 py-0.5 rounded-full text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300">
-                    <ShieldCheck className="h-3 w-3" /> Manager
-                  </span>
-                )}
                 <span className={cn('inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2 py-0.5 rounded-full',
                   e.status === 'active' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10' : 'text-slate-500 bg-slate-100 dark:bg-slate-500/10')}>
                   <span className={cn('h-1.5 w-1.5 rounded-full', e.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400')} />
@@ -174,9 +163,6 @@ export default function Employees() {
             </Field>
             <Field label="Status">
               <SearchableSelect value={form.status} onChange={(v) => set('status', v)} options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
-            </Field>
-            <Field label="Type">
-              <SearchableSelect value={form.is_manager ? 'manager' : 'employee'} onChange={(v) => set('is_manager', v === 'manager')} options={[{ value: 'employee', label: 'Employee' }, { value: 'manager', label: 'Project Manager' }]} />
             </Field>
           </div>
         </div>

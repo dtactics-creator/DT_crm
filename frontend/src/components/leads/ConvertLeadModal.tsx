@@ -44,7 +44,7 @@ export default function ConvertLeadModal({ open, onClose, onConfirm, lead, maste
 
   const confirm = () => {
     const nameErr = required(projectName, 'Project name') || minLen(projectName, 2, 'Project name') || maxLen(projectName, 150, 'Project name');
-    const costErr = nonNegativeNumber(cost, 'Project cost');
+    const costErr = nonNegativeNumber(cost, 'Budget');
     const dateErr = dateOrder(start, delivery, 'Expected delivery');
     const msg = nameErr || costErr || dateErr;
     if (msg) { setError(msg); return; }
@@ -84,7 +84,7 @@ export default function ConvertLeadModal({ open, onClose, onConfirm, lead, maste
             <SearchableSelect value={managerId} onChange={setManagerId} options={managerOpts} placeholder="Assign manager" clearable />
           </Field>
           {can('projects.view_cost') && (
-            <Field label="Project cost (₹)">
+            <Field label="Budget (₹)">
               <Input type="number" min="0" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="50000" />
             </Field>
           )}

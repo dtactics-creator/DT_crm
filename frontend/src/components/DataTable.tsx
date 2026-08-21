@@ -26,6 +26,8 @@ export default function DataTable<T>({ data, columns, rowKey, onRowClick, pageSi
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
   const [page, setPage] = useState(0);
 
+  const [internalPageSize, setInternalPageSize] = useState(pageSize);
+
   const sorted = useMemo(() => {
     if (!sort) return data;
     const col = columns.find((c) => c.key === sort.key);
@@ -39,9 +41,9 @@ export default function DataTable<T>({ data, columns, rowKey, onRowClick, pageSi
     return arr;
   }, [data, sort, columns]);
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / internalPageSize));
   const current = Math.min(page, totalPages - 1);
-  const rows = sorted.slice(current * pageSize, current * pageSize + pageSize);
+  const rows = sorted.slice(current * internalPageSize, current * internalPageSize + internalPageSize);
 
   const toggleSort = (key: string) => {
     setPage(0);
@@ -50,6 +52,11 @@ export default function DataTable<T>({ data, columns, rowKey, onRowClick, pageSi
       if (s.dir === 'asc') return { key, dir: 'desc' };
       return null;
     });
+  };
+
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setInternalPageSize(Number(e.target.value));
+    setPage(0);
   };
 
   if (data.length === 0 && emptyState) return <>{emptyState}</>;
@@ -84,7 +91,7 @@ export default function DataTable<T>({ data, columns, rowKey, onRowClick, pageSi
                 className={cn('border-b border-app last:border-0 transition-colors', onRowClick && 'cursor-pointer hover:bg-surface-2')}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className={cn('px-4 py-3.5 first:pl-5 last:pr-5 align-middle text-[13.5px] text-base-fg', col.className)}>
+                  <td key={col.key} className={cn('px-4 py-3.5 first:pl-5 last:pr-5 align-middle text-[13.5px] text-base-fg max-w-[200px] xl:max-w-[300px] truncate', col.className)}>
                     {col.render(row)}
                   </td>
                 ))}
@@ -94,19 +101,34 @@ export default function DataTable<T>({ data, columns, rowKey, onRowClick, pageSi
         </table>
       </div>
 
-      {sorted.length > pageSize && (
-        <div className="flex items-center justify-between gap-4 px-5 py-3.5 border-t border-app">
-          <p className="text-[12.5px] text-muted-fg">
-            Showing <span className="font-semibold text-base-fg">{current * pageSize + 1}–{Math.min((current + 1) * pageSize, sorted.length)}</span> of{' '}
-            <span className="font-semibold text-base-fg">{sorted.length}</span>
-          </p>
+      {sorted.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-3.5 border-t border-app">
+          <div className="flex items-center gap-4">
+            <p className="text-[12.5px] text-muted-fg">
+              Showing <span className="font-semibold text-base-fg">{sorted.length > 0 ? current * internalPageSize + 1 : 0}–{Math.min((current + 1) * internalPageSize, sorted.length)}</span> of{' '}
+              <span className="font-semibold text-base-fg">{sorted.length}</span>
+            </p>
+            <div className="flex items-center gap-1.5 border-l border-app pl-4">
+              <span className="text-[12.5px] text-muted-fg">Rows per page:</span>
+              <select
+                value={internalPageSize}
+                onChange={handlePageSizeChange}
+                className="bg-surface border border-app rounded px-1.5 py-1 text-[12.5px] text-base-fg focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
           <div className="flex items-center gap-1.5">
             <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={current === 0}
               className="h-8 w-8 rounded-lg border border-app flex items-center justify-center text-muted-fg hover:bg-surface-2 disabled:opacity-40 disabled:pointer-events-none transition-colors">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="text-[12.5px] font-semibold text-base-fg tabular px-2">{current + 1} / {totalPages}</span>
-            <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={current >= totalPages - 1}
+            <span className="text-[12.5px] font-semibold text-base-fg tabular px-2">{totalPages > 0 ? current + 1 : 0} / {totalPages}</span>
+            <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={current >= totalPages - 1 || totalPages === 0}
               className="h-8 w-8 rounded-lg border border-app flex items-center justify-center text-muted-fg hover:bg-surface-2 disabled:opacity-40 disabled:pointer-events-none transition-colors">
               <ChevronRight className="h-4 w-4" />
             </button>

@@ -17,9 +17,10 @@ import { SearchableSelect } from '../components/ui/SearchableSelect';
 import LeadForm, { type LeadFormValues } from '../components/leads/LeadForm';
 import LeadDetail from '../components/leads/LeadDetail';
 import ConvertLeadModal from '../components/leads/ConvertLeadModal';
+import NextFollowUpModal from '../components/ui/NextFollowUpModal';
 import { useLeads } from '../hooks/useLeads';
-import { useEmployees, useManagers } from '../hooks/useEmployees';
-import { useRolesByType } from '../hooks/useRoles';
+import { useEmployees } from '../hooks/useEmployees';
+
 import { useMasters, makeLookup, makeResolver, toOptions } from '../hooks/useMasters';
 import { useCrud } from '../hooks/useCrud';
 import { useConvertLead } from '../hooks/useConvertLead';
@@ -38,21 +39,14 @@ export default function Leads() {
   const [params, setParams] = useSearchParams();
   const { data: leads, isLoading } = useLeads();
   const { data: employees } = useEmployees();
-  const { data: managers } = useManagers();
-  const { data: salesRoles } = useRolesByType('sales');
-  const { data: devRoles } = useRolesByType('developer');
+
   const { data: masters } = useMasters();
   const lookup = makeLookup(masters);
   const resolve = makeResolver(masters);
   const { create, update, remove } = useCrud('leads', ['leads']);
   const convert = useConvertLead();
 
-  // Only employees holding a sales-type role can be assigned to leads.
-  const salesRoleNames = new Set((salesRoles || []).map((r) => r.name.toLowerCase()));
-  const salesEmployees = (employees || []).filter((e) => salesRoleNames.has(e.role.toLowerCase()));
-  // Project managers assigned on conversion must be developer-type.
-  const devRoleNames = new Set((devRoles || []).map((r) => r.name.toLowerCase()));
-  const devManagers = (managers || []).filter((e) => devRoleNames.has(e.role.toLowerCase()));
+
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -62,6 +56,7 @@ export default function Leads() {
   const [detail, setDetail] = useState<Lead | null>(null);
   const [toDelete, setToDelete] = useState<Lead | null>(null);
   const [toConvert, setToConvert] = useState<Lead | null>(null);
+  const [toFollowUp, setToFollowUp] = useState<Lead | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const urlTypes = useMemo(() => (masters || []).filter(m => m.category === 'url_type').map(m => m.value), [masters]);
@@ -115,10 +110,10 @@ export default function Leads() {
     primary_phone: v.primary_phone || null, secondary_phone: v.secondary_phone || null,
     tertiary_phone: v.tertiary_phone || null,
     primary_email: v.primary_email || null, secondary_email: v.secondary_email || null,
-    project_type: v.project_type || null, source: v.source,
+    project_type: v.project_type || null, industry: v.industry || null, source: v.source,
     budget: v.budget ? Number(v.budget) : 0, status: v.status, priority: v.priority,
-    lead_received_date: v.lead_received_date || null,
-    next_follow_up: v.next_follow_up || null, remarks: v.remarks || null,
+    lead_received_date: v.lead_received_date || null, urls: v.urls || [],
+    next_follow_up: v.next_follow_up || null, address: v.address || null, remarks: v.remarks || null,
   });
 
   const handleSubmit = async (v: LeadFormValues) => {
@@ -136,6 +131,36 @@ export default function Leads() {
   const handleConvert = async (data: Parameters<typeof convert.mutateAsync>[0]) => {
     await convert.mutateAsync(data);
     setToConvert(null); setDetail(null);
+  };
+
+  const handleNextFollowUp = async (data: { next_follow_up: string; remarks: string }) => {
+    if (!toFollowUp) return;
+    await update.mutateAsync({
+      id: toFollowUp.id,
+      lead_no: toFollowUp.lead_no,
+      customer_name: toFollowUp.customer_name,
+      company: toFollowUp.company,
+      sales_manager_id: toFollowUp.sales_manager_id,
+      assigned_employee_id: toFollowUp.assigned_employee_id,
+      source_person: toFollowUp.source_person,
+      primary_phone: toFollowUp.primary_phone,
+      secondary_phone: toFollowUp.secondary_phone,
+      tertiary_phone: toFollowUp.tertiary_phone,
+      primary_email: toFollowUp.primary_email,
+      secondary_email: toFollowUp.secondary_email,
+      project_type: toFollowUp.project_type,
+      industry: toFollowUp.industry,
+      source: toFollowUp.source,
+      budget: toFollowUp.budget,
+      status: toFollowUp.status,
+      priority: toFollowUp.priority,
+      lead_received_date: toFollowUp.lead_received_date,
+      urls: toFollowUp.urls || [],
+      address: toFollowUp.address,
+      next_follow_up: data.next_follow_up || null,
+      remarks: data.remarks || null,
+    });
+    setToFollowUp(null);
   };
 
   const columns: Column<Lead>[] = [
@@ -156,35 +181,27 @@ export default function Leads() {
       ),
     },
     {
-      key: 'phone', header: 'Phone Numbers',
+      key: 'phone', header: 'Phone & Email',
       render: (r) => {
         const phones = [r.primary_phone, r.secondary_phone, r.tertiary_phone].filter(Boolean) as string[];
-        if (phones.length === 0) return <span className="text-subtle-fg text-[12.5px]">—</span>;
-        return (
-          <div className="min-w-0">
-            <p className="text-[12.5px] text-base-fg truncate">{phones[0]}</p>
-            {phones.length > 1 && <p className="text-[11.5px] text-subtle-fg truncate">{phones.slice(1).join(' · ')}</p>}
-          </div>
-        );
-      },
-    },
-    {
-      key: 'email', header: 'Emails',
-      render: (r) => {
         const emails = [r.primary_email, r.secondary_email].filter(Boolean) as string[];
-        if (emails.length === 0) return <span className="text-subtle-fg text-[12.5px]">—</span>;
+        if (phones.length === 0 && emails.length === 0) return <span className="text-subtle-fg text-[12.5px]">—</span>;
+        
         return (
-          <div className="min-w-0 max-w-[200px]">
-            <p className="text-[12.5px] text-base-fg truncate">{emails[0]}</p>
+          <div className="min-w-0 max-w-[220px]">
+            {phones.length > 0 && <p className="text-[12.5px] text-base-fg truncate">{phones[0]}</p>}
+            {phones.length > 1 && <p className="text-[11.5px] text-subtle-fg truncate">{phones.slice(1).join(' · ')}</p>}
+            {emails.length > 0 && <p className={`text-[12px] truncate ${phones.length > 0 ? 'mt-0.5 text-muted-fg' : 'text-base-fg'}`}>{emails[0]}</p>}
             {emails.length > 1 && <p className="text-[11.5px] text-subtle-fg truncate">{emails[1]}</p>}
           </div>
         );
       },
     },
     { key: 'type', header: 'Project Type', sortValue: (r) => r.project_type ?? '', render: (r) => <span className="text-muted-fg">{lookup.label('project_type', r.project_type)}</span> },
+    { key: 'industry', header: 'Industry', sortValue: (r) => r.industry ?? '', render: (r) => <span className="text-muted-fg">{lookup.label('industry', r.industry)}</span> },
     { key: 'source', header: 'Source', sortValue: (r) => r.source, render: (r) => <Badge label={lookup.label('lead_source', r.source)} color={lookup.color('lead_source', r.source)} /> },
     {
-      key: 'manager', header: 'Lead cordinator', sortValue: (r) => r.sales_manager?.employee_name ?? '',
+      key: 'manager', header: 'Lead coordinator', sortValue: (r) => r.sales_manager?.employee_name ?? '',
       render: (r) => r.sales_manager ? (
         <div className="flex items-center gap-2"><Avatar name={r.sales_manager.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.sales_manager.employee_name}</span></div>
       ) : <span className="text-subtle-fg text-[12.5px]">Unassigned</span>,
@@ -250,7 +267,7 @@ export default function Leads() {
           <div className="flex items-center gap-2.5">
             <Filter className="h-4 w-4 text-subtle-fg hidden sm:block" />
             <div className="w-40"><SearchableSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: '', label: 'All statuses' }, ...toOptions(masters, 'lead_status')]} placeholder="All statuses" /></div>
-            <div className="w-40"><SearchableSelect value={sourceFilter} onChange={setSourceFilter} options={[{ value: '', label: 'All sources' }, ...toOptions(masters, 'lead_source')]} placeholder="All sources" /></div>
+            <div className="w-40"><SearchableSelect value={sourceFilter} onChange={setSourceFilter} options={[{ value: '', label: 'All sources' }, ...toOptions(masters, 'lead_source')]} placeholder="All sources" align="right" /></div>
           </div>
         </div>
 
@@ -270,14 +287,16 @@ export default function Leads() {
       </div>
 
       <LeadForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }} onSubmit={handleSubmit}
-        initial={editing} masters={masters} employees={salesEmployees} saving={create.isPending || update.isPending} />
+        initial={editing} masters={masters} employees={employees} saving={create.isPending || update.isPending} />
 
-      <LeadDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} lead={detail} masters={masters}
+      <LeadDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} lead={detail ? leads?.find(l => l.id === detail.id) || detail : null} masters={masters}
         onEdit={() => { setEditing(detail); setFormOpen(true); }} onDelete={() => setToDelete(detail)}
-        onConvert={() => setToConvert(detail)} />
+        onConvert={() => setToConvert(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
 
-      <ConvertLeadModal open={!!toConvert} onClose={() => setToConvert(null)} lead={toConvert} masters={masters} managers={devManagers}
+      <ConvertLeadModal open={!!toConvert} onClose={() => setToConvert(null)} lead={toConvert} masters={masters} managers={employees}
         saving={convert.isPending} onConfirm={(data) => handleConvert({ lead_id: toConvert!.id, ...data })} />
+
+      <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.customer_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
 
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={handleDelete}
         title="Delete lead" message={`Are you sure you want to delete ${toDelete?.customer_name}? This action can be reverted by an administrator.`}

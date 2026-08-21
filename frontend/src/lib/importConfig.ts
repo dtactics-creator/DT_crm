@@ -189,6 +189,7 @@ function getLeadFields(urlTypes: string[]): FieldSpec<Lead>[] {
     dateField('lead_received_date', 'Received Date', (r) => r.lead_received_date, { aliases: ['received date', 'lead received date'] }),
     dateField('next_follow_up', 'Follow-up Date', (r) => r.next_follow_up, { aliases: ['follow-up date', 'follow up date'], example: '' }),
     textField('remarks', 'Remarks', (r) => r.remarks ?? '', { max: 4000, aliases: ['notes'] }),
+    textField('address', 'Address', (r) => r.address ?? '', { max: 1000, aliases: ['location', 'street address'] }),
   ];
 
   for (const t of urlTypes) {
@@ -252,7 +253,7 @@ function getProjectFields(urlTypes: string[]): FieldSpec<Project>[] {
     masterField('project_type', 'Type', 'project_type', (r) => r.project_type, { hint: 'Project type', example: 'CRM', aliases: ['project type'] }),
     masterField('status', 'Status', 'project_status', (r) => r.status, { required: true, hint: 'Project status (required)', example: 'Active', aliases: ['project status'] }),
     masterField('priority', 'Priority', 'priority', (r) => r.priority, { defaultValue: 'medium', hint: 'Low / Medium / High / Critical', example: 'High' }),
-    numberField('project_cost', 'Cost', (r) => Number(r.project_cost || 0), { min: 0, hint: 'Numeric cost (INR)', example: '120000', aliases: ['project cost', 'budget'] }),
+    numberField('project_cost', 'Budget', (r) => Number(r.project_cost || 0), { min: 0, hint: 'Numeric budget (INR)', example: '120000', aliases: ['project cost', 'budget'] }),
     numberField('progress', 'Progress', (r) => r.progress ?? 0, { min: 0, max: 100, int: true, hint: '0 - 100', example: '0' }),
     employeeField('project_manager', 'Manager', (r) => r.manager?.employee_name ?? '', { aliases: ['project manager'] }),
     employeeField('assigned_employee', 'Assigned', (r) => r.assigned_employee?.employee_name ?? '', { aliases: ['assigned employee', 'assignee'] }),

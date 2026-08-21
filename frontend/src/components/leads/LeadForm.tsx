@@ -18,16 +18,16 @@ export interface LeadFormValues {
   lead_no: string; customer_name: string; company: string;
   sales_manager_id: string; assigned_employee_id: string; source_person: string;
   primary_phone: string; secondary_phone: string; tertiary_phone: string; primary_email: string; secondary_email: string;
-  project_type: string; source: string; budget: string;
-  status: string; priority: string; lead_received_date: string; next_follow_up: string; remarks: string;
+  project_type: string; industry: string; source: string; budget: string;
+  status: string; priority: string; lead_received_date: string; address: string; remarks: string;
   urls: ProjectUrl[];
 }
 
 const empty: LeadFormValues = {
   lead_no: '', customer_name: '', company: '', sales_manager_id: '', assigned_employee_id: '', source_person: '',
   primary_phone: '', secondary_phone: '', tertiary_phone: '', primary_email: '', secondary_email: '',
-  project_type: '', source: '', budget: '', status: '', priority: 'medium',
-  lead_received_date: '', next_follow_up: '', remarks: '',
+  project_type: '', industry: '', source: '', budget: '', status: '', priority: 'medium',
+  lead_received_date: '', address: '', remarks: '',
   urls: [],
 };
 
@@ -60,6 +60,7 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
   const statusOpts = toOptions(masters, 'lead_status');
   const sourceOpts = toOptions(masters, 'lead_source');
   const typeOpts = toOptions(masters, 'project_type');
+  const industryOpts = toOptions(masters, 'industry');
   const priorityOpts = toOptions(masters, 'priority');
   const empOpts = (employees || []).filter((e) => e.status === 'active').map((e) => ({ value: e.id, label: e.employee_name, hint: e.role }));
 
@@ -74,10 +75,11 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
           primary_phone: initial.primary_phone ?? '', secondary_phone: initial.secondary_phone ?? '',
           tertiary_phone: initial.tertiary_phone ?? '',
           primary_email: initial.primary_email ?? '', secondary_email: initial.secondary_email ?? '',
-          project_type: initial.project_type ?? '', source: initial.source, budget: String(initial.budget ?? ''),
+          project_type: initial.project_type ?? '', industry: initial.industry ?? '', source: initial.source, budget: String(initial.budget ?? ''),
           status: initial.status, priority: initial.priority,
-          lead_received_date: toDateInput(initial.lead_received_date), next_follow_up: toDateInput(initial.next_follow_up),
+          lead_received_date: toDateInput(initial.lead_received_date),
           urls: Array.isArray(initial.urls) ? initial.urls : [],
+          address: initial.address ?? '',
           remarks: initial.remarks ?? '',
         });
       } else {
@@ -110,6 +112,7 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
       budget: nonNegativeNumber(v.budget, 'Budget'),
       source_person: maxLen(v.source_person, 120, 'Source person'),
       lead_received_date: notFutureDate(v.lead_received_date, 'Received date'),
+      address: maxLen(v.address, 1000, 'Address'),
       remarks: maxLen(v.remarks, 4000, 'Remarks'),
     });
 
@@ -162,7 +165,7 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
             <Field label="Company" error={errors.company}>
               <Input value={v.company} onChange={(e) => set('company', e.target.value)} invalid={!!errors.company} placeholder="Acme Inc." />
             </Field>
-            <Field label="Lead cordinator">
+            <Field label="Lead coordinator">
               <Input
                 value={initial ? ((allEmployees || []).find(e => e.id === v.sales_manager_id)?.employee_name || displayUserName) : displayUserName}
                 readOnly
@@ -197,6 +200,11 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
             <Field label="Secondary Email" error={errors.secondary_email}>
               <Input type="email" value={v.secondary_email} onChange={(e) => set('secondary_email', e.target.value)} invalid={!!errors.secondary_email} placeholder="hello@acme.com" />
             </Field>
+            <div className="sm:col-span-2">
+              <Field label="Address" error={errors.address}>
+                <Textarea value={v.address} onChange={(e) => set('address', e.target.value)} invalid={!!errors.address} placeholder="Enter full address…" />
+              </Field>
+            </div>
           </div>
         </section>
 
@@ -205,6 +213,9 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Project type">
               <SearchableSelect value={v.project_type} onChange={(x) => set('project_type', x)} options={typeOpts} placeholder="Select type" clearable />
+            </Field>
+            <Field label="Industry">
+              <SearchableSelect value={v.industry} onChange={(x) => set('industry', x)} options={industryOpts} placeholder="Select industry" clearable />
             </Field>
             <Field label="Lead source" required error={errors.source}>
               <SearchableSelect value={v.source} onChange={(x) => set('source', x)} options={sourceOpts} placeholder="Select source" invalid={!!errors.source} />
@@ -217,9 +228,6 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
             </Field>
             <Field label="Budget (₹)" error={errors.budget}>
               <Input type="number" min="0" value={v.budget} onChange={(e) => set('budget', e.target.value)} invalid={!!errors.budget} placeholder="500000" />
-            </Field>
-            <Field label="Next follow-up">
-              <Input type="date" value={v.next_follow_up} onChange={(e) => set('next_follow_up', e.target.value)} />
             </Field>
           </div>
         </section>
@@ -270,8 +278,8 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
           )}
         </section>
 
-        <Field label="Remarks">
-          <Textarea value={v.remarks} onChange={(e) => set('remarks', e.target.value)} placeholder="Add context about this lead…" />
+        <Field label="Remarks" error={errors.remarks}>
+          <Textarea value={v.remarks} onChange={(e) => set('remarks', e.target.value)} invalid={!!errors.remarks} placeholder="Add context about this lead…" />
         </Field>
       </div>
     </Drawer>

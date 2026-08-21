@@ -11,14 +11,17 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../components/ui/Toast';
 import supabase from '../lib/supabase';
 import { formatDate, cn } from '../lib/utils';
+import { useEmployees } from '../hooks/useEmployees';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const { toast } = useToast();
+  const { data: allEmployees } = useEmployees();
 
   const email = user?.email ?? '—';
-  const metaName = (user?.user_metadata?.full_name || user?.user_metadata?.name || '') as string;
+  const actualEmployee = (allEmployees || []).find((e) => e.email === email);
+  const metaName = (actualEmployee?.employee_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '') as string;
   const provider = (user?.app_metadata?.provider ?? 'email') as string;
 
   const [fullName, setFullName] = useState(metaName);
@@ -33,19 +36,7 @@ export default function Profile() {
 
   const displayName = fullName || email.split('@')[0];
 
-  const saveName = async () => {
-    if (fullName.trim().length < 2) { toast('Please enter a valid name (min 2 chars).', 'error'); return; }
-    setSavingName(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ data: { full_name: fullName.trim(), name: fullName.trim() } });
-      if (error) throw error;
-      toast('Profile updated', 'success');
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Failed to update profile', 'error');
-    } finally {
-      setSavingName(false);
-    }
-  };
+  // Name is managed via crm_employees by admins.
 
   const savePassword = async () => {
     const er: Record<string, string> = {};
@@ -106,15 +97,12 @@ export default function Profile() {
             <h3 className="text-[15px] font-bold text-base-fg">Personal information</h3>
           </div>
           <div className="space-y-4">
-            <Field label="Display name">
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" />
+            <Field label="Display name" hint="Your name is managed by administrators">
+              <Input value={fullName} disabled className="opacity-70 cursor-not-allowed" />
             </Field>
             <Field label="Email" hint="Email cannot be changed">
               <Input value={email} disabled className="opacity-70 cursor-not-allowed" />
             </Field>
-            <div className="flex justify-end">
-              <Button icon={<Save className="h-4 w-4" />} onClick={saveName} loading={savingName} disabled={fullName.trim() === metaName.trim()}>Save changes</Button>
-            </div>
           </div>
         </div>
 

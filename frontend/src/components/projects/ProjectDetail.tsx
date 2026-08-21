@@ -2,19 +2,20 @@ import Drawer from '../ui/Drawer';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import Avatar from '../ui/Avatar';
-import { Pencil, Trash2, Building2, Calendar, Hash, Link2, DollarSign, Layers, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, Building2, Calendar, Hash, Link2, DollarSign, Layers, ExternalLink, CalendarClock } from 'lucide-react';
 import type { Project, MasterItem } from '../../types';
 import { makeLookup } from '../../hooks/useMasters';
 import { usePermissions } from '../../contexts/PermissionContext';
 import { formatCurrency, formatDate } from '../../lib/utils';
 
-export default function ProjectDetail({ open, onClose, project, masters, onEdit, onDelete }: {
+export default function ProjectDetail({ open, onClose, project, masters, onEdit, onDelete, onNextFollowUp }: {
   open: boolean;
   onClose: () => void;
   project: Project | null;
   masters: MasterItem[] | undefined;
   onEdit: () => void;
   onDelete: () => void;
+  onNextFollowUp?: () => void;
 }) {
   const lookup = makeLookup(masters);
   const { can } = usePermissions();
@@ -28,9 +29,11 @@ export default function ProjectDetail({ open, onClose, project, masters, onEdit,
     { icon: Hash, label: 'Project No', value: project.project_no || '—' },
     { icon: Link2, label: 'Lead reference', value: project.lead_no || project.lead?.lead_no || '—' },
     { icon: Layers, label: 'Type', value: lookup.label('project_type', project.project_type) },
-    ...(can('projects.view_cost') ? [{ icon: DollarSign, label: 'Cost', value: formatCurrency(project.project_cost) }] : []),
+    { icon: Building2, label: 'Industry', value: lookup.label('industry', project.industry) },
+    ...(can('projects.view_cost') ? [{ icon: DollarSign, label: 'Budget', value: formatCurrency(project.project_cost) }] : []),
     { icon: Calendar, label: 'Start date', value: formatDate(project.start_date) },
     { icon: Calendar, label: 'Expected delivery', value: formatDate(project.expected_delivery) },
+    { icon: CalendarClock, label: 'Next follow-up', value: formatDate(project.next_follow_up) },
   ];
 
   return (
@@ -43,7 +46,10 @@ export default function ProjectDetail({ open, onClose, project, masters, onEdit,
           {can('projects.delete')
             ? <Button variant="danger" size="sm" icon={<Trash2 className="h-4 w-4" />} onClick={onDelete}>Delete</Button>
             : <span />}
-          {can('projects.edit') && <Button icon={<Pencil className="h-4 w-4" />} onClick={onEdit}>Edit project</Button>}
+          <div className="flex items-center gap-2">
+            {onNextFollowUp && <Button variant="secondary" size="sm" icon={<CalendarClock className="h-4 w-4" />} onClick={onNextFollowUp}>Next follow-up</Button>}
+            {can('projects.edit') && <Button size="sm" icon={<Pencil className="h-4 w-4" />} onClick={onEdit}>Edit project</Button>}
+          </div>
         </div>
       }
     >
@@ -130,12 +136,34 @@ export default function ProjectDetail({ open, onClose, project, masters, onEdit,
               </div>
             </div>
           )}
+          {project.lead_coordinator && (
+            <div>
+              <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-2">Lead Coordinator</p>
+              <div className="flex items-center gap-3 rounded-xl border border-app p-3">
+                <Avatar name={project.lead_coordinator.employee_name} size={36} />
+                <div className="min-w-0"><p className="text-[13px] font-semibold text-base-fg truncate">{project.lead_coordinator.employee_name}</p><p className="text-[11.5px] text-muted-fg truncate">{project.lead_coordinator.role}</p></div>
+              </div>
+            </div>
+          )}
         </div>
 
         {project.remarks && (
           <div>
             <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-2">Remarks</p>
-            <p className="text-[13px] text-muted-fg leading-relaxed rounded-xl border border-app bg-surface-2 p-4">{project.remarks}</p>
+            <div className="space-y-2.5">
+              {project.remarks.split(/\n\n(?:---\n\n)?/).filter(r => r.trim() && r.trim() !== '---').map((r, i) => {
+                const text = r.trim();
+                const match = text.match(/^\[(\d{4}-\d{2}-\d{2})\]\s*(.*)$/s);
+                const dateLabel = match ? formatDate(match[1]) : (i === 0 ? formatDate(project.created_at) : 'Original Note');
+                const content = match ? match[2] : text;
+                return (
+                  <div key={i} className="rounded-xl border border-app bg-surface-2 p-3.5 shadow-sm">
+                    {dateLabel && <div className="mb-1.5"><span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/20">{dateLabel}</span></div>}
+                    <div className="text-[13px] text-muted-fg leading-relaxed whitespace-pre-wrap break-words">{content}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

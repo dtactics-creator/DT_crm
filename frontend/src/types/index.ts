@@ -41,7 +41,6 @@ export interface Employee extends AuditFields {
   phone: string | null;
   email: string;
   status: string;
-  is_manager: boolean;
 }
 
 export interface Lead extends AuditFields {
@@ -58,11 +57,13 @@ export interface Lead extends AuditFields {
   secondary_email: string | null;
   project_type: string | null;
   source: string;
+  industry: string | null;
   budget: number;
   status: string;
   priority: string;
   lead_received_date: string | null;
   next_follow_up: string | null;
+  address: string | null;
   remarks: string | null;
   converted_project_id: string | null;
   converted_at: string | null;
@@ -78,6 +79,7 @@ export interface Project extends AuditFields {
   lead_id: string | null;
   lead_no: string | null;
   project_type: string | null;
+  industry: string | null;
   project_manager_id: string | null;
   assigned_employee_id: string | null;
   technology_stack: string[];
@@ -88,6 +90,7 @@ export interface Project extends AuditFields {
   progress: number;
   start_date: string | null;
   expected_delivery: string | null;
+  next_follow_up: string | null;
   remarks: string | null;
   manager?: Employee | null;
   assigned_employee?: Employee | null;

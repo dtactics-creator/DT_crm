@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Search, FolderKanban, Filter, LayoutGrid, List, Pencil, Trash2, Eye, Download, Upload } from 'lucide-react';
+import { Plus, Search, FolderKanban, Filter, LayoutGrid, List, Pencil, Trash2, Eye, Download, Upload, CalendarClock } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
@@ -16,10 +16,11 @@ import ImportDialog from '../components/ImportDialog';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
 import ProjectDetail from '../components/projects/ProjectDetail';
+import NextFollowUpModal from '../components/ui/NextFollowUpModal';
 import { useProjects } from '../hooks/useProjects';
 import { usePermissions } from '../contexts/PermissionContext';
-import { useEmployees, useManagers } from '../hooks/useEmployees';
-import { useRolesByType } from '../hooks/useRoles';
+import { useEmployees } from '../hooks/useEmployees';
+
 import { useLeads } from '../hooks/useLeads';
 import { useMasters, makeLookup, makeResolver, toOptions } from '../hooks/useMasters';
 import { useCrud } from '../hooks/useCrud';
@@ -37,13 +38,7 @@ export default function Projects() {
   const [params, setParams] = useSearchParams();
   const { data: projects, isLoading } = useProjects();
   const { data: employees } = useEmployees();
-  const { data: managers } = useManagers();
-  const { data: devRoles } = useRolesByType('developer');
 
-  // Only employees holding a developer-type role can be assigned to projects.
-  const devRoleNames = new Set((devRoles || []).map((r) => r.name.toLowerCase()));
-  const devEmployees = (employees || []).filter((e) => devRoleNames.has(e.role.toLowerCase()));
-  const devManagers = (managers || []).filter((e) => devRoleNames.has(e.role.toLowerCase()));
   const { data: leads } = useLeads();
   const { data: masters } = useMasters();
   const lookup = makeLookup(masters);
@@ -53,10 +48,11 @@ export default function Projects() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [view, setView] = useState<'grid' | 'table'>('table');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const [detail, setDetail] = useState<Project | null>(null);
+  const [toFollowUp, setToFollowUp] = useState<Project | null>(null);
   const [toDelete, setToDelete] = useState<Project | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const urlTypes = useMemo(() => (masters || []).filter(m => m.category === 'url_type').map(m => m.value), [masters]);
@@ -106,7 +102,7 @@ export default function Projects() {
     ...(v.id ? { id: v.id } : {}),
     project_no: v.project_no || null, project_name: v.project_name, client: v.client,
     lead_id: v.lead_id || null, lead_no: (leads || []).find((l) => l.id === v.lead_id)?.lead_no || null,
-    project_type: v.project_type || null, project_manager_id: v.project_manager_id || null,
+    project_type: v.project_type || null, industry: v.industry || null, project_manager_id: v.project_manager_id || null,
     assigned_employee_id: v.assigned_employee_id || null, technology_stack: v.technology_stack, urls: v.urls,
     project_cost: v.project_cost ? Number(v.project_cost) : 0, status: v.status, priority: v.priority,
     progress: v.progress ? Number(v.progress) : 0, start_date: v.start_date || null, expected_delivery: v.expected_delivery || null,
@@ -125,6 +121,13 @@ export default function Projects() {
     setToDelete(null); setDetail(null);
   };
 
+  const handleNextFollowUp = async ({ next_follow_up, remarks }: { next_follow_up: string; remarks: string }) => {
+    if (!toFollowUp) return;
+    await update.mutateAsync({ ...toFollowUp, next_follow_up, remarks });
+    setToFollowUp(null);
+    if (detail?.id === toFollowUp.id) setDetail({ ...detail, next_follow_up, remarks });
+  };
+
   const columns: Column<Project>[] = [
     { key: 'project_no', header: 'Project No', sortValue: (r) => r.project_no ?? '', className: 'font-semibold tabular text-brand-600', render: (r) => r.project_no || '—' },
     {
@@ -133,6 +136,7 @@ export default function Projects() {
     },
     { key: 'lead_no', header: 'Lead Ref', sortValue: (r) => r.lead_no ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{r.lead_no || '—'}</span> },
     { key: 'type', header: 'Type', sortValue: (r) => r.project_type ?? '', render: (r) => <span className="text-muted-fg">{lookup.label('project_type', r.project_type)}</span> },
+    { key: 'industry', header: 'Industry', sortValue: (r) => r.industry ?? '', render: (r) => <span className="text-muted-fg">{lookup.label('industry', r.industry)}</span> },
     {
       key: 'manager', header: 'Project Manager', sortValue: (r) => r.manager?.employee_name ?? '',
       render: (r) => r.manager ? <div className="flex items-center gap-2"><Avatar name={r.manager.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.manager.employee_name}</span></div> : <span className="text-subtle-fg text-[12.5px]">—</span>,
@@ -140,10 +144,6 @@ export default function Projects() {
     {
       key: 'assigned', header: 'Assigned Employee', sortValue: (r) => r.assigned_employee?.employee_name ?? '',
       render: (r) => r.assigned_employee ? <div className="flex items-center gap-2"><Avatar name={r.assigned_employee.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.assigned_employee.employee_name}</span></div> : <span className="text-subtle-fg text-[12.5px]">—</span>,
-    },
-    {
-      key: 'coordinator', header: 'Lead cordinator', sortValue: (r) => r.lead_coordinator?.employee_name ?? '',
-      render: (r) => r.lead_coordinator ? <div className="flex items-center gap-2"><Avatar name={r.lead_coordinator.employee_name} size={26} /><span className="text-[12.5px] text-muted-fg truncate">{r.lead_coordinator.employee_name}</span></div> : <span className="text-subtle-fg text-[12.5px]">—</span>,
     },
     // {
     //   key: 'stack', header: 'Tech Stack',
@@ -157,15 +157,17 @@ export default function Projects() {
     //     ) : <span className="text-subtle-fg text-[12.5px]">—</span>;
     //   },
     // },
-    ...(can('projects.view_cost') ? [{ key: 'cost', header: 'Cost', sortValue: (r) => Number(r.project_cost), className: 'tabular font-semibold', render: (r) => formatCurrency(r.project_cost) } as Column<Project>] : []),
+    ...(can('projects.view_cost') ? [{ key: 'budget', header: 'Budget', sortValue: (r) => Number(r.project_cost), className: 'tabular font-semibold', render: (r) => formatCurrency(r.project_cost) } as Column<Project>] : []),
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={lookup.label('project_status', r.status)} color={lookup.color('project_status', r.status)} dot /> },
-    { key: 'delivery', header: 'Delivery', sortValue: (r) => r.expected_delivery ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.expected_delivery)}</span> },
+    { key: 'delivery', header: 'Delivery', sortValue: (r) => r.expected_delivery ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{formatDate(r.expected_delivery)}</span> },
+    { key: 'followup', header: 'Follow-up', sortValue: (r) => r.next_follow_up ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{formatDate(r.next_follow_up)}</span> },
     {
       key: 'actions', header: '', headerClassName: 'w-12', className: 'text-right',
       render: (r) => (
         <RowActions actions={[
           { label: 'View details', icon: <Eye className="h-4 w-4" />, onClick: () => setDetail(r) },
           ...(can('projects.edit') ? [{ label: 'Edit project', icon: <Pencil className="h-4 w-4" />, onClick: () => { setEditing(r); setFormOpen(true); } }] : []),
+          ...(can('projects.edit') && r.status !== 'completed' && r.status !== 'cancelled' ? [{ label: 'Set follow-up', icon: <CalendarClock className="h-4 w-4" />, onClick: () => setToFollowUp(r) }] : []),
           ...(can('projects.delete') ? [{ label: 'Delete', icon: <Trash2 className="h-4 w-4" />, onClick: () => setToDelete(r), danger: true }] : []),
         ]} />
       ),
@@ -190,7 +192,7 @@ export default function Projects() {
         {[
           { label: 'Total projects', value: (projects?.length ?? 0).toString() },
           { label: 'Active', value: (projects?.filter((p) => p.status === 'active').length ?? 0).toString() },
-          ...(can('projects.view_cost') ? [{ label: 'Total cost', value: formatCurrency(totalBudget) }] : []),
+          ...(can('projects.view_cost') ? [{ label: 'Total budget', value: formatCurrency(totalBudget) }] : []),
           { label: 'Completed', value: (projects?.filter((p) => p.status === 'completed').length ?? 0).toString() },
         ].map((s) => (
           <div key={s.label} className="flex-1 min-w-[140px] bg-surface border border-app rounded-xl card-shadow px-4 py-3.5">
@@ -208,7 +210,7 @@ export default function Projects() {
         <div className="flex items-center gap-2.5">
           <Filter className="h-4 w-4 text-subtle-fg hidden sm:block" />
           <div className="w-40"><SearchableSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: '', label: 'All statuses' }, ...toOptions(masters, 'project_status')]} placeholder="All statuses" /></div>
-          <div className="w-40"><SearchableSelect value={typeFilter} onChange={setTypeFilter} options={[{ value: '', label: 'All types' }, ...toOptions(masters, 'project_type')]} placeholder="All types" /></div>
+          <div className="w-40"><SearchableSelect value={typeFilter} onChange={setTypeFilter} options={[{ value: '', label: 'All types' }, ...toOptions(masters, 'project_type')]} placeholder="All types" align="right" /></div>
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-2 border border-app">
             <button onClick={() => setView('grid')} className={cn('h-8 w-8 rounded-md flex items-center justify-center transition-colors', view === 'grid' ? 'bg-surface text-brand-600 card-shadow' : 'text-muted-fg')}><LayoutGrid className="h-4 w-4" /></button>
             <button onClick={() => setView('table')} className={cn('h-8 w-8 rounded-md flex items-center justify-center transition-colors', view === 'table' ? 'bg-surface text-brand-600 card-shadow' : 'text-muted-fg')}><List className="h-4 w-4" /></button>
@@ -273,11 +275,14 @@ export default function Projects() {
         </div>
       )}
 
-      <ProjectForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }} onSubmit={handleSubmit}
-        initial={editing} masters={masters} employees={devEmployees} managers={devManagers} leads={leads} saving={create.isPending || update.isPending} />
+      <ProjectForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }}
+        initial={editing} masters={masters} employees={employees} managers={employees} leads={leads}
+        onSubmit={handleSubmit} saving={create.isPending || update.isPending} />
 
       <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail} masters={masters}
-        onEdit={() => { setEditing(detail); setFormOpen(true); }} onDelete={() => setToDelete(detail)} />
+        onEdit={() => { setEditing(detail); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
+
+      <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.project_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
 
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={handleDelete}
         title="Delete project" message={`Are you sure you want to delete ${toDelete?.project_name}? This action can be reverted by an administrator.`} loading={remove.isPending} />

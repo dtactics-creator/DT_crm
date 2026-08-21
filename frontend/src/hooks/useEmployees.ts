@@ -8,10 +8,3 @@ export function useEmployees() {
     queryFn: () => api.get<Employee[]>('/api/employees'),
   });
 }
-
-export function useManagers() {
-  return useQuery({
-    queryKey: ['managers'],
-    queryFn: () => api.get<Employee[]>('/api/employees?managers=1'),
-  });
-}

@@ -16,14 +16,12 @@ import { useCrud } from '../../hooks/useCrud';
 import { cn } from '../../lib/utils';
 import type { Employee } from '../../types';
 
-interface FormState { id?: string; employee_name: string; role: string; phone: string; email: string; password: string; status: string; is_manager: boolean; }
-const empty: FormState = { employee_name: '', role: '', phone: '', email: '', password: '', status: 'active', is_manager: false };
-
-// managersOnly => Project Managers tab; else general Employees tab
+interface FormState { id?: string; employee_name: string; role: string; phone: string; email: string; password: string; status: string; }
+const empty: FormState = { employee_name: '', role: '', phone: '', email: '', password: '', status: 'active' };
 import { usePermissions } from '../../contexts/PermissionContext';
 import { collect, required, minLen, maxLen, email, phone, password } from '../../lib/validators';
 
-export default function EmployeeMasterTab({ managersOnly, singular }: { managersOnly: boolean; singular: string }) {
+export default function EmployeeMasterTab({ singular }: { singular: string }) {
   const { can } = usePermissions();
   const { data: employees, isLoading } = useEmployees();
   const { data: roles } = useRoles();
@@ -40,11 +38,11 @@ export default function EmployeeMasterTab({ managersOnly, singular }: { managers
     .filter((r) => r.status === 'active' || r.name === form.role)
     .map((r) => ({ value: r.name, label: r.name }));
 
-  const scoped = useMemo(() => (employees || []).filter((e) => managersOnly ? e.is_manager : true), [employees, managersOnly]);
+  const scoped = useMemo(() => employees || [], [employees]);
   const filtered = useMemo(() => scoped.filter((e) => [e.employee_name, e.email, e.role].some((x) => x.toLowerCase().includes(search.toLowerCase()))), [scoped, search]);
 
-  const openNew = () => { setForm({ ...empty, is_manager: managersOnly }); setEditing(false); setErrors({}); setModalOpen(true); };
-  const openEdit = (e: Employee) => { setForm({ id: e.id, employee_name: e.employee_name, role: e.role, phone: e.phone ?? '', email: e.email, password: '', status: e.status, is_manager: e.is_manager }); setEditing(true); setErrors({}); setModalOpen(true); };
+  const openNew = () => { setForm({ ...empty }); setEditing(false); setErrors({}); setModalOpen(true); };
+  const openEdit = (e: Employee) => { setForm({ id: e.id, employee_name: e.employee_name, role: e.role, phone: e.phone ?? '', email: e.email, password: '', status: e.status }); setEditing(true); setErrors({}); setModalOpen(true); };
 
   const validate = () => {
     const er = collect({
@@ -60,7 +58,7 @@ export default function EmployeeMasterTab({ managersOnly, singular }: { managers
 
   const submit = async () => {
     if (!validate()) return;
-    const payload = { ...(form.id ? { id: form.id } : {}), employee_name: form.employee_name, role: form.role, phone: form.phone || null, email: form.email, status: form.status, is_manager: form.is_manager, ...(form.password ? { password: form.password } : {}) };
+    const payload = { ...(form.id ? { id: form.id } : {}), employee_name: form.employee_name, role: form.role, phone: form.phone || null, email: form.email, status: form.status, ...(form.password ? { password: form.password } : {}) };
     try {
       if (form.id) await update.mutateAsync(payload); else await create.mutateAsync(payload);
       setModalOpen(false);
@@ -119,7 +117,6 @@ export default function EmployeeMasterTab({ managersOnly, singular }: { managers
           <Field label="Email" required error={errors.email}><Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} invalid={!!errors.email} placeholder="jane@dtactics.io" /></Field>
           <Field label="Password" required={!editing} error={errors.password} hint={editing ? 'Leave blank to keep current' : 'Used to sign in'}><Input type="password" value={form.password} onChange={(e) => set('password', e.target.value)} invalid={!!errors.password} placeholder={editing ? '••••••••' : 'Min 6 characters'} /></Field>
           <Field label="Status"><SearchableSelect value={form.status} onChange={(v) => set('status', v)} options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} /></Field>
-          <Field label="Type"><SearchableSelect value={form.is_manager ? 'manager' : 'employee'} onChange={(v) => set('is_manager', v === 'manager')} options={[{ value: 'employee', label: 'Employee' }, { value: 'manager', label: 'Project Manager' }]} /></Field>
         </div>
       </Modal>
 

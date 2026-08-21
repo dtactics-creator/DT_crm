@@ -14,13 +14,13 @@ import type { Project, MasterItem, Employee, Lead, ProjectUrl } from '../../type
 export interface ProjectFormValues {
   id?: string;
   project_no: string; project_name: string; client: string; lead_id: string;
-  project_type: string; project_manager_id: string; assigned_employee_id: string;
+  project_type: string; industry: string; project_manager_id: string; assigned_employee_id: string;
   technology_stack: string[]; urls: ProjectUrl[]; project_cost: string; status: string; priority: string;
   progress: string; start_date: string; expected_delivery: string; remarks: string;
 }
 
 const empty: ProjectFormValues = {
-  project_no: '', project_name: '', client: '', lead_id: '', project_type: '', project_manager_id: '',
+  project_no: '', project_name: '', client: '', lead_id: '', project_type: '', industry: '', project_manager_id: '',
   assigned_employee_id: '', technology_stack: [], urls: [], project_cost: '', status: '', priority: 'medium',
   progress: '0', start_date: '', expected_delivery: '', remarks: '',
 };
@@ -47,6 +47,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   const displayProjectNo = initial ? (v.project_no || '—') : (nextNo?.next ?? 'Generating…');
 
   const typeOpts = toOptions(masters, 'project_type');
+  const industryOpts = toOptions(masters, 'industry');
   const statusOpts = toOptions(masters, 'project_status');
   const priorityOpts = toOptions(masters, 'priority');
   const stackOpts = toOptions(masters, 'technology_stack');
@@ -61,6 +62,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
         setV({
           id: initial.id, project_no: initial.project_no ?? '', project_name: initial.project_name,
           client: initial.client, lead_id: initial.lead_id ?? '', project_type: initial.project_type ?? '',
+          industry: initial.industry ?? '',
           project_manager_id: initial.project_manager_id ?? '', assigned_employee_id: initial.assigned_employee_id ?? '',
           technology_stack: Array.isArray(initial.technology_stack) ? initial.technology_stack : [],
           urls: Array.isArray(initial.urls) ? initial.urls : [],
@@ -90,7 +92,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
       client: required(v.client, 'Client') || maxLen(v.client, 150, 'Client'),
       project_type: required(v.project_type, 'Project type'),
       status: required(v.status, 'Status'),
-      project_cost: nonNegativeNumber(v.project_cost, 'Project cost'),
+      project_cost: nonNegativeNumber(v.project_cost, 'Budget'),
       progress: integerInRange(v.progress, 0, 100, 'Progress'),
       expected_delivery: dateOrder(v.start_date, v.expected_delivery, 'Expected delivery'),
       remarks: maxLen(v.remarks, 4000, 'Remarks'),
@@ -142,6 +144,9 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
             </Field>
             <Field label="Project type" required error={errors.project_type}>
               <SearchableSelect value={v.project_type} onChange={(x) => set('project_type', x)} options={typeOpts} placeholder="Select type" invalid={!!errors.project_type} />
+            </Field>
+            <Field label="Industry">
+              <SearchableSelect value={v.industry} onChange={(x) => set('industry', x)} options={industryOpts} placeholder="Select industry" clearable />
             </Field>
             <Field label="Status" required error={errors.status}>
               <SearchableSelect value={v.status} onChange={(x) => set('status', x)} options={statusOpts} placeholder="Select status" invalid={!!errors.status} />

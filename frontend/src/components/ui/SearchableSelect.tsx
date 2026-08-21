@@ -5,13 +5,14 @@ import { cn } from '../../lib/utils';
 
 export interface Option { value: string; label: string; color?: string | null; hint?: string }
 
-export function SearchableSelect({ value, onChange, options, placeholder = 'Select…', invalid, clearable }: {
+export function SearchableSelect({ value, onChange, options, placeholder = 'Select…', invalid, clearable, align = 'left' }: {
   value: string;
   onChange: (v: string) => void;
   options: Option[];
   placeholder?: string;
   invalid?: boolean;
   clearable?: boolean;
+  align?: 'left' | 'right';
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -53,7 +54,10 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
           <motion.div
             initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.14 }}
-            className="absolute z-50 mt-1.5 w-full bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden"
+            className={cn(
+              "absolute z-50 mt-1.5 min-w-full w-[max-content] max-w-[320px] bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden",
+              align === 'right' ? 'right-0' : 'left-0'
+            )}
           >
             <div className="flex items-center gap-2 px-3 h-10 border-b border-app">
               <Search className="h-4 w-4 text-subtle-fg shrink-0" />
@@ -81,11 +85,12 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
   );
 }
 
-export function MultiSelect({ values, onChange, options, placeholder = 'Select…' }: {
+export function MultiSelect({ values, onChange, options, placeholder = 'Select…', align = 'left' }: {
   values: string[];
   onChange: (v: string[]) => void;
   options: Option[];
   placeholder?: string;
+  align?: 'left' | 'right';
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -119,7 +124,10 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Select�
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }} transition={{ duration: 0.14 }}
-            className="absolute z-50 mt-1.5 w-full bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden">
+            className={cn(
+              "absolute z-50 mt-1.5 min-w-full w-[max-content] max-w-[320px] bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden",
+              align === 'right' ? 'right-0' : 'left-0'
+            )}>
             <div className="flex items-center gap-2 px-3 h-10 border-b border-app">
               <Search className="h-4 w-4 text-subtle-fg shrink-0" />
               <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…"

@@ -14,6 +14,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import PermissionMatrix from '../components/roles/PermissionMatrix';
 import { useRoles } from '../hooks/useRoles';
+import { useMasters, makeLookup } from '../hooks/useMasters';
 import { useCrud } from '../hooks/useCrud';
 import { usePermissions } from '../contexts/PermissionContext';
 import { collect, required, minLen, maxLen } from '../lib/validators';
@@ -23,18 +24,14 @@ import type { Role } from '../types';
 interface FormState { id?: string; name: string; type: string; description: string; status: string; }
 const empty: FormState = { name: '', type: 'sales', description: '', status: 'active' };
 
-const TYPE_META: Record<string, { label: string; color: string }> = {
-  sales: { label: 'Sales', color: '#3366ff' },
-  developer: { label: 'Developer', color: '#8b5cf6' },
-};
-
 export default function Roles() {
   const { can } = usePermissions();
   const { data: roles, isLoading } = useRoles();
+  const { data: masters } = useMasters();
+  const lookup = makeLookup(masters);
   const { create, update, remove } = useCrud('roles', ['roles', 'employees']);
 
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormState>(empty);
@@ -46,10 +43,9 @@ export default function Roles() {
   const filtered = useMemo(() => (roles || []).filter((r) => {
     const q = search.toLowerCase();
     const matchQ = !q || [r.name, r.description ?? ''].some((x) => x.toLowerCase().includes(q));
-    const matchType = !typeFilter || r.type === typeFilter;
     const matchStatus = !statusFilter || r.status === statusFilter;
-    return matchQ && matchType && matchStatus;
-  }), [roles, search, typeFilter, statusFilter]);
+    return matchQ && matchStatus;
+  }), [roles, search, statusFilter]);
 
   const openNew = () => { setForm(empty); setEditing(false); setErrors({}); setModalOpen(true); };
   const openEdit = (r: Role) => { setForm({ id: r.id, name: r.name, type: r.type ?? 'sales', description: r.description ?? '', status: r.status }); setEditing(true); setErrors({}); setModalOpen(true); };
@@ -89,10 +85,7 @@ export default function Roles() {
         </div>
       ),
     },
-    {
-      key: 'type', header: 'Type', sortValue: (r) => r.type,
-      render: (r) => { const m = TYPE_META[r.type] ?? TYPE_META.sales; return <Badge label={m.label} color={m.color} />; },
-    },
+
     { key: 'description', header: 'Description', sortValue: (r) => r.description ?? '', render: (r) => <span className="text-muted-fg text-[13px]">{r.description || '—'}</span> },
     {
       key: 'status', header: 'Status', sortValue: (r) => r.status,
@@ -141,10 +134,7 @@ export default function Roles() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search roles…" className="pl-10" />
           </div>
-          <div className="w-40">
-            <SearchableSelect value={typeFilter} onChange={setTypeFilter} placeholder="All types"
-              options={[{ value: '', label: 'All types' }, { value: 'sales', label: 'Sales' }, { value: 'developer', label: 'Developer' }]} />
-          </div>
+
           <div className="w-40">
             <SearchableSelect value={statusFilter} onChange={setStatusFilter} placeholder="All statuses"
               options={[{ value: '', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
@@ -156,8 +146,8 @@ export default function Roles() {
         ) : (
           <DataTable data={filtered} columns={columns} rowKey={(r) => r.id} onRowClick={(r) => setPermRole(r)}
             emptyState={<EmptyState icon={<ShieldCheck className="h-6 w-6" />}
-              title={search || statusFilter || typeFilter ? 'No matching roles' : 'No roles yet'}
-              description={search || statusFilter || typeFilter ? 'Try adjusting your search or filters.' : 'Create your first role to start assigning them to employees.'}
+              title={search || statusFilter ? 'No matching roles' : 'No roles yet'}
+              description={search || statusFilter ? 'Try adjusting your search or filters.' : 'Create your first role to start assigning them to employees.'}
               action={can('roles.create') ? <Button icon={<Plus className="h-4 w-4" />} onClick={openNew}>New role</Button> : null} />} />
         )}
       </div>
@@ -168,9 +158,7 @@ export default function Roles() {
           <Field label="Role name" required error={errors.name}>
             <Input value={form.name} onChange={(e) => set('name', e.target.value)} invalid={!!errors.name} placeholder="e.g. Sales Executive" autoFocus />
           </Field>
-          <Field label="Type" required hint="Sales roles appear in Leads; Developer roles appear in Projects">
-            <SearchableSelect value={form.type} onChange={(v) => set('type', v)} options={[{ value: 'sales', label: 'Sales', color: '#3366ff' }, { value: 'developer', label: 'Developer', color: '#8b5cf6' }]} />
-          </Field>
+
           <Field label="Description" hint="Optional — describe what this role does" error={errors.description}>
             <Textarea value={form.description} onChange={(e) => set('description', e.target.value)} invalid={!!errors.description} placeholder="Short description of responsibilities…" />
           </Field>

@@ -34,7 +34,7 @@ export default function RowActions({ actions }: { actions: RowAction[] }) {
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     const rect = btnRef.current?.getBoundingClientRect();
-    if (rect) setCoords({ top: rect.bottom + 6, left: rect.right - 176 });
+    if (rect) setCoords({ top: rect.bottom + 6, left: rect.right - 192 });
     setOpen((v) => !v);
   };
 
@@ -51,13 +51,13 @@ export default function RowActions({ actions }: { actions: RowAction[] }) {
               initial={{ opacity: 0, scale: 0.96, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: -4 }}
               transition={{ duration: 0.13 }}
               style={{ position: 'fixed', top: coords.top, left: Math.max(12, coords.left), zIndex: 90 }}
-              className="w-44 bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden p-1.5">
+              className="w-48 bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden p-1.5">
               {actions.map((a, i) => (
                 <button key={i} disabled={a.disabled}
                   onClick={(e) => { e.stopPropagation(); setOpen(false); a.onClick(); }}
-                  className={cn('flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-[13px] font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none',
+                  className={cn('flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-[13px] font-medium transition-colors disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap',
                     a.danger ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10' : 'text-muted-fg hover:bg-surface-2 hover:text-base-fg')}>
-                  {a.icon}{a.label}
+                  {a.icon}<span className="truncate">{a.label}</span>
                 </button>
               ))}
             </motion.div>
