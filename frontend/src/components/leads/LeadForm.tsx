@@ -20,6 +20,7 @@ export interface LeadFormValues {
   primary_phone: string; secondary_phone: string; tertiary_phone: string; primary_email: string; secondary_email: string;
   project_type: string; industry: string; source: string; budget: string;
   status: string; priority: string; lead_received_date: string; address: string; remarks: string;
+  next_follow_up?: string | null;
   urls: ProjectUrl[];
 }
 
@@ -27,7 +28,7 @@ const empty: LeadFormValues = {
   lead_no: '', customer_name: '', company: '', sales_manager_id: '', assigned_employee_id: '', source_person: '',
   primary_phone: '', secondary_phone: '', tertiary_phone: '', primary_email: '', secondary_email: '',
   project_type: '', industry: '', source: '', budget: '', status: '', priority: 'medium',
-  lead_received_date: '', address: '', remarks: '',
+  lead_received_date: '', address: '', remarks: '', next_follow_up: null,
   urls: [],
 };
 
@@ -78,6 +79,7 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
           project_type: initial.project_type ?? '', industry: initial.industry ?? '', source: initial.source, budget: String(initial.budget ?? ''),
           status: initial.status, priority: initial.priority,
           lead_received_date: toDateInput(initial.lead_received_date),
+          next_follow_up: initial.next_follow_up ?? null,
           urls: Array.isArray(initial.urls) ? initial.urls : [],
           address: initial.address ?? '',
           remarks: initial.remarks ?? '',
