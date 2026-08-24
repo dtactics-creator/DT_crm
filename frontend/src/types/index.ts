@@ -12,6 +12,7 @@ export interface MasterItem extends AuditFields {
   color: string | null;
   sort_order: number;
   is_active: boolean;
+  description?: string | null;
 }
 
 export interface Role extends AuditFields {
@@ -135,4 +136,26 @@ export interface ReportData {
   monthlyRevenue: { month: string; revenue: number; projects: number }[];
   leadValueByStatus: { status: string; value: number; color: string }[];
   employeeLoad: { name: string; leads: number; projects: number }[];
+}
+
+export interface AuditLog {
+  id: string;
+  user_id: string | null;
+  username: string | null;
+  user_email: string | null;
+  user_role: string | null;
+  action: string;
+  module: string;
+  entity: string | null;
+  entity_id: string | null;
+  description: string | null;
+  old_values: Record<string, any> | null;
+  new_values: Record<string, any> | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  http_method: string | null;
+  endpoint: string | null;
+  status: string;
+  error_message: string | null;
+  created_at: string;
 }

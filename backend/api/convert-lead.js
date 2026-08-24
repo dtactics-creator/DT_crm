@@ -1,6 +1,7 @@
 import { supabase, preflight, fail, V } from './_lib.js';
 import { requirePermission } from './_permissions.js';
 import { nextProjectNo } from './_join.js';
+import { logAudit } from './_audit.js';
 
 // Converts a lead into a project:
 //  - copies customer info
@@ -55,6 +56,9 @@ export default async function handler(req, res) {
       .update({ converted_project_id: project.id, converted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', lead.id);
     if (updErr) throw updErr;
+
+    await logAudit({ req, user, action: 'CONVERT', module: 'Leads', entity: 'Lead', entityId: lead.id, description: `Converted lead ${lead.lead_no} to project ${project.project_no}`, newValues: { converted_project_id: project.id } });
+    await logAudit({ req, user, action: 'CREATE', module: 'Projects', entity: 'Project', entityId: project.id, description: `Created project ${project.project_no} from lead ${lead.lead_no}`, newValues: project });
 
     return res.status(201).json({ project, lead_id: lead.id });
   } catch (err) {

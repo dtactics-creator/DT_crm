@@ -145,9 +145,38 @@ CREATE TABLE IF NOT EXISTS dt_templates (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES crm_employees(id) ON DELETE SET NULL,
+    username TEXT,
+    user_email TEXT,
+    user_role TEXT,
+    action TEXT NOT NULL,
+    module TEXT NOT NULL,
+    entity TEXT,
+    entity_id TEXT,
+    description TEXT,
+    old_values JSONB,
+    new_values JSONB,
+    ip_address TEXT,
+    user_agent TEXT,
+    http_method TEXT,
+    endpoint TEXT,
+    status TEXT NOT NULL,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON audit_logs(module);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
+
 -- ============================================================================
 -- 0.5. ALTER EXISTING TABLES TO ADD MISSING COLUMNS
 -- ============================================================================
+ALTER TABLE masters ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE crm_employees ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE dt_projects ADD COLUMN IF NOT EXISTS next_follow_up DATE;
 
@@ -163,6 +192,7 @@ ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP WITH TIME 
 -- 0. Clean slate (comment this block out to keep existing rows)
 -- ---------------------------------------------------------------------------
 DELETE FROM dt_role_permissions;
+DELETE FROM audit_logs;
 DELETE FROM dt_projects;
 DELETE FROM dt_leads3;
 DELETE FROM dt_templates;

@@ -10,6 +10,7 @@ export function useCrud(resource: string, invalidate: string[]) {
     for (const key of invalidate) qc.invalidateQueries({ queryKey: [key] });
     qc.invalidateQueries({ queryKey: ['dashboard'] });
     qc.invalidateQueries({ queryKey: ['reports'] });
+    qc.invalidateQueries({ queryKey: ['audit_logs'] });
   };
 
   const create = useMutation({

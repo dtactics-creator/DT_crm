@@ -321,7 +321,7 @@ export default function Leads() {
         existingKeys={existingLeadKeys}
         mapRow={mapLeadRow}
         onImport={importLeads}
-        onDone={() => { qc.invalidateQueries({ queryKey: ['leads'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); }}
+        onDone={() => { qc.invalidateQueries({ queryKey: ['leads'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); qc.invalidateQueries({ queryKey: ['audit_logs'] }); }}
       />
     </div>
   );

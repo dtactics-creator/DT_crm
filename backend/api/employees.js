@@ -1,5 +1,6 @@
 import { supabase, preflight, fail, V } from './_lib.js';
 import { requirePermission, methodPermission } from './_permissions.js';
+import { logAudit } from './_audit.js';
 
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
@@ -31,6 +32,7 @@ export default async function handler(req, res) {
       const { data, error } = await supabase.from('crm_employees').insert(payload).select().single();
       if (error) throw error;
       const { password_hash, ...safeData } = data;
+      await logAudit({ req, user, action: 'CREATE', module: 'Employees', entity: 'Employee', entityId: data.id, description: `Created employee: ${data.employee_name}`, newValues: safeData });
       return res.status(201).json(safeData);
     }
 
@@ -48,18 +50,23 @@ export default async function handler(req, res) {
         payload.password_hash = await bcrypt.hash(password, 10);
       }
 
+      const { data: oldData } = await supabase.from('crm_employees').select('*').eq('id', id).single();
       const { data, error } = await supabase.from('crm_employees').update(payload).eq('id', id).select().single();
       if (error) throw error;
       const { password_hash, ...safeData } = data;
+      const oldSafeData = oldData ? (() => { const { password_hash, ...rest } = oldData; return rest; })() : null;
+      if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Employees', entity: 'Employee', entityId: id, description: `Updated employee: ${data.employee_name}`, oldValues: oldSafeData, newValues: safeData });
       return res.status(200).json(safeData);
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Employee id is required');
+      const { data: oldData } = await supabase.from('crm_employees').select('*').eq('id', id).single();
       const { error } = await supabase.from('crm_employees')
         .update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
+      if (oldData) await logAudit({ req, user, action: 'DELETE', module: 'Employees', entity: 'Employee', entityId: id, description: `Deleted employee: ${oldData.employee_name}`, oldValues: oldData });
       return res.status(200).json({ ok: true });
     }
 

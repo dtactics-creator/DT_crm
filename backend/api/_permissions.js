@@ -20,6 +20,7 @@ export const PERMISSION_CATALOG = [
   { module: 'roles', label: 'Roles & Permissions', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'templates', label: 'Templates', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'reports', label: 'Reports', actions: ['view'] },
+  { module: 'audit_logs', label: 'Audit Logs', actions: ['view', 'export'] },
 ];
 
 const ACTION_LABELS = {
@@ -49,7 +50,7 @@ export async function getEffectivePermissions(user) {
   // Find the employee linked to this auth account (by email).
   const { data: emp } = await supabase
     .from('crm_employees')
-    .select('id, role, status, deleted_at')
+    .select('id, employee_name, role, status, deleted_at')
     .ilike('email', email)
     .maybeSingle();
 
@@ -104,10 +105,25 @@ export async function requirePermission(req, res, permission) {
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data?.user) { res.status(401).json({ error: 'Unauthorized — please sign in.' }); return null; }
 
-  const { isAdmin, permissions } = await getEffectivePermissions(data.user);
+  const { isAdmin, permissions, employee } = await getEffectivePermissions(data.user);
+  
+  // Attach employee data to the user object for auditing
+  if (employee) {
+    data.user.employee_name = employee.employee_name;
+    data.user.role = employee.role;
+    data.user.employee_id = employee.id;
+  }
+
   if (isAdmin || permissions.includes(permission) || permissions.includes('*')) {
     return data.user;
   }
+  
+  // Need to dynamically import logAudit to avoid circular dependencies if it imports this file later
+  import('./_audit.js').then(({ logAudit }) => {
+    const [mod, action] = permission.split('.');
+    logAudit({ req, user: data.user, action: action?.toUpperCase() || 'ACCESS_DENIED', module: mod, description: `Permission denied: required ${permission}`, status: 'FAILED', errorMessage: 'Forbidden' });
+  }).catch(() => {});
+
   res.status(403).json({ error: `Forbidden — you do not have permission to ${permission.replace('.', ' ')}.` });
   return null;
 }

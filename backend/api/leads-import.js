@@ -1,6 +1,7 @@
 import { supabase, preflight, fail, V, sanitizeUrls } from './_lib.js';
 import { requirePermission } from './_permissions.js';
 import { nextLeadNo } from './_join.js';
+import { logAudit } from './_audit.js';
 
 // Bulk import of leads. Body: { rows: [...], mode?: 'update' | 'skip' | 'create' }
 //   update (default): rows matching an existing lead (by Lead No, else email)
@@ -97,6 +98,14 @@ export default async function handler(req, res) {
       } catch (err) {
         failed.push({ row: i + 1, error: err.message });
       }
+    }
+
+    if (inserted.length > 0 || updated.length > 0) {
+      await logAudit({
+        req, user, action: 'IMPORT', module: 'Leads',
+        description: `Imported leads: ${inserted.length} created, ${updated.length} updated.`,
+        newValues: { inserted, updated, mode }
+      });
     }
 
     return res.status(200).json({

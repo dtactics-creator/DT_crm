@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { V, fail } from './_lib.js';
 import supabase from './db-client.js';
+import { logAudit } from './_audit.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
@@ -23,21 +24,24 @@ export default async function handler(req, res) {
     // Find the employee by email
     const { data: employee, error } = await supabase
       .from('crm_employees')
-      .select('id, email, password_hash, status')
+      .select('id, email, password_hash, status, employee_name, role')
       .eq('email', email)
       .is('deleted_at', null)
       .single();
 
     if (error || !employee) {
       console.error('DB query error:', error, 'Employee:', employee);
+      await logAudit({ req, user: { email }, action: 'LOGIN_FAILED', module: 'Authentication', description: 'Invalid credentials or user not found', status: 'FAILED' });
       return fail(res, 401, 'Invalid credentials.');
     }
 
     if (employee.status !== 'active') {
+      await logAudit({ req, user: employee, action: 'LOGIN_FAILED', module: 'Authentication', description: 'Account is inactive', status: 'FAILED' });
       return fail(res, 403, 'Account is inactive. Please contact your administrator.');
     }
 
     if (!employee.password_hash) {
+      await logAudit({ req, user: employee, action: 'LOGIN_FAILED', module: 'Authentication', description: 'No password hash set', status: 'FAILED' });
       return fail(res, 401, 'Invalid credentials.');
     }
 
@@ -45,6 +49,7 @@ export default async function handler(req, res) {
     const isValid = await bcrypt.compare(password, employee.password_hash);
     if (!isValid) {
       console.error('Bcrypt compare failed.');
+      await logAudit({ req, user: employee, action: 'LOGIN_FAILED', module: 'Authentication', description: 'Invalid password', status: 'FAILED' });
       return fail(res, 401, 'Invalid credentials.');
     }
 
@@ -54,8 +59,10 @@ export default async function handler(req, res) {
 
     // Return success.
     // The frontend will then proceed to authenticate with Supabase Auth to get the actual session token.
+    await logAudit({ req, user: employee, action: 'LOGIN', module: 'Authentication', description: 'User successfully authenticated via password' });
     return res.status(200).json({ success: true });
   } catch (err) {
+    await logAudit({ req, user: null, action: 'LOGIN_FAILED', module: 'Authentication', description: 'Unexpected error during login', status: 'FAILED', errorMessage: err.message });
     return fail(res, 400, err.message);
   }
 }

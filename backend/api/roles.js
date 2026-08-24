@@ -1,5 +1,6 @@
 import { supabase, preflight, fail, V } from './_lib.js';
 import { requirePermission, methodPermission } from './_permissions.js';
+import { logAudit } from './_audit.js';
 
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
       await ensureUnique(payload.name, null);
       const { data, error } = await supabase.from('dt_roles2').insert(payload).select().single();
       if (error) throw error;
+      await logAudit({ req, user, action: 'CREATE', module: 'Roles', entity: 'Role', entityId: data.id, description: `Created role: ${data.name}`, newValues: data });
       return res.status(201).json(data);
     }
 
@@ -30,17 +32,21 @@ export default async function handler(req, res) {
       const payload = validate(req.body);
       await ensureUnique(payload.name, id);
       payload.updated_at = new Date().toISOString();
+      const { data: oldData } = await supabase.from('dt_roles2').select('*').eq('id', id).single();
       const { data, error } = await supabase.from('dt_roles2').update(payload).eq('id', id).select().single();
       if (error) throw error;
+      if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Roles', entity: 'Role', entityId: id, description: `Updated role: ${data.name}`, oldValues: oldData, newValues: data });
       return res.status(200).json(data);
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Role id is required');
+      const { data: oldData } = await supabase.from('dt_roles2').select('*').eq('id', id).single();
       const { error } = await supabase.from('dt_roles2')
         .update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
+      if (oldData) await logAudit({ req, user, action: 'DELETE', module: 'Roles', entity: 'Role', entityId: id, description: `Deleted role: ${oldData.name}`, oldValues: oldData });
       return res.status(200).json({ ok: true });
     }
 

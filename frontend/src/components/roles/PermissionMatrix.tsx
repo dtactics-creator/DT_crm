@@ -77,6 +77,7 @@ export default function PermissionMatrix({ open, onClose, role, canEdit }: {
       const permissions = superAdmin ? ['*'] : Array.from(selected).filter((p) => p !== '*');
       await api.put('/api/role-permissions', { role_id: role.id, permissions });
       await qc.invalidateQueries({ queryKey: ['role-permissions', role.id] });
+      await qc.invalidateQueries({ queryKey: ['audit_logs'] });
       await refetchMe();
       toast('Permissions saved', 'success');
       onClose();

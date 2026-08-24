@@ -83,6 +83,7 @@ export default function Templates() {
     try {
       await api.post('/api/templates', { templates: changed });
       await qc.invalidateQueries({ queryKey: ['templates'] });
+      await qc.invalidateQueries({ queryKey: ['audit_logs'] });
       toast(`Saved ${changed.length} template${changed.length > 1 ? 's' : ''}`, 'success');
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Failed to save templates', 'error');
@@ -103,6 +104,7 @@ export default function Templates() {
     try {
       await api.post('/api/templates', { title: newTpl.title.trim(), category: newTpl.category, channel: 'whatsapp', body: newTpl.body, sort_order: (templates?.length ?? 0) + 1 });
       await qc.invalidateQueries({ queryKey: ['templates'] });
+      await qc.invalidateQueries({ queryKey: ['audit_logs'] });
       toast('Template created', 'success');
       setAddOpen(false); setNewTpl({ title: '', category: 'outreach', body: '' });
     } catch (e) {
@@ -118,6 +120,7 @@ export default function Templates() {
     try {
       await api.del('/api/templates', { id: toDelete.id });
       await qc.invalidateQueries({ queryKey: ['templates'] });
+      await qc.invalidateQueries({ queryKey: ['audit_logs'] });
       toast('Template deleted', 'success');
       setToDelete(null);
     } catch (e) {

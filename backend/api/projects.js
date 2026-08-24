@@ -1,6 +1,7 @@
 import { supabase, preflight, fail, V, sanitizeUrls } from './_lib.js';
 import { requirePermission, methodPermission, getEffectivePermissions } from './_permissions.js';
 import { employeeMap, leadMap, nextProjectNo } from './_join.js';
+import { logAudit } from './_audit.js';
 
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
@@ -28,7 +29,9 @@ export default async function handler(req, res) {
       if (!payload.project_no) payload.project_no = await nextProjectNo();
       const { data, error } = await supabase.from('dt_projects').insert(payload).select().single();
       if (error) throw error;
-      return res.status(201).json(await enrich(data));
+      const enriched = await enrich(data);
+      await logAudit({ req, user, action: 'CREATE', module: 'Projects', entity: 'Project', entityId: data.id, description: `Created project: ${data.project_name}`, newValues: data });
+      return res.status(201).json(enriched);
     }
 
     if (req.method === 'PUT') {
@@ -36,17 +39,22 @@ export default async function handler(req, res) {
       if (!id) return fail(res, 400, 'Project id is required');
       const payload = validate(req.body);
       payload.updated_at = new Date().toISOString();
+      const { data: oldData } = await supabase.from('dt_projects').select('*').eq('id', id).single();
       const { data, error } = await supabase.from('dt_projects').update(payload).eq('id', id).select().single();
       if (error) throw error;
-      return res.status(200).json(await enrich(data));
+      const enriched = await enrich(data);
+      if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Projects', entity: 'Project', entityId: id, description: `Updated project: ${data.project_name}`, oldValues: oldData, newValues: data });
+      return res.status(200).json(enriched);
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Project id is required');
+      const { data: oldData } = await supabase.from('dt_projects').select('*').eq('id', id).single();
       const { error } = await supabase.from('dt_projects')
         .update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
+      if (oldData) await logAudit({ req, user, action: 'DELETE', module: 'Projects', entity: 'Project', entityId: id, description: `Deleted project: ${oldData.project_name}`, oldValues: oldData });
       return res.status(200).json({ ok: true });
     }
 

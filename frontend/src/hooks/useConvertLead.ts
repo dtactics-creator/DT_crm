@@ -23,6 +23,7 @@ export function useConvertLead() {
       qc.invalidateQueries({ queryKey: ['projects'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
       qc.invalidateQueries({ queryKey: ['reports'] });
+      qc.invalidateQueries({ queryKey: ['audit_logs'] });
       toast('Lead converted to project — marked as Won 🎉', 'success');
     },
     onError: (e: Error) => toast(e.message, 'error'),

@@ -1,5 +1,6 @@
 import { supabase, preflight, fail, V } from './_lib.js';
 import { requirePermission, methodPermission } from './_permissions.js';
+import { logAudit } from './_audit.js';
 
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
@@ -27,12 +28,15 @@ export default async function handler(req, res) {
           const payload = validate(t);
           if (t.id) {
             payload.updated_at = new Date().toISOString();
+            const { data: oldData } = await supabase.from('dt_templates').select('*').eq('id', t.id).single();
             const { data, error } = await supabase.from('dt_templates').update(payload).eq('id', t.id).select().single();
             if (error) throw error;
+            if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Templates', entity: 'Template', entityId: t.id, description: `Updated template: ${data.title}`, oldValues: oldData, newValues: data });
             results.push(data);
           } else {
             const { data, error } = await supabase.from('dt_templates').insert(payload).select().single();
             if (error) throw error;
+            await logAudit({ req, user, action: 'CREATE', module: 'Templates', entity: 'Template', entityId: data.id, description: `Created template: ${data.title}`, newValues: data });
             results.push(data);
           }
         }
@@ -42,6 +46,7 @@ export default async function handler(req, res) {
       const payload = validate(req.body);
       const { data, error } = await supabase.from('dt_templates').insert(payload).select().single();
       if (error) throw error;
+      await logAudit({ req, user, action: 'CREATE', module: 'Templates', entity: 'Template', entityId: data.id, description: `Created template: ${data.title}`, newValues: data });
       return res.status(201).json(data);
     }
 
@@ -50,17 +55,21 @@ export default async function handler(req, res) {
       if (!id) return fail(res, 400, 'Template id is required');
       const payload = validate(req.body);
       payload.updated_at = new Date().toISOString();
+      const { data: oldData } = await supabase.from('dt_templates').select('*').eq('id', id).single();
       const { data, error } = await supabase.from('dt_templates').update(payload).eq('id', id).select().single();
       if (error) throw error;
+      if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Templates', entity: 'Template', entityId: id, description: `Updated template: ${data.title}`, oldValues: oldData, newValues: data });
       return res.status(200).json(data);
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Template id is required');
+      const { data: oldData } = await supabase.from('dt_templates').select('*').eq('id', id).single();
       const { error } = await supabase.from('dt_templates')
         .update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
+      if (oldData) await logAudit({ req, user, action: 'DELETE', module: 'Templates', entity: 'Template', entityId: id, description: `Deleted template: ${oldData.title}`, oldValues: oldData });
       return res.status(200).json({ ok: true });
     }
 

@@ -307,7 +307,7 @@ export default function Projects() {
         existingKeys={existingProjectKeys}
         mapRow={mapProjectRow}
         onImport={importProjects}
-        onDone={() => { qc.invalidateQueries({ queryKey: ['projects'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); }}
+        onDone={() => { qc.invalidateQueries({ queryKey: ['projects'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); qc.invalidateQueries({ queryKey: ['audit_logs'] }); }}
       />
     </div>
   );
