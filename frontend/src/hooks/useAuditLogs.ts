@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import type { AuditLog } from '../types';
 
@@ -33,6 +33,6 @@ export function useAuditLogs(filters: AuditLogFilters) {
   return useQuery({
     queryKey: ['audit_logs', filters],
     queryFn: () => api.get<AuditLogResponse>(`/api/audit-logs?${query.toString()}`),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 }
