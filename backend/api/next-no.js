@@ -1,6 +1,6 @@
 import { preflight, fail } from './_lib.js';
 import { requirePermission } from './_permissions.js';
-import { nextLeadNo, nextProjectNo } from './_join.js';
+import { nextLeadNo, nextProjectNo, nextQuotationNo } from './_join.js';
 
 // Returns the next auto-generated document numbers for previewing in forms.
 // GET /api/next-no?type=lead | project
@@ -10,13 +10,14 @@ export default async function handler(req, res) {
 
   const type = req.query?.type;
   // Previewing a number is part of creating that record.
-  const perm = type === 'project' ? 'projects.create' : 'leads.create';
+  const perm = type === 'project' ? 'projects.create' : type === 'quotation' ? 'quotations.create' : 'leads.create';
   const user = await requirePermission(req, res, perm);
   if (!user) return;
 
   try {
     if (type === 'lead') return res.status(200).json({ next: await nextLeadNo() });
     if (type === 'project') return res.status(200).json({ next: await nextProjectNo() });
+    if (type === 'quotation') return res.status(200).json({ next: await nextQuotationNo() });
     return fail(res, 400, 'Unknown type');
   } catch (err) {
     return fail(res, 500, err.message);

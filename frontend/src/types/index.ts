@@ -10,9 +10,12 @@ export interface MasterItem extends AuditFields {
   label: string;
   value: string;
   color: string | null;
+  symbol?: string | null;
   sort_order: number;
   is_active: boolean;
   description?: string | null;
+  percent?: number | null;
+  gst_percent?: number | null;
 }
 
 export interface Role extends AuditFields {
@@ -158,4 +161,90 @@ export interface AuditLog {
   status: string;
   error_message: string | null;
   created_at: string;
+}
+
+export interface QuotationCharge extends AuditFields {
+  service_area_id: string;
+  charge_name: string;
+  basis: string | null;
+  currency: string;
+  rate: number;
+  sort_order: number;
+}
+
+export interface QuotationMilestone extends AuditFields {
+  version_id: string;
+  label: string;
+  percent: number;
+  amount: number;
+  sort_order: number;
+}
+
+export interface QuotationCommercialItem extends AuditFields {
+  version_id: string;
+  project_type: string | null;
+  description: string;
+  base_amount: number;
+  gst_percent: number;
+  gst_amount: number;
+  amount_inc_gst: number;
+  sort_order: number;
+}
+
+export interface ServiceArea extends AuditFields {
+  version_id: string;
+  name: string;
+  location: string | null;
+  remarks: string | null;
+  sort_order: number;
+  charges?: QuotationCharge[];
+}
+
+export interface QuotationVersion extends AuditFields {
+  quotation_id: string;
+  version_number: number;
+  template: string;
+  date: string | null;
+  valid_until: string | null;
+  enquiry_no: string | null;
+  department: string | null;
+  service_type: string | null;
+  project_type_description: string | null;
+  from_location: string | null;
+  to_location: string | null;
+  customer_name: string | null;
+  company: string | null;
+  lead_source: string | null;
+  lead_status: string | null;
+  primary_phone: string | null;
+  secondary_phone: string | null;
+  tertiary_phone: string | null;
+  primary_email: string | null;
+  secondary_email: string | null;
+  budget: number | null;
+  source_person: string | null;
+  lead_received_date: string | null;
+  address: string | null;
+  lead_remarks: string | null;
+  currency: string;
+  payment_terms: string | null;
+  notes: string | null;
+  terms: string | null;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  grand_total: number;
+  is_accepted: boolean;
+  service_areas?: ServiceArea[];
+  commercial_items?: QuotationCommercialItem[];
+  milestones?: QuotationMilestone[];
+  quotation?: Partial<Quotation>;
+}
+
+export interface Quotation extends AuditFields {
+  quotation_no: string;
+  lead_id: string;
+  status: string;
+  lead?: { customer_name: string; company: string | null };
+  versions?: QuotationVersion[];
 }

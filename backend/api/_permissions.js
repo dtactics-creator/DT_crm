@@ -21,6 +21,7 @@ export const PERMISSION_CATALOG = [
   { module: 'templates', label: 'Templates', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'reports', label: 'Reports', actions: ['view'] },
   { module: 'audit_logs', label: 'Audit Logs', actions: ['view', 'export'] },
+  { module: 'quotations', label: 'Quotations', actions: ['view', 'create', 'edit', 'delete'] },
 ];
 
 const ACTION_LABELS = {

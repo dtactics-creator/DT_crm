@@ -50,5 +50,5 @@ export function toOptions(items: MasterItem[] | undefined, category: string) {
   return (items || [])
     .filter((m) => m.category === category && m.is_active)
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((m) => ({ value: m.value, label: m.label, color: m.color }));
+    .map((m) => ({ value: m.value, label: m.label, color: m.color, description: m.description, gst_percent: m.gst_percent, percent: m.percent }));
 }

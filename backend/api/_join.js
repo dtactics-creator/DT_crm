@@ -67,6 +67,24 @@ export async function nextProjectNo() {
   return `${yymm}PJ${String(max + 1).padStart(3, '0')}`;
 }
 
+export async function nextQuotationNo() {
+  const now = new Date();
+  const yyyy = String(now.getFullYear());
+  const { data, error } = await supabase
+    .from('dt_quotations')
+    .select('quotation_no')
+    .like('quotation_no', `QT-${yyyy}-%`)
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  let max = 0;
+  for (const row of data || []) {
+    const m = String(row.quotation_no || '').match(new RegExp(`^QT-${yyyy}-(\\d+)$`));
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `QT-${yyyy}-${String(max + 1).padStart(4, '0')}`;
+}
+
 // Generate the next sequential document number, e.g. LD-1001 or PRJ-2001.
 export async function nextNumber(table, column, prefix, start) {
   const { data, error } = await supabase

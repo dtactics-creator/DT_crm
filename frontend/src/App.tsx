@@ -19,6 +19,7 @@ import Templates from './pages/Templates';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import AuditLogs from './pages/AuditLogs';
+import Quotations from './pages/Quotations';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,6 +81,7 @@ export default function App() {
                       <Route path="/templates" element={<RequirePermission perm="templates.view"><Templates /></RequirePermission>} />
                       <Route path="/reports" element={<RequirePermission perm="reports.view"><Reports /></RequirePermission>} />
                       <Route path="/audit-logs" element={<RequirePermission perm="audit_logs.view"><AuditLogs /></RequirePermission>} />
+                      <Route path="/quotations" element={<RequirePermission perm="quotations.view"><Quotations /></RequirePermission>} />
                       <Route path="/profile" element={<Profile />} />
                     </Route>
                     <Route path="*" element={<Navigate to="/" replace />} />

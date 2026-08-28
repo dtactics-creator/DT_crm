@@ -17,7 +17,7 @@ import type { MasterItem } from '../../types';
 
 const PRESET_COLORS = ['#3366ff', '#0ea5e9', '#8b5cf6', '#ec4899', '#f97316', '#f59e0b', '#10b981', '#14b8a6', '#ef4444', '#64748b'];
 
-interface FormState { id?: string; label: string; color: string; sort_order: number; description?: string; }
+interface FormState { id?: string; label: string; color: string; sort_order: number; description?: string; symbol?: string; percent?: number; gst_percent?: number; }
 
 import { usePermissions } from '../../contexts/PermissionContext';
 import { required, maxLen } from '../../lib/validators';
@@ -30,15 +30,15 @@ export default function MasterTab({ category, singular }: { category: string; si
 
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState<FormState>({ label: '', color: PRESET_COLORS[0], sort_order: 0, description: '' });
+  const [form, setForm] = useState<FormState>({ label: '', color: PRESET_COLORS[0], sort_order: 0, description: '', symbol: '', percent: 0, gst_percent: 0 });
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const [toDelete, setToDelete] = useState<MasterItem | null>(null);
 
   const filtered = useMemo(() => items.filter((m) => m.label.toLowerCase().includes(search.toLowerCase())), [items, search]);
 
-  const openNew = () => { setForm({ label: '', color: PRESET_COLORS[0], sort_order: (items[items.length - 1]?.sort_order ?? 0) + 1, description: '' }); setEditing(false); setError(''); setModalOpen(true); };
-  const openEdit = (m: MasterItem) => { setForm({ id: m.id, label: m.label, color: m.color || PRESET_COLORS[0], sort_order: m.sort_order, description: m.description || '' }); setEditing(true); setError(''); setModalOpen(true); };
+  const openNew = () => { setForm({ label: '', color: PRESET_COLORS[0], sort_order: (items[items.length - 1]?.sort_order ?? 0) + 1, description: '', symbol: '', percent: 0, gst_percent: 0 }); setEditing(false); setError(''); setModalOpen(true); };
+  const openEdit = (m: MasterItem) => { setForm({ id: m.id, label: m.label, color: m.color || PRESET_COLORS[0], sort_order: m.sort_order, description: m.description || '', symbol: m.symbol || '', percent: m.percent || 0, gst_percent: m.gst_percent || 0 }); setEditing(true); setError(''); setModalOpen(true); };
 
   const submit = async () => {
     const labelErr = required(form.label, 'Label') || maxLen(form.label, 80, 'Label');
@@ -47,7 +47,7 @@ export default function MasterTab({ category, singular }: { category: string; si
     const dupe = items.some((m) => m.label.trim().toLowerCase() === form.label.trim().toLowerCase() && m.id !== form.id);
     if (dupe) { setError('A value with this label already exists.'); return; }
     const order = Number.isFinite(form.sort_order) ? Math.max(0, Math.min(9999, form.sort_order)) : 0;
-    const payload = { ...(form.id ? { id: form.id } : {}), category, label: form.label.trim(), color: form.color, sort_order: order, is_active: true, description: form.description || null };
+    const payload = { ...(form.id ? { id: form.id } : {}), category, label: form.label.trim(), color: form.color, sort_order: order, is_active: true, description: form.description || null, symbol: form.symbol || null, percent: form.percent || 0, gst_percent: form.gst_percent || 0 };
     try {
       if (form.id) await update.mutateAsync(payload); else await create.mutateAsync(payload);
       setModalOpen(false);
@@ -70,7 +70,30 @@ export default function MasterTab({ category, singular }: { category: string; si
         </p>
       )
     } as Column<MasterItem>] : []),
-    { key: 'sort', header: 'Order', sortValue: (r) => r.sort_order, render: (r) => <Badge label={`#${r.sort_order}`} color={r.color} /> },
+    ...(category === 'project_service' ? [{
+      key: 'gst_percent', header: 'GST %', render: (r) => (
+        <Badge label={`${r.gst_percent || 0}%`} color="#8b5cf6" />
+      )
+    } as Column<MasterItem>] : []),
+    ...(category === 'currency' ? [{
+      key: 'symbol', header: 'Symbol', render: (r) => (
+        <p className="text-[13px] text-muted-fg max-w-[100px] truncate" title={r.symbol || ''}>
+          {r.symbol || <span className="text-subtle-fg/50 italic">None</span>}
+        </p>
+      )
+    } as Column<MasterItem>, {
+      key: 'description', header: 'Description', render: (r) => (
+        <p className="text-[13px] text-muted-fg max-w-[250px] truncate" title={r.description || ''}>
+          {r.description || <span className="text-subtle-fg/50 italic">No description</span>}
+        </p>
+      )
+    } as Column<MasterItem>] : []),
+    ...(category === 'payment_milestone' ? [{
+      key: 'percent', header: 'Percentage', render: (r) => (
+        <Badge label={`${r.percent || 0}%`} color="#8b5cf6" />
+      )
+    } as Column<MasterItem>] : []),
+    { key: 'sort_order', header: 'Order', render: (r) => <span className="text-[12.5px] font-mono text-muted-fg">{r.sort_order}</span> },
     { key: 'status', header: 'Status', render: () => <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Active</span> },
     { key: 'actions', header: '', headerClassName: 'w-24', className: 'text-right', render: (r) => (
       <div className="flex items-center justify-end gap-1">
@@ -107,9 +130,29 @@ export default function MasterTab({ category, singular }: { category: string; si
           <Field label="Label" required error={error}>
             <Input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} invalid={!!error} placeholder={`e.g. ${singular}`} autoFocus />
           </Field>
-          {category === 'project_type' && (
+          {(category === 'project_type' || category === 'currency') && (
             <Field label="Description">
               <Textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Enter a brief description..." rows={3} />
+            </Field>
+          )}
+          {category === 'currency' && (
+            <Field label="Symbol">
+              <Input value={form.symbol || ''} onChange={(e) => setForm((f) => ({ ...f, symbol: e.target.value }))} placeholder="e.g. $, ₹, EUR" />
+            </Field>
+          )}
+          {category === 'project_service' && (
+            <>
+              <Field label="Description">
+                <Textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Enter a brief description..." rows={3} />
+              </Field>
+              <Field label="GST %">
+                <Input type="number" min="0" max="100" value={form.gst_percent} onChange={(e) => setForm((f) => ({ ...f, gst_percent: Number(e.target.value) }))} placeholder="e.g. 18" />
+              </Field>
+            </>
+          )}
+          {category === 'payment_milestone' && (
+            <Field label="Percentage (%)">
+              <Input type="number" min="0" max="100" value={form.percent || 0} onChange={(e) => setForm((f) => ({ ...f, percent: Number(e.target.value) }))} placeholder="e.g. 30" />
             </Field>
           )}
           <Field label="Color">

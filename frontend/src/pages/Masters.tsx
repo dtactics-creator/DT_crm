@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Layers, Flag, Activity, Radio, Users, ShieldCheck, Cpu, SignalHigh, Link2, MessageSquareText, Building2
-} from 'lucide-react';
+import { Activity, Flag, Radio, Users, Cpu, Link2, Layers, MessageSquareText, SignalHigh, Building2, Coins, CalendarDays } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import MasterTab from '../components/masters/MasterTab';
 import EmployeeMasterTab from '../components/masters/EmployeeMasterTab';
@@ -22,8 +20,10 @@ const TABS: TabKind[] = [
   { key: 'url_type', label: 'URL Types', icon: Link2, kind: 'master', category: 'url_type', singular: 'URL Type' },
   { key: 'template_category', label: 'Template Categories', icon: MessageSquareText, kind: 'master', category: 'template_category', singular: 'Template Category' },
   { key: 'priority', label: 'Priority', icon: SignalHigh, kind: 'master', category: 'priority', singular: 'Priority' },
-
+  { key: 'project_service', label: 'Project Services', icon: Layers, kind: 'master', category: 'project_service', singular: 'Project Service' },
   { key: 'industry', label: 'Industries', icon: Building2, kind: 'master', category: 'industry', singular: 'Industry' },
+  { key: 'currency', label: 'Currencies', icon: Coins, kind: 'master', category: 'currency', singular: 'Currency' },
+  { key: 'payment_milestone', label: 'Payment Milestones', icon: CalendarDays, kind: 'master', category: 'payment_milestone', singular: 'Payment Milestone' },
 ];
 
 export default function Masters() {

@@ -173,12 +173,119 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON audit_logs(module);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
 
+CREATE TABLE IF NOT EXISTS dt_quotations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quotation_no TEXT UNIQUE NOT NULL,
+    lead_id UUID REFERENCES dt_leads3(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'Draft',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS dt_quotation_versions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quotation_id UUID NOT NULL REFERENCES dt_quotations(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL DEFAULT 1,
+    template TEXT DEFAULT 'logistics',
+    date DATE,
+    valid_until DATE,
+    enquiry_no TEXT,
+    department TEXT,
+    service_type TEXT,
+    from_location TEXT,
+    to_location TEXT,
+    customer_name TEXT,
+    company TEXT,
+    lead_source TEXT,
+    lead_status TEXT,
+    primary_phone TEXT,
+    secondary_phone TEXT,
+    tertiary_phone TEXT,
+    primary_email TEXT,
+    secondary_email TEXT,
+    budget NUMERIC DEFAULT 0,
+    source_person TEXT,
+    lead_received_date DATE,
+    address TEXT,
+    lead_remarks TEXT,
+    currency TEXT DEFAULT 'USD',
+    payment_terms TEXT,
+    notes TEXT,
+    terms TEXT,
+    subtotal NUMERIC DEFAULT 0,
+    discount NUMERIC DEFAULT 0,
+    tax NUMERIC DEFAULT 0,
+    grand_total NUMERIC DEFAULT 0,
+    is_accepted BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE (quotation_id, version_number)
+);
+
+CREATE TABLE IF NOT EXISTS dt_quotation_service_areas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    version_id UUID REFERENCES dt_quotation_versions(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    location TEXT,
+    remarks TEXT,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS dt_quotation_charges (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    service_area_id UUID NOT NULL REFERENCES dt_quotation_service_areas(id) ON DELETE CASCADE,
+    charge_name TEXT NOT NULL,
+    basis TEXT,
+    currency TEXT DEFAULT 'USD',
+    rate NUMERIC DEFAULT 0,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS dt_quotation_milestones (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    version_id UUID NOT NULL REFERENCES dt_quotation_versions(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    percent NUMERIC DEFAULT 0,
+    amount NUMERIC DEFAULT 0,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS dt_quotation_commercial_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    version_id UUID NOT NULL REFERENCES dt_quotation_versions(id) ON DELETE CASCADE,
+    project_type TEXT,
+    description TEXT,
+    base_amount NUMERIC DEFAULT 0,
+    gst_percent NUMERIC DEFAULT 0,
+    gst_amount NUMERIC DEFAULT 0,
+    amount_inc_gst NUMERIC DEFAULT 0,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================================
 -- 0.5. ALTER EXISTING TABLES TO ADD MISSING COLUMNS
 -- ============================================================================
 ALTER TABLE masters ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE masters ADD COLUMN IF NOT EXISTS symbol TEXT;
+ALTER TABLE masters ADD COLUMN IF NOT EXISTS percent NUMERIC(5,2);
+ALTER TABLE masters ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2);
 ALTER TABLE crm_employees ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE dt_projects ADD COLUMN IF NOT EXISTS next_follow_up DATE;
+ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS department TEXT;
+ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS service_type TEXT;
+ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS from_location TEXT;
+ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS to_location TEXT;
+ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS project_type_description TEXT;
 
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS tertiary_phone TEXT;
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS secondary_email TEXT;
@@ -590,6 +697,16 @@ INSERT INTO dt_templates (title, category, channel, body, status, sort_order) VA
   ('New Lead Welcome','general','whatsapp',
    E'Hi {{Name}} 👋\n\nThank you for reaching out to DTACTICS IT Solutions!\n\nWe help businesses like {{BusinessName}} grow online with custom websites, CRMs, mobile apps and AI solutions.\n\nCould you share a bit about what you''re looking to build? I''ll put together a tailored proposal for you. 🚀',
    'active',7);
+
+-- Quotations Permissions
+INSERT INTO dt_role_permissions (role_id, permission)
+SELECT id, 'quotations.view' FROM dt_roles2 WHERE name IN ('Administrator', 'Sales Director', 'Sales Manager', 'Account Executive', 'Sales Executive');
+
+INSERT INTO dt_role_permissions (role_id, permission)
+SELECT id, 'quotations.create' FROM dt_roles2 WHERE name IN ('Administrator', 'Sales Director', 'Sales Manager', 'Account Executive', 'Sales Executive');
+
+INSERT INTO dt_role_permissions (role_id, permission)
+SELECT id, 'quotations.edit' FROM dt_roles2 WHERE name IN ('Administrator', 'Sales Director', 'Sales Manager', 'Account Executive', 'Sales Executive');
 
 COMMIT;
 

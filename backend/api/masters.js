@@ -82,8 +82,11 @@ function validate(body) {
     label,
     value: (V.str(body.value, { field: 'Value' }) || label).toLowerCase().replace(/\s+/g, '_'),
     color: V.str(body.color, { field: 'Color', max: 20 }),
+    symbol: V.str(body.symbol, { field: 'Symbol', max: 10 }),
     sort_order: V.num(body.sort_order, { field: 'Sort order', def: 0 }),
     is_active: body.is_active === undefined ? true : Boolean(body.is_active),
     description: V.str(body.description, { field: 'Description', max: 1000 }) || null,
+    percent: V.num(body.percent, { field: 'Percent', min: 0, max: 100 }) || null,
+    gst_percent: V.num(body.gst_percent, { field: 'GST %', def: 0, min: 0, max: 100 }) || 0,
   };
 }

@@ -1,0 +1,215 @@
+import { useState } from 'react';
+import PageHeader from '../components/layout/PageHeader';
+import DataTable, { type Column } from '../components/DataTable';
+import Badge from '../components/ui/Badge';
+import { useQuotations, useCreateQuotation } from '../hooks/useQuotations';
+import QuotationPreview from '../components/quotations/QuotationPreview';
+import QuotationForm, { type QuotationFormValues } from '../components/quotations/QuotationForm';
+import type { Quotation, QuotationVersion } from '../types';
+import { formatDate } from '../lib/utils';
+import { Eye, Receipt } from 'lucide-react';
+import EmptyState from '../components/ui/EmptyState';
+import RowActions from '../components/ui/RowActions';
+import Skeleton from '../components/ui/Skeleton';
+import Button from '../components/ui/Button';
+import { Plus, Users } from 'lucide-react';
+import { useLeads } from '../hooks/useLeads';
+import type { Lead } from '../types';
+
+export default function Quotations() {
+  const { data: quotations, isLoading } = useQuotations();
+  const { data: leads, isLoading: leadsLoading } = useLeads();
+  const createQuotation = useCreateQuotation();
+  const [previewData, setPreviewData] = useState<{ q: Quotation, v: QuotationVersion } | null>(null);
+  const [activeTab, setActiveTab] = useState<'quotations' | 'leads'>('quotations');
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  const handleSubmit = async (values: QuotationFormValues) => {
+    if (!selectedLead) return;
+    await createQuotation.mutateAsync({
+      ...values as any,
+      lead_id: selectedLead.id,
+    });
+    setSelectedLead(null);
+  };
+
+  const getStatusColor = (s: string) => {
+    switch (s) {
+      case 'Draft': return '#64748b';
+      case 'Sent': return '#3366ff';
+      case 'Viewed': return '#f59e0b';
+      case 'Accepted': return '#10b981';
+      case 'Rejected': return '#ef4444';
+      case 'Expired': return '#ef4444';
+      case 'Cancelled': return '#64748b';
+      default: return '#64748b';
+    }
+  };
+
+  const columns: Column<Quotation>[] = [
+    {
+      key: 'quotation_no', header: 'Quotation No', sortValue: (r) => r.quotation_no,
+      className: 'font-semibold tabular text-brand-600', render: (r) => r.quotation_no,
+    },
+    {
+      key: 'customer', header: 'Customer', sortValue: (r) => r.lead?.customer_name || '',
+      render: (r) => (
+        <div className="min-w-0">
+          <p className="font-semibold text-base-fg truncate">{r.lead?.customer_name || '—'}</p>
+          <p className="text-[12px] text-muted-fg truncate">{r.lead?.company || ''}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'version', header: 'Latest Version', sortValue: (r) => r.versions?.[0]?.version_number || 0,
+      render: (r) => r.versions?.[0] ? `V${r.versions[0].version_number}` : '—',
+    },
+    {
+      key: 'date', header: 'Date', sortValue: (r) => r.versions?.[0]?.date || '',
+      render: (r) => <span className="text-muted-fg">{formatDate(r.versions?.[0]?.date || '')}</span>,
+    },
+    {
+      key: 'total', header: 'Grand Total', className: 'tabular-nums font-semibold',
+      sortValue: (r) => Number(r.versions?.[0]?.grand_total || 0),
+      render: (r) => {
+        const v = r.versions?.[0];
+        if (!v) return '—';
+        return `${v.currency} ${Number(v.grand_total).toFixed(2)}`;
+      }
+    },
+    { 
+      key: 'status', header: 'Status', sortValue: (r) => r.status, 
+      render: (r) => <Badge label={r.status} color={getStatusColor(r.status)} dot /> 
+    },
+    {
+      key: 'actions', header: '', headerClassName: 'w-12', className: 'text-right',
+      render: (r) => (
+        <RowActions actions={[
+          { label: 'View PDF', icon: <Eye className="h-4 w-4" />, onClick: () => {
+              if (r.versions?.[0]) setPreviewData({ q: r, v: r.versions[0] });
+            } 
+          },
+        ]} />
+      ),
+    },
+  ];
+
+  const leadColumns: Column<Lead>[] = [
+    {
+      key: 'name', header: 'Lead Name',
+      render: (r) => (
+        <div>
+          <p className="font-semibold text-base-fg">{r.customer_name}</p>
+          {r.company && <p className="text-xs text-muted-fg">{r.company}</p>}
+        </div>
+      )
+    },
+    {
+      key: 'contact', header: 'Contact',
+      render: (r) => (
+        <div>
+          <p className="text-sm">{r.primary_email || '—'}</p>
+          <p className="text-xs text-muted-fg">{r.primary_phone || '—'}</p>
+        </div>
+      )
+    },
+    {
+      key: 'action', header: '', className: 'text-right',
+      render: (r) => (
+        <Button size="sm" icon={<Plus className="h-4 w-4" />} onClick={(e) => {
+          e.stopPropagation();
+          setSelectedLead(r);
+        }}>Create Quotation</Button>
+      )
+    }
+  ];
+
+  return (
+    <div className="p-5 sm:p-8 max-w-[1500px] mx-auto">
+      <PageHeader
+        title="Quotations"
+        subtitle="Manage generated quotations or select a lead to create a new one."
+      />
+
+      <div className="flex space-x-1 mt-6 border-b border-app">
+        <button
+          onClick={() => setActiveTab('quotations')}
+          className={`px-4 py-2.5 text-[13px] font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'quotations' ? 'border-brand-600 text-brand-600' : 'border-transparent text-muted-fg hover:text-base-fg'
+          }`}
+        >
+          <Receipt className="h-4 w-4" />
+          All Quotations
+        </button>
+        <button
+          onClick={() => setActiveTab('leads')}
+          className={`px-4 py-2.5 text-[13px] font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'leads' ? 'border-brand-600 text-brand-600' : 'border-transparent text-muted-fg hover:text-base-fg'
+          }`}
+        >
+          <Users className="h-4 w-4" />
+          Select Lead
+        </button>
+      </div>
+
+      <div className="bg-surface border border-app rounded-2xl rounded-tl-none card-shadow mt-4">
+        {activeTab === 'quotations' ? (
+          isLoading ? (
+          <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
+        ) : (
+          <DataTable
+            data={quotations || []} columns={columns} rowKey={(r) => r.id}
+            onRowClick={(r) => {
+              if (r.versions?.[0]) setPreviewData({ q: r, v: r.versions[0] });
+            }}
+            stickyHeader maxBodyHeight="560px"
+            emptyState={
+              <EmptyState icon={<Receipt className="h-6 w-6" />}
+                title="No quotations found"
+                description="Select a lead from the Leads tab to create one."
+              />
+            } />
+          )
+        ) : (
+          leadsLoading ? (
+            <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
+          ) : (
+            <DataTable
+              data={leads || []} columns={leadColumns} rowKey={(r) => r.id}
+              onRowClick={(r) => setSelectedLead(r)}
+              stickyHeader maxBodyHeight="560px"
+              emptyState={
+                <EmptyState icon={<Users className="h-6 w-6" />}
+                  title="No leads found"
+                  description="Add leads in the Leads module to create quotations for them."
+                />
+              } />
+          )
+        )}
+      </div>
+
+      {previewData && (
+        <QuotationPreview
+          quotation={previewData.q}
+          version={previewData.v}
+          onClose={() => setPreviewData(null)}
+          onEdit={() => {
+            // Can't edit from here, need to link to lead or show toast
+            alert('To edit this quotation, navigate to the Lead details page.');
+          }}
+        />
+      )}
+
+      {!!selectedLead && (
+        <QuotationForm
+          open={!!selectedLead}
+          onClose={() => setSelectedLead(null)}
+          saving={createQuotation.isPending}
+          onSubmit={handleSubmit}
+          title="New Quotation"
+          lead={selectedLead}
+        />
+      )}
+    </div>
+  );
+}
