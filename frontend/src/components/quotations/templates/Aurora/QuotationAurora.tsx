@@ -26,26 +26,8 @@ function AuroraFooter({ page, quote, brand }: { page: number; quote: string; bra
 
 function LogoLockup() {
   return (
-    <div className="flex items-center gap-3">
-      <svg width="42" height="42" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 5 C 10 5, 10 35, 10 35" stroke="url(#paint0_linear)" strokeWidth="8" strokeLinecap="round" />
-        <path d="M10 5 C 30 5, 35 15, 35 20 C 35 25, 30 35, 10 35" stroke="url(#paint1_linear)" strokeWidth="8" strokeLinecap="round" />
-        <defs>
-          <linearGradient id="paint0_linear" x1="10" y1="5" x2="10" y2="35" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#1c93d6" />
-            <stop offset="1" stopColor="#3a3f8f" />
-          </linearGradient>
-          <linearGradient id="paint1_linear" x1="10" y1="5" x2="35" y2="35" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#c81e3a" />
-            <stop offset="0.5" stopColor="#e87a17" />
-            <stop offset="1" stopColor="#6fb01a" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="flex flex-col justify-center">
-        <span className="text-[22px] font-bold text-[#9c0d3a] leading-none tracking-tight" style={{ fontFamily: "Georgia, serif" }}>D'TACTICS</span>
-        <span className="text-[7.5px] font-bold text-[#141a33] tracking-[0.12em] mt-[4px] uppercase">Information Technologies</span>
-      </div>
+    <div className="flex items-center">
+      <img src="/logo.png" alt="D'Tactics Logo" className="h-[42px] object-contain" />
     </div>
   );
 }

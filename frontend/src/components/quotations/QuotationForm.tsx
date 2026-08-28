@@ -9,6 +9,7 @@ import { collect, required } from '../../lib/validators';
 import type { QuotationVersion, ServiceArea, QuotationCharge, Lead, QuotationMilestone, Quotation, QuotationCommercialItem } from '../../types';
 import QuotationPreview from './QuotationPreview';
 import { useMasters, toOptions } from '../../hooks/useMasters';
+import { useNextNo } from '../../hooks/useNextNo';
 import { SearchableSelect } from '../ui/SearchableSelect';
 
 export interface FormQuotationCharge extends Omit<QuotationCharge, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'service_area_id'> { }
@@ -78,7 +79,7 @@ const empty: QuotationFormValues = {
   lead_received_date: '',
   address: '',
   lead_remarks: '',
-  currency: 'USD',
+  currency: 'inr',
   payment_terms: '',
   notes: '',
   terms: '1. This quotation is valid for 15 days.\n2. Payment is due as per milestone schedule.\n3. Taxes calculated at invoicing.',
@@ -111,6 +112,9 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
   const [showPreview, setShowPreview] = useState(false);
 
   const { data: masters } = useMasters();
+  const { data: nextNo } = useNextNo('quotation', open && !initial);
+  const displayQuotationNo = initial?.quotation?.quotation_no ? initial.quotation.quotation_no : (nextNo?.next ?? 'Generating...');
+
   const typeOpts = toOptions(masters, 'project_type');
   const serviceOpts = toOptions(masters, 'project_service');
   const currencyOpts = toOptions(masters, 'currency');
@@ -417,7 +421,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
         footer={
           <div className="flex items-center justify-between w-full">
             <div className="text-sm font-semibold">
-              Grand Total: <span className="text-xl tabular-nums ml-2 text-brand-600">{v.currency} {grandTotal.toFixed(2)}</span>
+              Grand Total: <span className="text-xl tabular-nums ml-2 text-brand-600">{v.currency?.toUpperCase()} {grandTotal.toFixed(2)}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="secondary" icon={<Eye className="h-4 w-4" />} onClick={() => setShowPreview(true)}>Preview PDF</Button>
@@ -429,11 +433,46 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
         }
       >
         <div className="space-y-8 pb-10">
+          <div className="pb-2 border-b border-app">
+            <h2 className="text-2xl font-bold text-base-fg">
+              {v.customer_name || 'New Customer'}
+              {v.company && v.company !== v.customer_name ? ` - ${v.company}` : ''}
+            </h2>
+          </div>
+
+          <section>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg mb-4">General Information</p>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <Field label="Quotation No">
+                <Input value={displayQuotationNo} disabled className="bg-subtle/30" />
+              </Field>
+              <Field label="Quotation Date" required error={errors.date}><Input type="date" value={v.date} onChange={(e) => set('date', e.target.value)} invalid={!!errors.date} /></Field>
+              <Field label="Valid Until" required error={errors.valid_until}><Input type="date" value={v.valid_until} onChange={(e) => set('valid_until', e.target.value)} invalid={!!errors.valid_until} /></Field>
+              {v.template === 'logistics' && <Field label="Enquiry No"><Input value={v.enquiry_no} onChange={(e) => set('enquiry_no', e.target.value)} placeholder="ENQ-2026-..." /></Field>}
+              <Field label="Currency" required error={errors.currency}>
+                <SearchableSelect
+                  options={currencyOpts}
+                  value={v.currency || ''}
+                  onChange={(val) => set('currency', val)}
+                  placeholder="Select currency..."
+                />
+              </Field>
+
+              {v.template === 'logistics' && (
+                <>
+                  <Field label="Department"><Input value={v.department} onChange={(e) => set('department', e.target.value)} placeholder="e.g. Export" /></Field>
+                  <Field label="Service Type"><Input value={v.service_type} onChange={(e) => set('service_type', e.target.value)} placeholder="e.g. Air Freight" /></Field>
+                  <Field label="From Location"><Input value={v.from_location} onChange={(e) => set('from_location', e.target.value)} placeholder="Origin Port" /></Field>
+                  <Field label="To Location"><Input value={v.to_location} onChange={(e) => set('to_location', e.target.value)} placeholder="Destination Port" /></Field>
+                </>
+              )}
+            </div>
+          </section>
+
           <section>
             <button type="button" className="flex items-center justify-between w-full text-left mb-4" onClick={() => setSnapshotOpen(!snapshotOpen)}>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Customer Snapshot (Auto-filled)</p>
-                <p className="text-xs text-brand-600 mt-1 font-medium">{v.customer_name} {v.company ? `- ${v.company}` : ''}</p>
               </div>
               {snapshotOpen ? <ChevronUp className="h-5 w-5 text-subtle-fg" /> : <ChevronDown className="h-5 w-5 text-subtle-fg" />}
             </button>
@@ -497,7 +536,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                 <div className="space-y-4">
                   {v.commercial_items.map((c, i) => (
                     <div key={i} className="flex gap-4 items-start w-full flex-wrap">
-                      <div className="w-full sm:w-48">
+                      <div className="flex-[1.5] min-w-[150px]">
                         <Field label="Project Service">
                           <SearchableSelect
                             options={serviceOpts}
@@ -511,12 +550,12 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                           />
                         </Field>
                       </div>
-                      <div className="w-32">
+                      <div className="flex-1 min-w-[100px]">
                         <Field label="Base Amount">
                           <Input type="number" min="0" value={c.base_amount} onChange={(e) => updateCommercialItem(i, { base_amount: Number(e.target.value) })} placeholder="Amount" />
                         </Field>
                       </div>
-                      <div className="w-24">
+                      <div className="flex-1 min-w-[80px]">
                         <Field label="GST %">
                           <div className="relative">
                             <Input type="number" min="0" max="100" value={c.gst_percent} onChange={(e) => updateCommercialItem(i, { gst_percent: Number(e.target.value) })} className="pr-6" />
@@ -524,12 +563,12 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                           </div>
                         </Field>
                       </div>
-                      <div className="w-32">
+                      <div className="flex-1 min-w-[100px]">
                         <Field label="GST Amt">
                           <Input type="number" value={c.gst_amount} disabled className="bg-surface-3 cursor-not-allowed text-right tabular-nums text-subtle-fg" placeholder="GST" />
                         </Field>
                       </div>
-                      <div className="w-32">
+                      <div className="flex-1 min-w-[100px]">
                         <Field label="Total">
                           <Input type="number" value={c.amount_inc_gst} disabled className="bg-surface-3 cursor-not-allowed text-right tabular-nums font-bold text-base-fg" placeholder="Total" />
                         </Field>
@@ -543,32 +582,6 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
               </section>
             </>
           )}
-
-          <section>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg mb-4">General Information</p>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <Field label="Quotation Date" required error={errors.date}><Input type="date" value={v.date} onChange={(e) => set('date', e.target.value)} invalid={!!errors.date} /></Field>
-              <Field label="Valid Until" required error={errors.valid_until}><Input type="date" value={v.valid_until} onChange={(e) => set('valid_until', e.target.value)} invalid={!!errors.valid_until} /></Field>
-              {v.template === 'logistics' && <Field label="Enquiry No"><Input value={v.enquiry_no} onChange={(e) => set('enquiry_no', e.target.value)} placeholder="ENQ-2026-..." /></Field>}
-              <Field label="Currency" required error={errors.currency}>
-                <SearchableSelect
-                  options={currencyOpts}
-                  value={v.currency || ''}
-                  onChange={(val) => set('currency', val)}
-                  placeholder="Select currency..."
-                />
-              </Field>
-
-              {v.template === 'logistics' && (
-                <>
-                  <Field label="Department"><Input value={v.department} onChange={(e) => set('department', e.target.value)} placeholder="e.g. Export" /></Field>
-                  <Field label="Service Type"><Input value={v.service_type} onChange={(e) => set('service_type', e.target.value)} placeholder="e.g. Air Freight" /></Field>
-                  <Field label="From Location"><Input value={v.from_location} onChange={(e) => set('from_location', e.target.value)} placeholder="Origin Port" /></Field>
-                  <Field label="To Location"><Input value={v.to_location} onChange={(e) => set('to_location', e.target.value)} placeholder="Destination Port" /></Field>
-                </>
-              )}
-            </div>
-          </section>
 
           {v.template === 'aurora' && (
             <section>

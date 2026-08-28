@@ -120,3 +120,25 @@ body {
 }
 
 input, select, textarea, button { font-family: inherit; }
+
+@media print { 
+  * { 
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important; 
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body.printing-mode > *:not(.print-only) {
+    display: none !important;
+  }
+  .print-only { 
+    display: block !important;
+    position: static !important; 
+    width: 210mm !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    background: white !important;
+  } 
+}

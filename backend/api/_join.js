@@ -69,20 +69,20 @@ export async function nextProjectNo() {
 
 export async function nextQuotationNo() {
   const now = new Date();
-  const yyyy = String(now.getFullYear());
+  const yy = String(now.getFullYear()).slice(-2);
   const { data, error } = await supabase
     .from('dt_quotations')
     .select('quotation_no')
-    .like('quotation_no', `QT-${yyyy}-%`)
+    .like('quotation_no', `${yy}-DTQ-%`)
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) throw error;
   let max = 0;
   for (const row of data || []) {
-    const m = String(row.quotation_no || '').match(new RegExp(`^QT-${yyyy}-(\\d+)$`));
+    const m = String(row.quotation_no || '').match(new RegExp(`^${yy}-DTQ-(\\d+)$`));
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
-  return `QT-${yyyy}-${String(max + 1).padStart(4, '0')}`;
+  return `${yy}-DTQ-${String(max + 1).padStart(3, '0')}`;
 }
 
 // Generate the next sequential document number, e.g. LD-1001 or PRJ-2001.

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { Quotation, QuotationVersion } from '../../types';
 import Button from '../ui/Button';
 import { Download, Edit2, Share2, Mail } from 'lucide-react';
@@ -17,10 +17,35 @@ export default function QuotationPreview({
   onEdit?: () => void;
 }) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handlePrint = () => {
-    // A simple approach is to invoke window.print() and use print CSS to hide everything except the preview.
-    window.print();
+    if (!printRef.current) return;
+    const node = printRef.current;
+    const parent = node.parentNode;
+    const placeholder = document.createElement('div');
+    parent?.insertBefore(placeholder, node);
+    
+    document.body.appendChild(node);
+    document.body.classList.add('printing-mode');
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+    const timeStr = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/:/g, '-');
+    const projectName = version.company || version.customer_name || quotation.quotation_no || 'Quotation';
+    const safeProjectName = projectName.replace(/[^a-zA-Z0-9 -]/g, '').trim().replace(/\s+/g, '_');
+    
+    const oldTitle = document.title;
+    document.title = `${safeProjectName}_${dateStr}_${timeStr}`;
+    
+    setTimeout(() => {
+      window.print();
+      
+      document.title = oldTitle;
+      document.body.classList.remove('printing-mode');
+      parent?.insertBefore(node, placeholder);
+      parent?.removeChild(placeholder);
+    }, 100);
   };
 
   return (
@@ -51,7 +76,7 @@ export default function QuotationPreview({
       <div className="flex justify-center p-4 sm:p-8 bg-gray-100/50 print:p-0 print:bg-white print:overflow-visible custom-scrollbar">
         <div 
           ref={printRef}
-          className="w-full max-w-[210mm] min-h-[297mm] bg-white text-gray-900 shadow-lg print:shadow-none relative isolate origin-top transform-gpu"
+          className="print-only w-full max-w-[210mm] min-h-[297mm] bg-white text-gray-900 shadow-lg print:shadow-none relative isolate origin-top transform-gpu"
         >
           <TemplateRenderer quotation={quotation} version={version} />
         </div>
