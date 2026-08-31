@@ -69,32 +69,41 @@ export default async function handler(req, res) {
 
 // Ensure the user exists in Supabase Auth, or update their password to match
 async function upsertAuthUser(email, password) {
-  const { error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-  if (!error) return;
+  try {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (!error) return;
 
-  // Already registered -> update the password
-  const already = /already|registered|exists/i.test(error.message || '');
-  if (already) {
-    const existing = await findAuthUserByEmail(email);
-    if (existing) {
-      await supabase.auth.admin.updateUserById(existing.id, { password });
+    // Already registered -> update the password
+    const errMessage = error?.message || error?.error_description || (typeof error === 'string' ? error : '') || '';
+    const already = /already|registered|exists/i.test(errMessage);
+    if (already) {
+      const existing = await findAuthUserByEmail(email);
+      if (existing?.id) {
+        await supabase.auth.admin.updateUserById(existing.id, { password });
+      }
     }
+  } catch (err) {
+    console.error('Error in upsertAuthUser:', err);
   }
 }
 
 async function findAuthUserByEmail(email) {
-  const target = email.toLowerCase();
-  for (let page = 1; page <= 10; page++) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) break;
-    const users = data?.users || [];
-    const match = users.find((u) => (u.email || '').toLowerCase() === target);
-    if (match) return match;
-    if (users.length < 200) break;
+  try {
+    const target = (email || '').toLowerCase();
+    for (let page = 1; page <= 10; page++) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) break;
+      const users = data?.users || [];
+      const match = users.find((u) => (u.email || '').toLowerCase() === target);
+      if (match) return match;
+      if (users.length < 200) break;
+    }
+  } catch (err) {
+    console.error('Error in findAuthUserByEmail:', err);
   }
   return null;
 }
