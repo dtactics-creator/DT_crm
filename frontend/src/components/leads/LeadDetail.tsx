@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import Drawer from '../ui/Drawer';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import Avatar from '../ui/Avatar';
-import { Pencil, Trash2, Mail, Phone, Building2, CalendarClock, CalendarCheck, Tag, Layers, ArrowRightLeft, CheckCircle2, UserPlus, MapPin, Link2, ExternalLink } from 'lucide-react';
-import type { Lead, MasterItem } from '../../types';
+import { Pencil, Trash2, Mail, Phone, Building2, CalendarClock, CalendarCheck, Tag, Layers, ArrowRightLeft, CheckCircle2, UserPlus, MapPin, Link2, ExternalLink, Copy, BarChart3 } from 'lucide-react';
+import type { Lead, MasterItem, ProjectUrl } from '../../types';
 import { makeLookup } from '../../hooks/useMasters';
 import { usePermissions } from '../../contexts/PermissionContext';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import TrackingDetailDrawer from './TrackingDetailDrawer';
 
 export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDelete, onConvert, onNextFollowUp }: {
   open: boolean;
@@ -18,6 +20,7 @@ export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDel
   onConvert: () => void;
   onNextFollowUp?: () => void;
 }) {
+  const [selectedTrackingUrl, setSelectedTrackingUrl] = useState<ProjectUrl | null>(null);
   const lookup = makeLookup(masters);
   const { can } = usePermissions();
   if (!lead) return null;
@@ -106,20 +109,86 @@ export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDel
         {urls.length > 0 && (
           <div>
             <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-3">Lead URLs</p>
-            <div className="space-y-2">
-              {urls.map((u, i) => (
-                <a key={i} href={u.url} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-3 rounded-xl border border-app p-3 hover:bg-surface-2 hover:border-strong transition-colors group">
-                  <span className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${lookup.color('url_type', u.type)}18` }}>
-                    <Link2 className="h-4 w-4" style={{ color: lookup.color('url_type', u.type) }} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-base-fg">{lookup.label('url_type', u.type)}</p>
-                    <p className="text-[12px] text-muted-fg truncate">{u.url}</p>
+            <div className="space-y-3">
+              {urls.map((u, i) => {
+                const isTracked = Boolean(u.tracking_enabled && u.tracking_token);
+                const visits = u.total_visits || 0;
+                const engagementStatus = visits === 0 ? 'Not Opened' : visits >= 3 ? 'Highly Engaged' : 'Opened';
+                const trackingLink = `${window.location.origin}/t/${u.tracking_token || ''}`;
+
+                return (
+                  <div key={i} className="rounded-xl border border-app bg-surface-1 p-3.5 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <span className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: `${lookup.color('url_type', u.type)}18` }}>
+                        <Link2 className="h-4 w-4" style={{ color: lookup.color('url_type', u.type) }} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                          <p className="text-[13.5px] font-bold text-base-fg">{lookup.label('url_type', u.type)}</p>
+                          {isTracked ? (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold ${
+                              engagementStatus === 'Highly Engaged' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300' :
+                              engagementStatus === 'Opened' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300' :
+                              'bg-surface-3 text-muted-fg border border-app'
+                            }`}>
+                              {engagementStatus === 'Highly Engaged' ? '🔥 Highly Engaged' : engagementStatus === 'Opened' ? '🟢 Opened' : '⚪ Not Opened'}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10.5px] font-medium bg-surface-3 text-subtle-fg">
+                              Tracking OFF
+                            </span>
+                          )}
+                        </div>
+                        <a href={u.url} target="_blank" rel="noreferrer" className="text-[12px] text-muted-fg hover:text-brand-600 truncate flex items-center gap-1">
+                          {u.url} <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+
+                    {isTracked && (
+                      <div className="pt-2 border-t border-[color:var(--border)] space-y-2.5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11.5px]">
+                          <div>
+                            <span className="text-subtle-fg block text-[10px] uppercase font-bold">First Opened</span>
+                            <span className="font-semibold text-base-fg">{formatDate(u.first_opened_at) || 'Not yet'}</span>
+                          </div>
+                          <div>
+                            <span className="text-subtle-fg block text-[10px] uppercase font-bold">Last Opened</span>
+                            <span className="font-semibold text-base-fg">{formatDate(u.last_opened_at) || '—'}</span>
+                          </div>
+                          <div>
+                            <span className="text-subtle-fg block text-[10px] uppercase font-bold">Total Visits</span>
+                            <span className="font-bold text-brand-600 dark:text-brand-400">{u.total_visits || 0}</span>
+                          </div>
+                          <div>
+                            <span className="text-subtle-fg block text-[10px] uppercase font-bold">Unique Pages</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{u.unique_pages || 0}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(trackingLink);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold bg-surface-2 border border-app hover:bg-surface-3 text-base-fg transition-colors"
+                          >
+                            <Copy className="h-3.5 w-3.5 text-subtle-fg" /> Copy Tracked Link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTrackingUrl(u)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold bg-brand-50 text-brand-600 border border-brand-200 dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/20 hover:bg-brand-100 transition-colors"
+                          >
+                            <BarChart3 className="h-3.5 w-3.5" /> View Tracking
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <ExternalLink className="h-4 w-4 text-subtle-fg group-hover:text-brand-600 shrink-0" />
-                </a>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -185,6 +254,16 @@ export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDel
 
         <p className="text-[11.5px] text-subtle-fg">Created {formatDate(lead.created_at)} · Updated {formatDate(lead.updated_at)}</p>
       </div>
+
+      <TrackingDetailDrawer
+        open={Boolean(selectedTrackingUrl)}
+        onClose={() => setSelectedTrackingUrl(null)}
+        leadId={lead.id}
+        leadName={lead.customer_name}
+        leadNo={lead.lead_no}
+        url={selectedTrackingUrl}
+        masters={masters}
+      />
     </Drawer>
   );
 }

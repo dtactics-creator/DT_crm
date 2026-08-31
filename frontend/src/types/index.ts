@@ -35,8 +35,81 @@ export interface Template extends AuditFields {
 }
 
 export interface ProjectUrl {
+  id?: string;
   type: string;
   url: string;
+  tracking_enabled?: boolean;
+  tracking_token?: string;
+  first_opened_at?: string | null;
+  last_opened_at?: string | null;
+  total_visits?: number;
+  unique_visitors?: number;
+  unique_pages?: number;
+}
+
+export interface UrlVisit {
+  id: string;
+  lead_id: string;
+  lead_url_id: string;
+  tracking_token: string;
+  session_id: string;
+  visited_at: string;
+  full_url?: string | null;
+  path: string;
+  ip_address?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  timezone?: string | null;
+  device_type?: string | null;
+  operating_system?: string | null;
+  browser?: string | null;
+  user_agent?: string | null;
+  referrer?: string | null;
+  duration_seconds?: number;
+}
+
+export interface UrlPageView {
+  id: string;
+  visit_id?: string | null;
+  lead_id: string;
+  lead_url_id: string;
+  tracking_token: string;
+  session_id: string;
+  path: string;
+  full_url?: string | null;
+  viewed_at: string;
+  duration_seconds: number;
+  referrer?: string | null;
+}
+
+export interface UrlPathAnalytics {
+  path: string;
+  views: number;
+  first_viewed: string;
+  last_viewed: string;
+  avg_duration_seconds: number;
+}
+
+export interface LeadUrlAnalytics {
+  lead: {
+    id: string;
+    lead_no: string | null;
+    customer_name: string;
+    company: string | null;
+  };
+  url: ProjectUrl;
+  summary: {
+    first_opened_at: string | null;
+    last_opened_at: string | null;
+    total_visits: number;
+    unique_visitors: number;
+    unique_pages: number;
+  };
+  pages: UrlPathAnalytics[];
+  visits: UrlVisit[];
 }
 
 export interface Employee extends AuditFields {

@@ -14,6 +14,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Support large imports
 app.use(express.urlencoded({ extended: true }));
@@ -57,6 +58,25 @@ async function mountApiRoutes() {
 }
 
 mountApiRoutes().then(() => {
+  // Public short URL shortcuts
+  app.get('/t/sdk.js', async (req, res) => {
+    try {
+      const module = await import(pathToFileURL(path.join(__dirname, 'api', 'lead-url-sdk.js')).href);
+      return module.default(req, res);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/t/:tracking_token', async (req, res) => {
+    try {
+      const module = await import(pathToFileURL(path.join(__dirname, 'api', 't.js')).href);
+      return module.default(req, res);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.listen(PORT, () => {
     console.log(`\n🚀 Backend API Server running at http://localhost:${PORT}`);
     console.log(`Ensure your Vite frontend proxies /api to this port (or connects to it directly).\n`);

@@ -81,6 +81,12 @@ export const V = {
   },
 };
 
+import crypto from 'crypto';
+
+export function generateTrackingToken() {
+  return crypto.randomBytes(12).toString('hex');
+}
+
 export function sanitizeUrls(input) {
   if (!Array.isArray(input)) return [];
   const out = [];
@@ -88,10 +94,30 @@ export function sanitizeUrls(input) {
     const type = (row?.type ?? '').toString().trim();
     const url = (row?.url ?? '').toString().trim();
     if (!type && !url) continue; // skip empty rows
-    if (!type) throw new Error('Each URL row must have a URL type');
+    if (!type) throw new Error('Each URL row must have a URL type/label');
     if (!url) throw new Error('Each URL row must have a URL');
     if (!/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(url)) throw new Error(`"${url}" is not a valid URL (must start with http:// or https://)`);
-    out.push({ type, url });
+    
+    const id = row?.id ? String(row.id) : `url_${crypto.randomBytes(6).toString('hex')}`;
+    const tracking_enabled = Boolean(row?.tracking_enabled);
+    let tracking_token = row?.tracking_token ? String(row.tracking_token).trim() : null;
+
+    if (tracking_enabled && !tracking_token) {
+      tracking_token = generateTrackingToken();
+    }
+
+    out.push({
+      id,
+      type,
+      url,
+      tracking_enabled,
+      tracking_token: tracking_token || null,
+      first_opened_at: row?.first_opened_at || null,
+      last_opened_at: row?.last_opened_at || null,
+      total_visits: typeof row?.total_visits === 'number' ? row.total_visits : 0,
+      unique_visitors: typeof row?.unique_visitors === 'number' ? row.unique_visitors : 0,
+      unique_pages: typeof row?.unique_pages === 'number' ? row.unique_pages : 0,
+    });
   }
   return out;
 }

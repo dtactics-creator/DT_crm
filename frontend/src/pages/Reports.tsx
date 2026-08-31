@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer, Tooltip, Legend,
@@ -8,7 +9,8 @@ import PageHeader from '../components/layout/PageHeader';
 import { ChartCard, ChartTooltip, useChartColors } from '../components/charts/ChartKit';
 import Skeleton from '../components/ui/Skeleton';
 import { useReports } from '../hooks/useDashboard';
-import { formatCompact, formatCurrency } from '../lib/utils';
+import { useAuth } from '../contexts/AuthContext';
+import { formatCompact, formatCurrency, formatDate } from '../lib/utils';
 import type { ReportData } from '../types';
 
 const SUMMARY = (s: ReportData['summary']) => [
@@ -175,8 +177,127 @@ export default function Reports() {
               </ResponsiveContainer>
             )}
           </ChartCard>
+
+          {/* Website Visitor Analytics */}
+          <VisitorAnalyticsCard />
         </div>
       )}
     </div>
+  );
+}
+
+function VisitorAnalyticsCard() {
+  const { session } = useAuth();
+  const [data, setData] = useState<{
+    summary: { totalTrackedUrls: number; openedUrls: number; unopenedUrls: number; totalVisits: number; engagementRate: number };
+    labelBreakdown: { label: string; tracked: number; opened: number; visits: number }[];
+    trackedUrls: { lead_id: string; customer_name: string; company: string; type: string; url: string; tracking_token: string; first_opened_at: string; last_opened_at: string; total_visits: number; unique_pages: number }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/lead-url-tracking?action=analytics', {
+          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          setData(json);
+        }
+      } catch {
+        // Ignore fetch error
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [session?.access_token]);
+
+  if (loading) {
+    return <ChartCard title="Website Visitor Analytics" subtitle="Lead URL opens and page navigation metrics" className="lg:col-span-2"><Skeleton className="h-48" /></ChartCard>;
+  }
+
+  const s = data?.summary || { totalTrackedUrls: 0, openedUrls: 0, unopenedUrls: 0, totalVisits: 0, engagementRate: 0 };
+  const trackedUrls = data?.trackedUrls || [];
+
+  return (
+    <ChartCard title="Website Visitor Analytics" subtitle="Lead URL opens, visitor frequency, and website exploration depth" className="lg:col-span-2" action={<Activity className="h-4.5 w-4.5 text-emerald-500" />}>
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="rounded-xl border border-app bg-surface-2 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Tracked URLs</p>
+            <p className="text-[20px] font-extrabold text-base-fg mt-0.5 tabular">{s.totalTrackedUrls}</p>
+          </div>
+          <div className="rounded-xl border border-app bg-surface-2 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Opened URLs</p>
+            <p className="text-[20px] font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 tabular">
+              {s.openedUrls} <span className="text-[12px] font-normal text-muted-fg">({s.engagementRate}%)</span>
+            </p>
+          </div>
+          <div className="rounded-xl border border-app bg-surface-2 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Unopened</p>
+            <p className="text-[20px] font-extrabold text-muted-fg mt-0.5 tabular">{s.unopenedUrls}</p>
+          </div>
+          <div className="rounded-xl border border-app bg-surface-2 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Total Visits</p>
+            <p className="text-[20px] font-extrabold text-brand-600 dark:text-brand-400 mt-0.5 tabular">{s.totalVisits}</p>
+          </div>
+        </div>
+
+        {trackedUrls.length === 0 ? (
+          <p className="text-[12.5px] text-muted-fg text-center py-6">No tracked URLs added yet. Enable tracking on Lead URLs in the Lead Form to view analytics.</p>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-2">Tracked URL Engagement Summary</p>
+              <div className="overflow-x-auto rounded-xl border border-app">
+                <table className="w-full text-left text-[12px]">
+                  <thead className="bg-surface-2 text-subtle-fg font-bold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="px-3.5 py-2.5">Lead</th>
+                      <th className="px-3.5 py-2.5">Label</th>
+                      <th className="px-3.5 py-2.5">Status</th>
+                      <th className="px-3.5 py-2.5">First Opened</th>
+                      <th className="px-3.5 py-2.5">Last Opened</th>
+                      <th className="px-3.5 py-2.5 text-center">Visits</th>
+                      <th className="px-3.5 py-2.5 text-center">Pages</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[color:var(--border)]">
+                    {trackedUrls.slice(0, 10).map((u, i) => {
+                      const visits = u.total_visits || 0;
+                      const status = visits === 0 ? 'Not Opened' : visits >= 3 ? 'Highly Engaged' : 'Opened';
+                      return (
+                        <tr key={i} className="hover:bg-surface-2/50 transition-colors">
+                          <td className="px-3.5 py-2.5">
+                            <p className="font-semibold text-base-fg">{u.customer_name}</p>
+                            <p className="text-[11px] text-muted-fg">{u.company || '—'}</p>
+                          </td>
+                          <td className="px-3.5 py-2.5 font-medium text-base-fg">{u.type}</td>
+                          <td className="px-3.5 py-2.5">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold ${
+                              status === 'Highly Engaged' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' :
+                              status === 'Opened' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' :
+                              'bg-surface-3 text-muted-fg'
+                            }`}>
+                              {status === 'Highly Engaged' ? '🔥 Highly Engaged' : status === 'Opened' ? '🟢 Opened' : '⚪ Not Opened'}
+                            </span>
+                          </td>
+                          <td className="px-3.5 py-2.5 text-muted-fg">{formatDate(u.first_opened_at) || 'Not yet'}</td>
+                          <td className="px-3.5 py-2.5 text-muted-fg">{formatDate(u.last_opened_at) || '—'}</td>
+                          <td className="px-3.5 py-2.5 text-center font-bold text-brand-600 dark:text-brand-400">{u.total_visits || 0}</td>
+                          <td className="px-3.5 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{u.unique_pages || 0}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </ChartCard>
   );
 }

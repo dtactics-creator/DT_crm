@@ -173,6 +173,52 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON audit_logs(module);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
 
+CREATE TABLE IF NOT EXISTS dt_lead_url_visits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    lead_id UUID REFERENCES dt_leads3(id) ON DELETE CASCADE,
+    lead_url_id TEXT NOT NULL,
+    tracking_token TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    visited_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    full_url TEXT,
+    path TEXT,
+    query_string TEXT,
+    ip_address TEXT,
+    country TEXT,
+    state TEXT,
+    city TEXT,
+    latitude NUMERIC,
+    longitude NUMERIC,
+    timezone TEXT,
+    device_type TEXT,
+    operating_system TEXT,
+    browser TEXT,
+    user_agent TEXT,
+    referrer TEXT,
+    duration_seconds INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS dt_lead_url_page_views (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    visit_id UUID REFERENCES dt_lead_url_visits(id) ON DELETE CASCADE,
+    lead_id UUID REFERENCES dt_leads3(id) ON DELETE CASCADE,
+    lead_url_id TEXT NOT NULL,
+    tracking_token TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    path TEXT NOT NULL,
+    full_url TEXT,
+    viewed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    duration_seconds INTEGER DEFAULT 0,
+    referrer TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_lead_url_visits_lead_id ON dt_lead_url_visits(lead_id);
+CREATE INDEX IF NOT EXISTS idx_lead_url_visits_token ON dt_lead_url_visits(tracking_token);
+CREATE INDEX IF NOT EXISTS idx_lead_url_visits_session ON dt_lead_url_visits(session_id);
+CREATE INDEX IF NOT EXISTS idx_lead_url_visits_visited_at ON dt_lead_url_visits(visited_at DESC);
+CREATE INDEX IF NOT EXISTS idx_lead_url_pv_visit_id ON dt_lead_url_page_views(visit_id);
+CREATE INDEX IF NOT EXISTS idx_lead_url_pv_token ON dt_lead_url_page_views(tracking_token);
+
 CREATE TABLE IF NOT EXISTS dt_quotations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     quotation_no TEXT UNIQUE NOT NULL,
@@ -300,6 +346,8 @@ ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP WITH TIME 
 -- ---------------------------------------------------------------------------
 DELETE FROM dt_role_permissions;
 DELETE FROM audit_logs;
+DELETE FROM dt_lead_url_page_views;
+DELETE FROM dt_lead_url_visits;
 DELETE FROM dt_projects;
 DELETE FROM dt_leads3;
 DELETE FROM dt_templates;

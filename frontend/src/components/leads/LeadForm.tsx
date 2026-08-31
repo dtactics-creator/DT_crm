@@ -250,30 +250,49 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
           ) : (
             <div className="space-y-2.5">
               {v.urls.map((row, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <div className="w-40 shrink-0">
-                    <SearchableSelect
-                      value={row.type}
-                      onChange={(val) => updateUrl(i, { type: val })}
-                      options={urlTypeOpts}
-                      placeholder="Type"
-                      invalid={!!errors[`url_type_${i}`]}
-                    />
-                    {errors[`url_type_${i}`] && <p className="text-[11.5px] font-medium text-red-500 mt-1">{errors[`url_type_${i}`]}</p>}
+                <div key={i} className="rounded-xl border border-app p-3 bg-surface-1 space-y-2.5">
+                  <div className="flex items-start gap-2">
+                    <div className="w-40 shrink-0">
+                      <SearchableSelect
+                        value={row.type}
+                        onChange={(val) => updateUrl(i, { type: val })}
+                        options={urlTypeOpts}
+                        placeholder="Type"
+                        invalid={!!errors[`url_type_${i}`]}
+                      />
+                      {errors[`url_type_${i}`] && <p className="text-[11.5px] font-medium text-red-500 mt-1">{errors[`url_type_${i}`]}</p>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Input
+                        value={row.url}
+                        onChange={(e) => updateUrl(i, { url: e.target.value })}
+                        invalid={!!errors[`url_${i}`]}
+                        placeholder="https://example.com"
+                      />
+                      {errors[`url_${i}`] && <p className="text-[11.5px] font-medium text-red-500 mt-1">{errors[`url_${i}`]}</p>}
+                    </div>
+                    <button type="button" onClick={() => removeUrl(i)}
+                      className="h-10 w-10 shrink-0 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <Input
-                      value={row.url}
-                      onChange={(e) => updateUrl(i, { url: e.target.value })}
-                      invalid={!!errors[`url_${i}`]}
-                      placeholder="https://example.com"
-                    />
-                    {errors[`url_${i}`] && <p className="text-[11.5px] font-medium text-red-500 mt-1">{errors[`url_${i}`]}</p>}
+
+                  <div className="flex items-center justify-between pt-1 border-t border-[color:var(--border)]">
+                    <label className="flex items-center gap-2 text-[12px] font-medium text-muted-fg cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(row.tracking_enabled)}
+                        onChange={(e) => updateUrl(i, { tracking_enabled: e.target.checked })}
+                        className="h-4 w-4 rounded border-strong text-brand-600 focus:ring-brand-500 cursor-pointer"
+                      />
+                      <span>Track website visits &amp; page navigation</span>
+                    </label>
+                    {row.tracking_enabled && (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10.5px] font-bold bg-brand-50 text-brand-600 border border-brand-200 dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/20">
+                        <Link2 className="h-3 w-3" /> Tracked URL
+                      </span>
+                    )}
                   </div>
-                  <button type="button" onClick={() => removeUrl(i)}
-                    className="h-10 w-10 shrink-0 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>

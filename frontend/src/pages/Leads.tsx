@@ -213,6 +213,34 @@ export default function Leads() {
       ) : <span className="text-subtle-fg text-[12.5px]">Unassigned</span>,
     },
     { key: 'source_person', header: 'Source Person', sortValue: (r) => r.source_person ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{r.source_person || '—'}</span> },
+    {
+      key: 'tracking', header: 'Tracked URLs',
+      render: (r) => {
+        const tracked = (Array.isArray(r.urls) ? r.urls : []).filter((u) => u.tracking_enabled);
+        if (tracked.length === 0) return <span className="text-subtle-fg text-[12.5px]">—</span>;
+        return (
+          <div className="flex flex-col gap-1 min-w-[130px]">
+            {tracked.slice(0, 2).map((u, i) => {
+              const visits = u.total_visits || 0;
+              const status = visits === 0 ? 'Not Opened' : visits >= 3 ? 'Highly Engaged' : 'Opened';
+              return (
+                <div key={i} className="flex items-center gap-1 text-[11px] font-semibold">
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    status === 'Highly Engaged' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' :
+                    status === 'Opened' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' :
+                    'bg-surface-3 text-muted-fg'
+                  }`}>
+                    {status === 'Highly Engaged' ? '🔥' : status === 'Opened' ? '🟢' : '⚪'} {lookup.label('url_type', u.type)}
+                  </span>
+                  <span className="text-[10.5px] text-muted-fg tabular">({visits} v)</span>
+                </div>
+              );
+            })}
+            {tracked.length > 2 && <span className="text-[10px] text-subtle-fg">+{tracked.length - 2} more</span>}
+          </div>
+        );
+      },
+    },
     ...(can('leads.view_budget') ? [{ key: 'budget', header: 'Budget', sortValue: (r) => Number(r.budget), className: 'tabular font-semibold', render: (r) => formatCurrency(r.budget) } as Column<Lead>] : []),
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={lookup.label('lead_status', r.status)} color={lookup.color('lead_status', r.status)} dot /> },
     { key: 'received', header: 'Received', sortValue: (r) => r.lead_received_date ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.lead_received_date)}</span> },
