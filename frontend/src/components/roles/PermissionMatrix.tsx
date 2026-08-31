@@ -92,7 +92,7 @@ export default function PermissionMatrix({ open, onClose, role, canEdit }: {
 
   return (
     <Drawer open={open} onClose={onClose}
-      width="max-w-[70%]"
+      width="max-w-[85%]"
       title="Manage permissions"
       subtitle={role ? `${role.name} · ${selectedCount === 'All' ? 'Full access' : `${selectedCount} permission${selectedCount === 1 ? '' : 's'}`}` : ''}
       footer={

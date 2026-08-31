@@ -9,7 +9,8 @@ function formatCategory(cat) {
 
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
-  const user = await requirePermission(req, res, methodPermission('masters', req.method));
+  const perm = req.method === 'GET' ? null : methodPermission('masters', req.method);
+  const user = await requirePermission(req, res, perm);
   if (!user) return;
 
   try {

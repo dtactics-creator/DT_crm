@@ -141,7 +141,7 @@ export default function LeadForm({ open, onClose, onSubmit, initial, masters, em
   return (
     <Drawer
       open={open} onClose={onClose}
-      width="max-w-[70%]"
+      width="max-w-[85%]"
       title={initial ? 'Edit lead' : 'New lead'}
       subtitle={initial ? `${initial.lead_no} · ${initial.company || initial.customer_name}` : 'Add a new opportunity to your pipeline'}
       footer={

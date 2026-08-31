@@ -46,7 +46,7 @@ export default function LeadDetail({ open, onClose, lead, masters, onEdit, onDel
   return (
     <Drawer
       open={open} onClose={onClose}
-      width="max-w-[70%]"
+      width="max-w-[85%]"
       title={lead.customer_name}
       subtitle={`${lead.lead_no || 'Lead'} · ${lead.company || '—'}`}
       footer={

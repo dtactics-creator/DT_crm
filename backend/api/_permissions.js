@@ -115,7 +115,7 @@ export async function requirePermission(req, res, permission) {
     data.user.employee_id = employee.id;
   }
 
-  if (isAdmin || permissions.includes(permission) || permissions.includes('*')) {
+  if (!permission || isAdmin || permissions.includes(permission) || permissions.includes('*')) {
     return data.user;
   }
   

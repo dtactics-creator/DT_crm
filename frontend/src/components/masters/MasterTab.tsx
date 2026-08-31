@@ -60,16 +60,14 @@ export default function MasterTab({ category, singular }: { category: string; si
     { key: 'label', header: 'Label', sortValue: (r) => r.label.toLowerCase(), render: (r) => (
       <div className="flex items-center gap-3">
         <span className="h-7 w-7 rounded-lg shrink-0 border border-app" style={{ backgroundColor: r.color || '#64748b' }} />
-        <div><p className="font-semibold text-base-fg">{r.label}</p><p className="text-[11.5px] text-subtle-fg font-mono">{r.value}</p></div>
+        <div>
+          <p className="font-semibold text-base-fg">{r.label}</p>
+          <p className="text-[11.5px] text-subtle-fg max-w-[250px] truncate" title={r.description || ''}>
+            {r.description || <span className="text-subtle-fg/50 italic">No description</span>}
+          </p>
+        </div>
       </div>
     ) },
-    ...(category === 'project_type' ? [{
-      key: 'description', header: 'Description', render: (r) => (
-        <p className="text-[13px] text-muted-fg max-w-[250px] truncate" title={r.description || ''}>
-          {r.description || <span className="text-subtle-fg/50 italic">No description</span>}
-        </p>
-      )
-    } as Column<MasterItem>] : []),
     ...(category === 'project_service' ? [{
       key: 'gst_percent', header: 'GST %', render: (r) => (
         <Badge label={`${r.gst_percent || 0}%`} color="#8b5cf6" />
@@ -79,12 +77,6 @@ export default function MasterTab({ category, singular }: { category: string; si
       key: 'symbol', header: 'Symbol', render: (r) => (
         <p className="text-[13px] text-muted-fg max-w-[100px] truncate" title={r.symbol || ''}>
           {r.symbol || <span className="text-subtle-fg/50 italic">None</span>}
-        </p>
-      )
-    } as Column<MasterItem>, {
-      key: 'description', header: 'Description', render: (r) => (
-        <p className="text-[13px] text-muted-fg max-w-[250px] truncate" title={r.description || ''}>
-          {r.description || <span className="text-subtle-fg/50 italic">No description</span>}
         </p>
       )
     } as Column<MasterItem>] : []),
@@ -130,25 +122,18 @@ export default function MasterTab({ category, singular }: { category: string; si
           <Field label="Label" required error={error}>
             <Input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} invalid={!!error} placeholder={`e.g. ${singular}`} autoFocus />
           </Field>
-          {(category === 'project_type' || category === 'currency') && (
-            <Field label="Description">
-              <Textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Enter a brief description..." rows={3} />
-            </Field>
-          )}
+          <Field label="Description">
+            <Textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Enter a brief description..." rows={3} />
+          </Field>
           {category === 'currency' && (
             <Field label="Symbol">
               <Input value={form.symbol || ''} onChange={(e) => setForm((f) => ({ ...f, symbol: e.target.value }))} placeholder="e.g. $, ₹, EUR" />
             </Field>
           )}
           {category === 'project_service' && (
-            <>
-              <Field label="Description">
-                <Textarea value={form.description || ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Enter a brief description..." rows={3} />
-              </Field>
-              <Field label="GST %">
-                <Input type="number" min="0" max="100" value={form.gst_percent} onChange={(e) => setForm((f) => ({ ...f, gst_percent: Number(e.target.value) }))} placeholder="e.g. 18" />
-              </Field>
-            </>
+            <Field label="GST %">
+              <Input type="number" min="0" max="100" value={form.gst_percent} onChange={(e) => setForm((f) => ({ ...f, gst_percent: Number(e.target.value) }))} placeholder="e.g. 18" />
+            </Field>
           )}
           {category === 'payment_milestone' && (
             <Field label="Percentage (%)">

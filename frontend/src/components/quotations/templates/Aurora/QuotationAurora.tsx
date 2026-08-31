@@ -168,7 +168,8 @@ export function AuroraPage({ quotation, version }: { quotation: Quotation, versi
                   version.commercial_items.map((item, idx) => (
                     <tr key={idx}>
                       <td className="au-item-desc">
-                        {item.project_type || 'Service'}
+                        <div className="font-semibold text-base-fg">{item.project_type || 'Service'}</div>
+                        {item.description && <div className="text-[11px] text-muted-fg mt-0.5 whitespace-pre-wrap">{item.description}</div>}
                       </td>
                       <td className="au-item-basis">{formatCurrency(item.base_amount, version.currency)}</td>
                       <td className="au-item-basis">{item.gst_percent}%</td>

@@ -4,7 +4,8 @@ import { logAudit } from './_audit.js';
 
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
-  const user = await requirePermission(req, res, methodPermission('employees', req.method));
+  const perm = req.method === 'GET' ? null : methodPermission('employees', req.method);
+  const user = await requirePermission(req, res, perm);
   if (!user) return;
 
   try {

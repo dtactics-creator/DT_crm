@@ -20,10 +20,10 @@ const TABS: TabKind[] = [
   { key: 'url_type', label: 'URL Types', icon: Link2, kind: 'master', category: 'url_type', singular: 'URL Type' },
   { key: 'template_category', label: 'Template Categories', icon: MessageSquareText, kind: 'master', category: 'template_category', singular: 'Template Category' },
   { key: 'priority', label: 'Priority', icon: SignalHigh, kind: 'master', category: 'priority', singular: 'Priority' },
-  { key: 'project_service', label: 'Project Services', icon: Layers, kind: 'master', category: 'project_service', singular: 'Project Service' },
+  { key: 'project_service', label: 'Services', icon: Layers, kind: 'master', category: 'project_service', singular: 'Service' },
   { key: 'industry', label: 'Industries', icon: Building2, kind: 'master', category: 'industry', singular: 'Industry' },
   { key: 'currency', label: 'Currencies', icon: Coins, kind: 'master', category: 'currency', singular: 'Currency' },
-  { key: 'payment_milestone', label: 'Payment Milestones', icon: CalendarDays, kind: 'master', category: 'payment_milestone', singular: 'Payment Milestone' },
+  { key: 'payment_milestone', label: 'Milestones', icon: CalendarDays, kind: 'master', category: 'payment_milestone', singular: 'Milestone' },
 ];
 
 export default function Masters() {

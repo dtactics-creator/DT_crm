@@ -53,6 +53,8 @@ export interface QuotationFormValues {
   service_areas: FormServiceArea[];
   commercial_items: FormQuotationCommercialItem[];
   milestones: FormQuotationMilestone[];
+  subtotal?: number;
+  grand_total?: number;
 }
 
 const empty: QuotationFormValues = {
@@ -317,7 +319,16 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
 
   const submit = () => {
     if (!validate()) return;
-    onSubmit(v);
+
+    let currentSubtotal = 0;
+    if (v.template === 'logistics') {
+      v.service_areas.forEach(sa => { (sa.charges || []).forEach(c => { currentSubtotal += Number(c.rate) || 0; }); });
+    } else {
+      currentSubtotal = Number(v.budget) || 0;
+    }
+    const currentGrandTotal = currentSubtotal - (Number(v.discount) || 0) + (Number(v.tax) || 0);
+
+    onSubmit({ ...v, subtotal: currentSubtotal, grand_total: currentGrandTotal });
   };
 
   let subtotal = 0;
@@ -416,7 +427,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
   return (
     <>
       <Drawer
-        open={open} onClose={onClose} width="w-full lg:w-[70vw] xl:max-w-[1200px]"
+        open={open} onClose={onClose} width="max-w-[85%]"
         title={title} subtitle={subtitle}
         footer={
           <div className="flex items-center justify-between w-full">
@@ -544,10 +555,16 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                             onChange={(val) => {
                               const opt = serviceOpts.find((o) => o.value === val);
                               const newGst = (opt as any)?.gst_percent !== undefined ? (opt as any).gst_percent : c.gst_percent;
-                              updateCommercialItem(i, { project_type: val, gst_percent: newGst });
+                              const newDesc = (opt as any)?.description !== undefined ? (opt as any).description : c.description;
+                              updateCommercialItem(i, { project_type: val, gst_percent: newGst, description: newDesc });
                             }}
                             placeholder="Select service..."
                           />
+                        </Field>
+                      </div>
+                      <div className="flex-[2] min-w-[200px]">
+                        <Field label="Description">
+                          <Input value={c.description || ''} onChange={(e) => updateCommercialItem(i, { description: e.target.value })} placeholder="Service description..." />
                         </Field>
                       </div>
                       <div className="flex-1 min-w-[100px]">
@@ -699,8 +716,8 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
             <div className="flex justify-end mb-6">
               <div className="w-80 bg-surface-2 rounded-xl p-4 border border-app space-y-3">
                 <div className="flex justify-between items-center text-sm"><span className="text-muted-fg">Subtotal:</span><span className="tabular-nums font-medium">{subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between items-center text-sm"><span className="text-muted-fg">Global Discount:</span><Input type="number" min="0" className="w-24 h-8 text-right" value={v.discount} onChange={(e) => set('discount', Number(e.target.value))} /></div>
-                <div className="flex justify-between items-center text-sm"><span className="text-muted-fg">Global Tax:</span><Input type="number" min="0" className="w-24 h-8 text-right" value={v.tax} onChange={(e) => set('tax', Number(e.target.value))} /></div>
+                <div className="flex justify-between items-center text-sm"><span className="text-muted-fg">Discount:</span><Input type="number" min="0" className="w-24 h-8 text-right" placeholder="0" value={v.discount || ''} onChange={(e) => set('discount', Number(e.target.value))} /></div>
+                <div className="flex justify-between items-center text-sm"><span className="text-muted-fg">Gst:</span><Input type="number" min="0" className="w-24 h-8 text-right" placeholder="0" value={v.tax || ''} onChange={(e) => set('tax', Number(e.target.value))} /></div>
                 <div className="pt-2 border-t border-strong flex justify-between"><span className="font-semibold text-base-fg">Total:</span><span className="font-bold tabular-nums text-brand-600">{grandTotal.toFixed(2)}</span></div>
               </div>
             </div>
