@@ -39,23 +39,27 @@ export function fail(res, status, message) {
 
 // Minimal validator helpers (server-side validation, no external deps).
 export const V = {
-  str(value, { field, required = false, min = 0, max = 10000 } = {}) {
+  str(value, options = {}) {
+    const fieldName = options.field || options.name || 'Field';
     if (value === undefined || value === null || value === '') {
-      if (required) throw new Error(`${field} is required`);
-      return null;
+      if (options.required) throw new Error(`${fieldName} is required`);
+      return options.default !== undefined ? options.default : null;
     }
     const s = String(value).trim();
-    if (required && s.length < Math.max(1, min)) throw new Error(`${field} must be at least ${Math.max(1, min)} characters`);
-    if (s.length > max) throw new Error(`${field} is too long`);
+    const min = options.min || 0;
+    const max = options.max || 10000;
+    if (options.required && s.length < Math.max(1, min)) throw new Error(`${fieldName} must be at least ${Math.max(1, min)} characters`);
+    if (s.length > max) throw new Error(`${fieldName} is too long`);
     return s;
   },
-  email(value, { field = 'Email', required = false } = {}) {
+  email(value, options = {}) {
+    const fieldName = options.field || options.name || 'Email';
     if (!value) {
-      if (required) throw new Error(`${field} is required`);
+      if (options.required) throw new Error(`${fieldName} is required`);
       return null;
     }
     const s = String(value).trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) throw new Error(`${field} is not a valid email address`);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) throw new Error(`${fieldName} is not a valid email address`);
     return s;
   },
   num(value, { field, required = false, min = -Infinity, max = Infinity, def = 0 } = {}) {
