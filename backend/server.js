@@ -34,11 +34,9 @@ async function mountApiRoutes() {
     const filePath = path.join(apiDir, file);
 
     try {
-      // Import the default exported handler
       const module = await import(pathToFileURL(filePath).href);
       if (module.default && typeof module.default === 'function') {
         const routePath = `/api/${routeName}`;
-        // Map all HTTP methods to the same handler, just like Vercel serverless functions
         app.all(routePath, async (req, res) => {
           try {
             await module.default(req, res);
@@ -58,7 +56,7 @@ async function mountApiRoutes() {
 }
 
 mountApiRoutes().then(() => {
-  // Public short URL shortcuts
+  // Public short URL shortcuts (Must be mounted BEFORE static SPA fallback)
   app.get('/t/sdk.js', async (req, res) => {
     try {
       const module = await import(pathToFileURL(path.join(__dirname, 'api', 'lead-url-sdk.js')).href);
@@ -77,8 +75,18 @@ mountApiRoutes().then(() => {
     }
   });
 
+  // Serve static frontend files if dist directory exists
+  const distDir = path.join(__dirname, '..', 'frontend', 'dist');
+  if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distDir, 'index.html'));
+    });
+    console.log(`Mounted static frontend from ${distDir}`);
+  }
+
   app.listen(PORT, () => {
     console.log(`\n🚀 Backend API Server running at http://localhost:${PORT}`);
-    console.log(`Ensure your Vite frontend proxies /api to this port (or connects to it directly).\n`);
+    console.log(`Ensure reverse proxy forwards /t/* and /api/* to this port.\n`);
   });
 });
