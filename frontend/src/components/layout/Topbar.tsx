@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEmployees } from '../../hooks/useEmployees';
+import { useNotifications } from '../../hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
 import Avatar from '../ui/Avatar';
 import { cn } from '../../lib/utils';
 import type { Crumb } from './crumbs';
@@ -39,11 +41,7 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
   const actualEmployee = (allEmployees || []).find((e) => e.email === email);
   const name = actualEmployee?.employee_name || fallbackName;
 
-  const notifications = [
-    { title: 'New lead assigned', desc: 'Marcus Thompson · Northwind Analytics', color: '#3366ff', time: '2h' },
-    { title: 'Proposal follow-up due', desc: 'Meridian Finance · $210K', color: '#f59e0b', time: '5h' },
-    { title: 'Project completed', desc: 'GreenGrid Analytics Dashboard', color: '#10b981', time: '1d' },
-  ];
+  const { notifications, markAsRead, markAllAsRead } = useNotifications();
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-xl border-b border-app flex items-center gap-3 px-4 sm:px-6 shrink-0">
@@ -95,7 +93,9 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
       <div className="relative" ref={notifRef}>
         <button onClick={() => setNotifOpen((v) => !v)} className="relative h-9 w-9 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
           <Bell className="h-4.5 w-4.5" />
-          <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[color:var(--surface)]" />
+          {notifications.length > 0 && (
+            <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[color:var(--surface)]" />
+          )}
         </button>
         <AnimatePresence>
           {notifOpen && (
@@ -106,19 +106,38 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
             >
               <div className="px-4 py-3 border-b border-app flex items-center justify-between">
                 <p className="text-[13px] font-bold text-base-fg">Notifications</p>
-                <span className="text-[11px] font-semibold text-brand-600">3 new</span>
+                {notifications.length > 0 && (
+                  <button onClick={markAllAsRead} className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                    Mark all read
+                  </button>
+                )}
               </div>
               <div className="max-h-80 overflow-y-auto">
-                {notifications.map((n, i) => (
-                  <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-2 transition-colors cursor-pointer">
-                    <span className="mt-1.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: n.color }} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-semibold text-base-fg">{n.title}</p>
-                      <p className="text-[12px] text-muted-fg truncate">{n.desc}</p>
-                    </div>
-                    <span className="text-[11px] text-subtle-fg shrink-0">{n.time}</span>
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-8 text-center">
+                    <Bell className="h-8 w-8 text-subtle-fg mx-auto mb-2 opacity-50" />
+                    <p className="text-[13px] text-muted-fg">No new notifications</p>
                   </div>
-                ))}
+                ) : (
+                  notifications.map((n) => (
+                    <div 
+                      key={n.id} 
+                      onClick={() => {
+                        markAsRead(n.id);
+                        if (n.link) navigate(n.link);
+                        setNotifOpen(false);
+                      }}
+                      className="flex items-start gap-3 px-4 py-3 hover:bg-surface-2 transition-colors cursor-pointer group"
+                    >
+                      <span className="mt-1.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: n.color || '#3366ff' }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-semibold text-base-fg group-hover:text-brand-600 transition-colors">{n.title}</p>
+                        <p className="text-[12px] text-muted-fg truncate">{n.description}</p>
+                      </div>
+                      <span className="text-[11px] text-subtle-fg shrink-0">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
           )}

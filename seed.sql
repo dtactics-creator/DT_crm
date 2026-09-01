@@ -322,6 +322,83 @@ CREATE TABLE IF NOT EXISTS dt_quotation_commercial_items (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS dt_notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES crm_employees(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    color TEXT DEFAULT '#3366ff',
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Enable RLS and add policy based on user email
+ALTER TABLE dt_notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can manage their own notifications" ON dt_notifications;
+DROP POLICY IF EXISTS "Users can view notifications" ON dt_notifications;
+
+-- Simplification for Realtime: Allow all authenticated users to receive events.
+-- The frontend filter ensures they only receive their own notifications.
+CREATE POLICY "Users can view notifications"
+ON dt_notifications FOR SELECT
+USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can manage their own notifications"
+ON dt_notifications FOR UPDATE
+USING (user_id = (SELECT id FROM crm_employees WHERE email = auth.jwt()->>'email'));
+
+-- Enable Realtime for dt_notifications (Supabase specific)
+-- Direct alter publication is cleaner and guarantees setup if publication exists.
+ALTER PUBLICATION supabase_realtime ADD TABLE dt_notifications;
+
+-- Trigger Function: Notify on new lead assigned
+CREATE OR REPLACE FUNCTION notify_lead_assigned() RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.assigned_employee_id IS NOT NULL AND (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.assigned_employee_id IS DISTINCT FROM NEW.assigned_employee_id)) THEN
+    INSERT INTO dt_notifications (user_id, title, description, color)
+    VALUES (
+      NEW.assigned_employee_id,
+      'New lead assigned',
+      NEW.customer_name || ' · ' || COALESCE(NEW.company, 'No Company'),
+      '#3366ff'
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_lead_assigned ON dt_leads3;
+CREATE TRIGGER trigger_lead_assigned
+  AFTER INSERT OR UPDATE OF assigned_employee_id ON dt_leads3
+  FOR EACH ROW EXECUTE FUNCTION notify_lead_assigned();
+
+-- Trigger Function: Notify on new quotation created
+CREATE OR REPLACE FUNCTION notify_quotation_created() RETURNS TRIGGER AS $$
+DECLARE
+  v_lead dt_leads3%ROWTYPE;
+BEGIN
+  -- Fetch the lead to find who to notify (assigned employee or sales manager)
+  SELECT * INTO v_lead FROM dt_leads3 WHERE id = NEW.lead_id;
+  
+  IF FOUND AND COALESCE(v_lead.assigned_employee_id, v_lead.sales_manager_id) IS NOT NULL THEN
+    INSERT INTO dt_notifications (user_id, title, description, color)
+    VALUES (
+      COALESCE(v_lead.assigned_employee_id, v_lead.sales_manager_id),
+      'New quotation created',
+      'Quotation ' || NEW.quotation_no || ' for ' || v_lead.customer_name,
+      '#f59e0b'
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_quotation_created ON dt_quotations;
+CREATE TRIGGER trigger_quotation_created
+  AFTER INSERT ON dt_quotations
+  FOR EACH ROW EXECUTE FUNCTION notify_quotation_created();
+
 -- ============================================================================
 -- 0.5. ALTER EXISTING TABLES TO ADD MISSING COLUMNS
 -- ============================================================================
@@ -360,6 +437,7 @@ DELETE FROM dt_lead_url_visits;
 DELETE FROM dt_projects;
 DELETE FROM dt_leads3;
 DELETE FROM dt_templates;
+DELETE FROM dt_notifications;
 DELETE FROM crm_employees;
 DELETE FROM dt_roles2;
 DELETE FROM masters;
