@@ -30,9 +30,9 @@
   position: relative;
   display: flex;
   width: 794px;
-  height: 1123px;
+  min-height: 1123px;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   color: var(--c-ink);
   background: #ffffff;
   font-family: Inter, Arial, Helvetica, sans-serif;
@@ -1104,10 +1104,91 @@
   }
 
   .au-page {
+    display: block;
     margin: 0;
     box-shadow: none;
+    height: auto;
+    min-height: auto;
+  }
+
+  .au-header {
+    width: 100%;
+    background: white;
+    padding-bottom: 20px;
+  }
+
+  .au-body {
+    padding-top: 10px;
+    padding-bottom: 20px;
+  }
+
+  .au-footer {
+    width: 100%;
+    background: white;
+  }
+
+  .au-sec-title,
+  .au-charge,
+  .au-charge tr,
+  .au-milestone,
+  .au-sign {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
-.au-scope-list { list-style-type: disc; margin-left: 20px; font-size: 13px; color: var(--c-body); line-height: 1.5; padding-left: 10px; margin-bottom: 24px; }
-.au-scope-list li { margin-bottom: 6px; }
+/* ============================================================
+   PAGED.JS PREVIEW
+   ============================================================ */
+
+.pagedjs_pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  width: 100%;
+  --pagedjs-margin-top: 0px !important;
+  --pagedjs-margin-bottom: 0px !important;
+  --pagedjs-margin-left: 0px !important;
+  --pagedjs-margin-right: 0px !important;
+}
+
+.pagedjs_page {
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  margin: 0 auto !important;
+  width: 210mm !important;
+  height: 297mm !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.pagedjs_page_content {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Override screen styles when running inside Paged.js */
+.pagedjs_page .au-page {
+  box-shadow: none !important;
+  min-height: auto !important;
+  width: auto !important;
+  display: block !important;
+  margin: 0 !important;
+}
+
+.pagedjs_page .au-header {
+  width: 100%;
+  background: white;
+  padding-bottom: 20px;
+}
+
+.pagedjs_page .au-body {
+  padding-top: 10px;
+  padding-bottom: 20px;
+}
+
+.pagedjs_page .au-footer {
+  width: 100%;
+  background: white;
+}
 

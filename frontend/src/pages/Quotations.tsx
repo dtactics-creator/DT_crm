@@ -2,7 +2,7 @@ import { useState } from 'react';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Badge from '../components/ui/Badge';
-import { useQuotations, useCreateQuotation } from '../hooks/useQuotations';
+import { useQuotations, useCreateQuotation, useUpdateQuotationVersion } from '../hooks/useQuotations';
 import QuotationPreview from '../components/quotations/QuotationPreview';
 import QuotationForm, { type QuotationFormValues } from '../components/quotations/QuotationForm';
 import type { Quotation, QuotationVersion } from '../types';
@@ -20,7 +20,9 @@ export default function Quotations() {
   const { data: quotations, isLoading } = useQuotations();
   const { data: leads, isLoading: leadsLoading } = useLeads();
   const createQuotation = useCreateQuotation();
+  const updateVersion = useUpdateQuotationVersion();
   const [previewData, setPreviewData] = useState<{ q: Quotation, v: QuotationVersion } | null>(null);
+  const [editingData, setEditingData] = useState<{ q: Quotation, v: QuotationVersion } | null>(null);
   const [activeTab, setActiveTab] = useState<'quotations' | 'leads'>('quotations');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
@@ -194,9 +196,26 @@ export default function Quotations() {
           version={previewData.v}
           onClose={() => setPreviewData(null)}
           onEdit={() => {
-            // Can't edit from here, need to link to lead or show toast
-            alert('To edit this quotation, navigate to the Lead details page.');
+            setEditingData(previewData);
+            setPreviewData(null);
           }}
+        />
+      )}
+
+      {!!editingData && (
+        <QuotationForm
+          open={!!editingData}
+          onClose={() => setEditingData(null)}
+          saving={updateVersion.isPending}
+          onSubmit={async (values) => {
+             await updateVersion.mutateAsync({
+               ...values as any,
+               id: editingData.v.id
+             });
+             setEditingData(null);
+          }}
+          title="Edit Quotation"
+          initial={editingData.v}
         />
       )}
 
