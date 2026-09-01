@@ -89,10 +89,10 @@ const empty: QuotationFormValues = {
   tax: 0,
   service_areas: [],
   commercial_items: [
-    { project_type: '', description: '', base_amount: 0, gst_percent: 0, gst_amount: 0, amount_inc_gst: 0, sort_order: 0 }
+    { project_type: '', description: '', base_amount: 0, gst_percent: 0, gst_amount: 0, amount_inc_gst: 0, sort_order: 0, exclude_from_milestone: false }
   ],
   milestones: [
-    { label: '', percent: 0, amount: 0, sort_order: 0 }
+    { label: '', description: '', percent: 0, base_amount: 0, gst_percent: 18, gst_amount: 0, amount: 0, sort_order: 0 }
   ],
 };
 
@@ -158,7 +158,11 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
           tax: Number(initial.tax) || 0,
           milestones: initial.milestones?.map(m => ({
             label: m.label,
+            description: m.description || '',
             percent: Number(m.percent),
+            base_amount: Number(m.base_amount) || 0,
+            gst_percent: Number(m.gst_percent) || 18,
+            gst_amount: Number(m.gst_amount) || 0,
             amount: Number(m.amount),
             sort_order: m.sort_order
           })) || empty.milestones,
@@ -169,7 +173,8 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
             gst_percent: Number(c.gst_percent),
             gst_amount: Number(c.gst_amount),
             amount_inc_gst: Number(c.amount_inc_gst),
-            sort_order: c.sort_order
+            sort_order: c.sort_order,
+            exclude_from_milestone: c.exclude_from_milestone || false
           })) || empty.commercial_items,
           service_areas: initial.service_areas?.map(sa => ({
             name: sa.name,
@@ -219,11 +224,27 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
       const next = { ...p, [k]: val };
       if (k === 'budget' || k === 'milestones') {
         let currentBudget = k === 'budget' ? Number(val) : Number(p.budget);
-        if (next.template === 'aurora' && currentBudget > 0 && next.milestones.length > 0) {
-          next.milestones = next.milestones.map(m => ({
-            ...m,
-            amount: (currentBudget * m.percent) / 100
-          }));
+        
+        let milestone_basis = 0;
+        if (next.template === 'aurora') {
+           next.commercial_items.forEach(c => {
+             if (!c.exclude_from_milestone) milestone_basis += Number(c.base_amount) || 0;
+           });
+        } else {
+           milestone_basis = currentBudget;
+        }
+
+        if (next.template === 'aurora' && milestone_basis >= 0 && next.milestones.length > 0) {
+          next.milestones = next.milestones.map(m => {
+            const base_amount = Number(((milestone_basis * m.percent) / 100).toFixed(2));
+            const gst_amount = Number(((base_amount * (m.gst_percent || 18)) / 100).toFixed(2));
+            return {
+              ...m,
+              base_amount,
+              gst_amount,
+              amount: Number((base_amount + gst_amount).toFixed(2))
+            };
+          });
         }
       }
       return next;
@@ -234,24 +255,35 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
     if (next.template === 'aurora') {
       let subtotal = 0;
       let tax = 0;
+      let milestone_basis = 0;
       next.commercial_items.forEach((c) => {
-        subtotal += Number(c.base_amount) || 0;
+        const base = Number(c.base_amount) || 0;
+        subtotal += base;
         tax += Number(c.gst_amount) || 0;
+        if (!c.exclude_from_milestone) {
+          milestone_basis += base;
+        }
       });
       next.budget = Number(subtotal.toFixed(2));
       next.tax = Number(tax.toFixed(2));
 
-      if (next.budget > 0 && next.milestones.length > 0) {
-        next.milestones = next.milestones.map((m) => ({
-          ...m,
-          amount: Number(((next.budget * m.percent) / 100).toFixed(2)),
-        }));
+      if (milestone_basis >= 0 && next.milestones.length > 0) {
+        next.milestones = next.milestones.map((m) => {
+          const base_amount = Number(((milestone_basis * m.percent) / 100).toFixed(2));
+          const gst_amount = Number(((base_amount * (m.gst_percent || 18)) / 100).toFixed(2));
+          return {
+            ...m,
+            base_amount,
+            gst_amount,
+            amount: Number((base_amount + gst_amount).toFixed(2)),
+          };
+        });
       }
     }
     return next;
   };
 
-  const addCommercialItem = () => setV(p => updateAuroraTotals({ ...p, commercial_items: [...p.commercial_items, { project_type: '', description: '', base_amount: 0, gst_percent: 18, gst_amount: 0, amount_inc_gst: 0, sort_order: p.commercial_items.length }] }));
+  const addCommercialItem = () => setV(p => updateAuroraTotals({ ...p, commercial_items: [...p.commercial_items, { project_type: '', description: '', base_amount: 0, gst_percent: 18, gst_amount: 0, amount_inc_gst: 0, sort_order: p.commercial_items.length, exclude_from_milestone: false }] }));
 
   const removeCommercialItem = (i: number) => setV(p => updateAuroraTotals({ ...p, commercial_items: p.commercial_items.filter((_, idx) => idx !== i) }));
 
@@ -269,12 +301,36 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
     });
   };
 
-  const addMilestone = () => setV(p => updateAuroraTotals({ ...p, milestones: [...p.milestones, { label: '', percent: 0, amount: 0, sort_order: p.milestones.length }] }));
+  const addMilestone = () => setV(p => updateAuroraTotals({ ...p, milestones: [...p.milestones, { label: '', description: '', percent: 0, base_amount: 0, gst_percent: 18, gst_amount: 0, amount: 0, sort_order: p.milestones.length }] }));
   const removeMilestone = (i: number) => setV(p => ({ ...p, milestones: p.milestones.filter((_, idx) => idx !== i) }));
   const updateMilestone = (i: number, patch: Partial<FormQuotationMilestone>) => {
     setV(p => {
       const ms = p.milestones.map((m, idx) => idx === i ? { ...m, ...patch } : m);
-      if (patch.percent !== undefined) ms[i].amount = Number(((p.budget * Number(patch.percent)) / 100).toFixed(2));
+      
+      let milestone_basis = 0;
+      p.commercial_items.forEach(c => {
+        if (!c.exclude_from_milestone) milestone_basis += Number(c.base_amount) || 0;
+      });
+
+      if (patch.percent !== undefined) {
+        const base_amount = Number(((milestone_basis * Number(ms[i].percent)) / 100).toFixed(2));
+        const gst_amount = Number(((base_amount * Number(ms[i].gst_percent || 18)) / 100).toFixed(2));
+        ms[i].base_amount = base_amount;
+        ms[i].gst_amount = gst_amount;
+        ms[i].amount = Number((base_amount + gst_amount).toFixed(2));
+      } else if (patch.base_amount !== undefined) {
+        const base_amount = Number(ms[i].base_amount) || 0;
+        const percent = milestone_basis > 0 ? Number(((base_amount / milestone_basis) * 100).toFixed(2)) : 0;
+        const gst_amount = Number(((base_amount * Number(ms[i].gst_percent || 18)) / 100).toFixed(2));
+        ms[i].percent = percent;
+        ms[i].gst_amount = gst_amount;
+        ms[i].amount = Number((base_amount + gst_amount).toFixed(2));
+      } else if (patch.gst_percent !== undefined) {
+        const base_amount = Number(ms[i].base_amount) || 0;
+        const gst_amount = Number(((base_amount * Number(ms[i].gst_percent || 18)) / 100).toFixed(2));
+        ms[i].gst_amount = gst_amount;
+        ms[i].amount = Number((base_amount + gst_amount).toFixed(2));
+      }
       return { ...p, milestones: ms };
     });
   };
@@ -590,7 +646,15 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                           <Input type="number" value={c.amount_inc_gst} disabled className="bg-surface-3 cursor-not-allowed text-right tabular-nums font-bold text-base-fg" placeholder="Total" />
                         </Field>
                       </div>
-                      <div className="pt-7 shrink-0">
+                      <div className="pt-7 shrink-0 flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          id={`exclude-${i}`}
+                          checked={c.exclude_from_milestone || false}
+                          onChange={(e) => updateCommercialItem(i, { exclude_from_milestone: e.target.checked })}
+                          className="rounded border-app text-brand-600 focus:ring-brand-500 h-4 w-4"
+                          title="Exclude from Milestones Calculation"
+                        />
                         <button type="button" onClick={() => removeCommercialItem(i)} className="h-10 w-10 shrink-0 rounded text-subtle-fg hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </div>
@@ -611,8 +675,8 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
               <div className="space-y-4">
                 {v.milestones.map((m, i) => (
                   <div key={i} className="flex gap-4 items-start w-full flex-wrap">
-                    <div className="flex-1 min-w-[200px]">
-                      <Field label="Milestone Description">
+                    <div className="flex-1 min-w-[150px]">
+                      <Field label="Milestone Label">
                         <SearchableSelect
                           options={milestoneOpts}
                           value={m.label}
@@ -621,11 +685,16 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                             const newPercent = (opt as any)?.percent !== undefined ? (opt as any).percent : m.percent;
                             updateMilestone(i, { label: val, percent: newPercent });
                           }}
-                          placeholder="Select or enter milestone..."
+                          placeholder="Select..."
                         />
                       </Field>
                     </div>
-                    <div className="w-24">
+                    <div className="flex-[2] min-w-[200px]">
+                      <Field label="Description">
+                        <Input value={m.description || ''} onChange={(e) => updateMilestone(i, { description: e.target.value })} placeholder="Details..." />
+                      </Field>
+                    </div>
+                    <div className="w-20">
                       <Field label="Percent">
                         <div className="relative">
                           <Input type="number" min="0" max="100" value={m.percent} onChange={(e) => updateMilestone(i, { percent: Number(e.target.value) })} className="pr-6" />
@@ -633,8 +702,26 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                         </div>
                       </Field>
                     </div>
-                    <div className="w-40">
-                      <Field label="Amount">
+                    <div className="flex-1 min-w-[100px]">
+                      <Field label="Base Amount">
+                        <Input type="number" min="0" value={m.base_amount || 0} onChange={(e) => updateMilestone(i, { base_amount: Number(e.target.value) })} className="pr-6" placeholder="Base" />
+                      </Field>
+                    </div>
+                    <div className="w-20">
+                      <Field label="GST %">
+                        <div className="relative">
+                          <Input type="number" min="0" max="100" value={m.gst_percent ?? 18} onChange={(e) => updateMilestone(i, { gst_percent: Number(e.target.value) })} className="pr-6" />
+                          <span className="absolute right-3 top-2.5 text-xs text-muted-fg">%</span>
+                        </div>
+                      </Field>
+                    </div>
+                    <div className="flex-1 min-w-[100px]">
+                      <Field label="GST Amt">
+                        <Input type="number" value={m.gst_amount || 0} disabled className="bg-surface-3 cursor-not-allowed text-right tabular-nums text-subtle-fg" placeholder="GST" />
+                      </Field>
+                    </div>
+                    <div className="flex-1 min-w-[120px]">
+                      <Field label="Total Amount">
                         <Input type="number" value={m.amount} disabled className="bg-surface-3 cursor-not-allowed text-right tabular-nums font-bold text-base-fg" placeholder="Total" />
                       </Field>
                     </div>
@@ -734,6 +821,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
           quotation={mockQuotation}
           version={mockVersion}
           onClose={() => setShowPreview(false)}
+          onEdit={() => setShowPreview(false)}
         />
       )}
     </>

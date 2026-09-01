@@ -297,7 +297,11 @@ CREATE TABLE IF NOT EXISTS dt_quotation_milestones (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     version_id UUID NOT NULL REFERENCES dt_quotation_versions(id) ON DELETE CASCADE,
     label TEXT NOT NULL,
+    description TEXT,
     percent NUMERIC DEFAULT 0,
+    base_amount NUMERIC DEFAULT 0,
+    gst_percent NUMERIC DEFAULT 0,
+    gst_amount NUMERIC DEFAULT 0,
     amount NUMERIC DEFAULT 0,
     sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -332,6 +336,11 @@ ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS service_type TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS from_location TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS to_location TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS project_type_description TEXT;
+
+ALTER TABLE dt_quotation_milestones ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE dt_quotation_milestones ADD COLUMN IF NOT EXISTS base_amount NUMERIC DEFAULT 0;
+ALTER TABLE dt_quotation_milestones ADD COLUMN IF NOT EXISTS gst_percent NUMERIC DEFAULT 0;
+ALTER TABLE dt_quotation_milestones ADD COLUMN IF NOT EXISTS gst_amount NUMERIC DEFAULT 0;
 
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS tertiary_phone TEXT;
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS secondary_email TEXT;

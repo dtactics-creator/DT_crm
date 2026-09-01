@@ -341,8 +341,13 @@ function validateMilestone(body, versionId, sortOrder) {
   return {
     version_id: versionId,
     label: V.str(body.label, { field: 'Milestone Label', req: true }),
+    description: V.str(body.description, { field: 'Milestone Description' }),
     percent: V.num(body.percent, { field: 'Percent', def: 0 }),
+    base_amount: V.num(body.base_amount, { field: 'Base Amount', def: 0 }),
+    gst_percent: V.num(body.gst_percent, { field: 'GST %', def: 0 }),
+    gst_amount: V.num(body.gst_amount, { field: 'GST Amt', def: 0 }),
     amount: V.num(body.amount, { field: 'Amount', def: 0 }),
     sort_order: sortOrder
   };
 }
+

@@ -248,7 +248,11 @@ export interface QuotationCharge extends AuditFields {
 export interface QuotationMilestone extends AuditFields {
   version_id: string;
   label: string;
+  description?: string;
   percent: number;
+  base_amount?: number;
+  gst_percent?: number;
+  gst_amount?: number;
   amount: number;
   sort_order: number;
 }
@@ -262,6 +266,7 @@ export interface QuotationCommercialItem extends AuditFields {
   gst_amount: number;
   amount_inc_gst: number;
   sort_order: number;
+  exclude_from_milestone?: boolean;
 }
 
 export interface ServiceArea extends AuditFields {
