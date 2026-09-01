@@ -981,7 +981,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 56px;
 
-  margin-top: auto;
+  margin-top: 48px;
   padding: 22px 0 16px;
 }
 
@@ -1085,6 +1085,10 @@
   font-family: "IBM Plex Mono", monospace;
   letter-spacing: 0.08em;
   text-align: right;
+}
+
+.page-counter::after {
+  content: "Page " counter(page, decimal-leading-zero) " / " counter(pages, decimal-leading-zero);
 }
 
 /* ============================================================

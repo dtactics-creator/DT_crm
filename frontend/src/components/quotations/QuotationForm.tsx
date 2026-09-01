@@ -55,6 +55,7 @@ export interface QuotationFormValues {
   milestones: FormQuotationMilestone[];
   subtotal?: number;
   grand_total?: number;
+  version_number?: number;
 }
 
 const empty: QuotationFormValues = {
@@ -127,6 +128,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
       setErrors({});
       if (initial) {
         setV({
+          version_number: initial.version_number || 1,
           template: initial.template || 'logistics',
           date: toDateInput(initial.date) || empty.date,
           valid_until: toDateInput(initial.valid_until) || empty.valid_until,
@@ -512,6 +514,20 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <Field label="Quotation No">
                 <Input value={displayQuotationNo} disabled className="bg-subtle/30" />
+              </Field>
+              <Field label="Version">
+                {initial ? (
+                  <SearchableSelect
+                    options={[
+                      { label: `Current Version (V${initial.version_number || 1})`, value: String(initial.version_number || 1) },
+                      { label: `Next Version (V${(initial.version_number || 1) + 1})`, value: String((initial.version_number || 1) + 1) }
+                    ]}
+                    value={String(v.version_number || initial.version_number || 1)}
+                    onChange={(val) => set('version_number', parseInt(val) || initial.version_number || 1)}
+                  />
+                ) : (
+                  <Input value="V1" disabled className="bg-subtle/30" />
+                )}
               </Field>
               <Field label="Quotation Date" required error={errors.date}><Input type="date" value={v.date} onChange={(e) => set('date', e.target.value)} invalid={!!errors.date} /></Field>
               <Field label="Valid Until" required error={errors.valid_until}><Input type="date" value={v.valid_until} onChange={(e) => set('valid_until', e.target.value)} invalid={!!errors.valid_until} /></Field>
