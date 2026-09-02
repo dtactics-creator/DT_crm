@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, FolderKanban, Database, UserCog,
-  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt
+  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
@@ -18,6 +18,7 @@ const NAV = [
   { to: '/reports', label: 'Reports', icon: BarChart3, perm: 'reports.view' },
   { to: '/audit-logs', label: 'Audit Logs', icon: FileText, perm: 'audit_logs.view' },
   { to: '/quotations', label: 'Quotations', icon: Receipt, perm: 'quotations.view' },
+  { to: '/settings', label: 'Settings', icon: Settings, perm: 'masters.edit' },
 ];
 
 const FUTURE = ['Clients', 'Invoices', 'Documents', 'Support'];

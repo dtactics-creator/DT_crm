@@ -106,6 +106,9 @@ export default async function handler(req, res) {
         // Audit log
         await logAudit({ req, user, action: 'CREATE_VERSION', module: 'Quotations', entity: 'QuotationVersion', entityId: vData.id, description: `Created version ${nextVersionNumber} for ${qData.quotation_no}` });
         
+        // Touch parent quotation to trigger notifications
+        await supabase.from('dt_quotations').update({ updated_at: new Date().toISOString() }).eq('id', quotation_id);
+
         return res.status(201).json({ id: vData.id, version_number: nextVersionNumber });
       }
 
@@ -223,6 +226,10 @@ export default async function handler(req, res) {
       }
 
       await logAudit({ req, user, action: 'UPDATE', module: 'Quotations', entity: 'QuotationVersion', entityId: id, description: `Updated version ${vData.version_number} of ${oldVersion.quotation?.quotation_no}` });
+      
+      // Touch parent quotation to trigger notifications
+      await supabase.from('dt_quotations').update({ updated_at: new Date().toISOString() }).eq('id', oldVersion.quotation_id);
+
       return res.status(200).json(vData);
     }
 

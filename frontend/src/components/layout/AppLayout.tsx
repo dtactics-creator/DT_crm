@@ -8,14 +8,21 @@ import { createContext, useContext } from 'react';
 const CrumbCtx = createContext<(c: Crumb[]) => void>(() => {});
 export const useCrumbs = () => useContext(CrumbCtx);
 
+export const SidebarCtx = createContext<{ collapsed: boolean; setCollapsed: React.Dispatch<React.SetStateAction<boolean>> }>({
+  collapsed: false,
+  setCollapsed: () => {},
+});
+export const useSidebar = () => useContext(SidebarCtx);
+
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [crumbs, setCrumbs] = useState<Crumb[]>([{ label: 'Dashboard' }]);
 
   return (
-    <CrumbCtx.Provider value={setCrumbs}>
-      <div className="min-h-screen flex bg-app">
+    <SidebarCtx.Provider value={{ collapsed, setCollapsed }}>
+      <CrumbCtx.Provider value={setCrumbs}>
+        <div className="min-h-screen flex bg-app">
         <Sidebar
           collapsed={collapsed}
           onToggle={() => setCollapsed((v) => !v)}
@@ -28,7 +35,8 @@ export default function AppLayout() {
             <Outlet />
           </main>
         </div>
-      </div>
-    </CrumbCtx.Provider>
+        </div>
+      </CrumbCtx.Provider>
+    </SidebarCtx.Provider>
   );
 }

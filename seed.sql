@@ -332,6 +332,14 @@ CREATE TABLE IF NOT EXISTS dt_notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+CREATE TABLE IF NOT EXISTS dt_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    value JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Enable RLS and add policy based on user email
 ALTER TABLE dt_notifications ENABLE ROW LEVEL SECURITY;
 
@@ -373,31 +381,62 @@ CREATE TRIGGER trigger_lead_assigned
   AFTER INSERT OR UPDATE OF assigned_employee_id ON dt_leads3
   FOR EACH ROW EXECUTE FUNCTION notify_lead_assigned();
 
--- Trigger Function: Notify on new quotation created
-CREATE OR REPLACE FUNCTION notify_quotation_created() RETURNS TRIGGER AS $$
+-- Trigger Function: Notify on new quotation created or updated
+CREATE OR REPLACE FUNCTION notify_quotation_changed() RETURNS TRIGGER AS $$
 DECLARE
   v_lead dt_leads3%ROWTYPE;
+  v_settings_value JSONB;
+  v_user_ids UUID[] := '{}';
+  v_user_id UUID;
+  v_default_user UUID;
+  v_title TEXT;
+  v_desc TEXT;
 BEGIN
-  -- Fetch the lead to find who to notify (assigned employee or sales manager)
   SELECT * INTO v_lead FROM dt_leads3 WHERE id = NEW.lead_id;
-  
-  IF FOUND AND COALESCE(v_lead.assigned_employee_id, v_lead.sales_manager_id) IS NOT NULL THEN
-    INSERT INTO dt_notifications (user_id, title, description, color)
-    VALUES (
-      COALESCE(v_lead.assigned_employee_id, v_lead.sales_manager_id),
-      'New quotation created',
-      'Quotation ' || NEW.quotation_no || ' for ' || v_lead.customer_name,
-      '#f59e0b'
-    );
+  IF NOT FOUND THEN
+    RETURN NEW;
   END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    v_title := 'New quotation created';
+  ELSE
+    v_title := 'Quotation updated';
+  END IF;
+
+  v_desc := 'Quotation ' || NEW.quotation_no || ' for ' || v_lead.customer_name;
+  v_default_user := COALESCE(v_lead.assigned_employee_id, v_lead.sales_manager_id);
+  
+  SELECT value INTO v_settings_value FROM dt_settings WHERE key = 'quotation_notification_users';
+
+  IF v_settings_value IS NOT NULL AND jsonb_typeof(v_settings_value) = 'array' THEN
+    SELECT array_agg(DISTINCT value::text::uuid) INTO v_user_ids
+    FROM jsonb_array_elements_text(v_settings_value);
+  END IF;
+
+  IF v_default_user IS NOT NULL THEN
+    v_user_ids := array_append(v_user_ids, v_default_user);
+  END IF;
+
+  IF v_user_ids IS NOT NULL AND array_length(v_user_ids, 1) > 0 THEN
+    FOR v_user_id IN 
+      SELECT DISTINCT unnest(v_user_ids) AS uid 
+    LOOP
+      IF v_user_id IS NOT NULL THEN
+        INSERT INTO dt_notifications (user_id, title, description, color)
+        VALUES (v_user_id, v_title, v_desc, '#f59e0b');
+      END IF;
+    END LOOP;
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trigger_quotation_created ON dt_quotations;
-CREATE TRIGGER trigger_quotation_created
-  AFTER INSERT ON dt_quotations
-  FOR EACH ROW EXECUTE FUNCTION notify_quotation_created();
+DROP TRIGGER IF EXISTS trigger_quotation_changed ON dt_quotations;
+CREATE TRIGGER trigger_quotation_changed
+  AFTER INSERT OR UPDATE ON dt_quotations
+  FOR EACH ROW EXECUTE FUNCTION notify_quotation_changed();
 
 -- ============================================================================
 -- 0.5. ALTER EXISTING TABLES TO ADD MISSING COLUMNS
@@ -438,6 +477,7 @@ DELETE FROM dt_projects;
 DELETE FROM dt_leads3;
 DELETE FROM dt_templates;
 DELETE FROM dt_notifications;
+DELETE FROM dt_settings;
 DELETE FROM crm_employees;
 DELETE FROM dt_roles2;
 DELETE FROM masters;

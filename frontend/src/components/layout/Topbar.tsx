@@ -6,7 +6,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEmployees } from '../../hooks/useEmployees';
 import { useNotifications } from '../../hooks/useNotifications';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import Avatar from '../ui/Avatar';
 import { cn } from '../../lib/utils';
 import type { Crumb } from './crumbs';
@@ -134,7 +134,14 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
                         <p className="text-[13px] font-semibold text-base-fg group-hover:text-brand-600 transition-colors">{n.title}</p>
                         <p className="text-[12px] text-muted-fg truncate">{n.description}</p>
                       </div>
-                      <span className="text-[11px] text-subtle-fg shrink-0">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
+                      <div className="flex flex-col items-end shrink-0">
+                        <span className="text-[11px] font-medium text-subtle-fg">
+                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        </span>
+                        <span className="text-[10px] text-muted-fg/70">
+                          {format(new Date(n.created_at), 'dd/MM/yy')}
+                        </span>
+                      </div>
                     </div>
                   ))
                 )}
@@ -167,7 +174,7 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
                 <button onClick={() => { setMenuOpen(false); navigate('/profile'); }} className="flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-[13px] font-medium text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
                   <UserIcon className="h-4 w-4" /> Profile
                 </button>
-                <button onClick={() => { setMenuOpen(false); navigate('/masters'); }} className="flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-[13px] font-medium text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
+                <button onClick={() => { setMenuOpen(false); navigate('/settings'); }} className="flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-[13px] font-medium text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
                   <Settings className="h-4 w-4" /> Settings
                 </button>
               </div>
