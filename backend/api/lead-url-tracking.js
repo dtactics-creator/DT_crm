@@ -15,7 +15,7 @@ export function extractDomain(inputUrl) {
 }
 
 export default async function handler(req, res) {
-  cors(res);
+  cors(res, req);
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   // POST is public for tracking SDK; GET requires authenticated CRM user

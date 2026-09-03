@@ -1,13 +1,28 @@
 import supabase from './db-client.js';
 
-export function cors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+export function cors(res, req) {
+  let response = res;
+  let request = req;
+
+  if (res && res.headers && typeof res.setHeader !== 'function') {
+    request = res;
+    response = req;
+  }
+
+  const origin = request?.headers?.origin || '*';
+
+  if (response && typeof response.setHeader === 'function') {
+    response.setHeader('Access-Control-Allow-Origin', origin);
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    if (origin !== '*') {
+      response.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+  }
 }
 
 export function preflight(req, res) {
-  cors(res);
+  cors(res, req);
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return true;

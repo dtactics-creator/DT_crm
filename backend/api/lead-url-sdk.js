@@ -112,6 +112,7 @@ export default function handler(req, res) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: payload,
+          credentials: 'omit',
           keepalive: true
         }).catch(function(){});
       }
