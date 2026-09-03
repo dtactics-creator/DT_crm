@@ -70,14 +70,20 @@ export default function handler(req, res) {
       } catch(e){}
     }
 
+    if (!sid) {
+      sid = 'sess_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      try {
+        sessionStorage.setItem(STORAGE_SID_KEY, sid);
+      } catch(e){}
+    }
+
     // Strip _dt_tk and _dt_sid from browser URL bar after capturing context
     cleanUrlParameters();
 
-    return { token: tk, sessionId: sid, visitorId: getOrCreateVisitorId() };
+    return { token: tk || null, sessionId: sid, visitorId: getOrCreateVisitorId() };
   }
 
   var ctx = getContext();
-  if (!ctx.token) return; // Not a tracked session
 
   var currentPath = window.location.pathname || '/';
   var startTime = Date.now();
@@ -85,12 +91,12 @@ export default function handler(req, res) {
   var backendOrigin = scriptTag ? new URL(scriptTag.src).origin : window.location.origin;
 
   function reportPageView(pathName, durationSec) {
-    if (!ctx.token) return;
     var endpoint = backendOrigin + '/api/lead-url-tracking';
     var payload = JSON.stringify({
-      tracking_token: ctx.token,
-      session_id: ctx.sessionId || 'sess_anonymous',
+      tracking_token: ctx.token || null,
+      session_id: ctx.sessionId,
       visitor_id: ctx.visitorId,
+      hostname: window.location.hostname || '',
       path: pathName || window.location.pathname || '/',
       full_url: window.location.href,
       referrer: document.referrer || null,
@@ -155,3 +161,4 @@ export default function handler(req, res) {
 
   return res.status(200).send(sdkJs);
 }
+
