@@ -104,18 +104,13 @@ export default function handler(req, res) {
     });
 
     try {
-      if (navigator.sendBeacon) {
-        var blob = new Blob([payload], { type: 'application/json' });
-        navigator.sendBeacon(endpoint, blob);
-      } else {
-        fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload,
-          credentials: 'omit',
-          keepalive: true
-        }).catch(function(){});
-      }
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        credentials: 'omit',
+        keepalive: true
+      }).catch(function(){});
     } catch(e){}
   }
 
