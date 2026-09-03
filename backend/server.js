@@ -15,7 +15,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', true);
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    callback(null, origin || '*');
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false,
+  optionsSuccessStatus: 204
+}));
 app.use(express.json({ limit: '50mb' })); // Support large imports
 app.use(express.urlencoded({ extended: true }));
 
