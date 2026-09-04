@@ -102,3 +102,22 @@ export async function nextNumber(table, column, prefix, start) {
   }
   return `${prefix}${max + 1}`;
 }
+
+// Generate the next client number in the format YY-CLI-001.
+export async function nextClientNo() {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const { data, error } = await supabase
+    .from('dt_clients')
+    .select('client_no')
+    .like('client_no', `${yy}-CLI-%`)
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  let max = 0;
+  for (const row of data || []) {
+    const m = String(row.client_no || '').match(new RegExp(`^${yy}-CLI-(\\d+)$`));
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `${yy}-CLI-${String(max + 1).padStart(3, '0')}`;
+}

@@ -190,9 +190,7 @@ export default function Leads() {
         return (
           <div className="min-w-0 max-w-[220px]">
             {phones.length > 0 && <p className="text-[12.5px] text-base-fg truncate">{phones[0]}</p>}
-            {phones.length > 1 && <p className="text-[11.5px] text-subtle-fg truncate">{phones.slice(1).join(' · ')}</p>}
             {emails.length > 0 && <p className={`text-[12px] truncate ${phones.length > 0 ? 'mt-0.5 text-muted-fg' : 'text-base-fg'}`}>{emails[0]}</p>}
-            {emails.length > 1 && <p className="text-[11.5px] text-subtle-fg truncate">{emails[1]}</p>}
           </div>
         );
       },

@@ -179,8 +179,8 @@ export function AuroraPage({ quotation, version }: { quotation: Quotation, versi
                           return (
                             <tr key={idx}>
                               <td className="au-item-desc">
-                                <div className="font-semibold text-base-fg">{formatLabel(item.project_type || '') || 'Service'}</div>
-                                {item.description && <div className="text-[11px] text-muted-fg mt-0.5 whitespace-pre-wrap">{item.description}</div>}
+                                <div>{formatLabel(item.project_type || '') || 'Service'}</div>
+                                {item.description && <small className="whitespace-pre-wrap">{item.description}</small>}
                               </td>
                               <td className="au-item-basis">{formatCurrency(item.base_amount, version.currency)}</td>
                               <td className="au-item-basis">{item.gst_percent}%</td>
@@ -191,22 +191,22 @@ export function AuroraPage({ quotation, version }: { quotation: Quotation, versi
                         })
                       ) : (
                         <tr>
-                          <td colSpan={5} className="text-center text-muted-fg py-4">No services added</td>
+                          <td colSpan={5} className="text-center py-4" style={{ color: 'var(--c-slate)' }}>No services added</td>
                         </tr>
                       )}
                     </tbody>
                     {version.commercial_items && version.commercial_items.length > 0 && (
                       <tfoot>
                         <tr style={{ borderTop: '2px solid #e2e8f0' }}>
-                          <td className="au-item-desc text-right font-bold text-base-fg" style={{ paddingTop: '16px' }}>Total</td>
-                          <td className="au-item-basis font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-desc text-right font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>Total</td>
+                          <td className="au-item-basis font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {formatCurrency(version.commercial_items.reduce((s, i) => s + (Number(i.base_amount) || 0), 0), version.currency)}
                           </td>
                           <td className="au-item-basis" style={{ paddingTop: '16px' }}></td>
-                          <td className="au-item-basis font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-basis font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {formatCurrency(version.commercial_items.reduce((s, i) => s + (Number(i.gst_amount) || 0), 0), version.currency)}
                           </td>
-                          <td className="au-item-amt font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-amt font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {formatCurrency(version.commercial_items.reduce((s, i) => s + (Number(i.amount_inc_gst) || 0), 0), version.currency)}
                           </td>
                         </tr>
@@ -239,8 +239,8 @@ export function AuroraPage({ quotation, version }: { quotation: Quotation, versi
                           return (
                             <tr key={idx}>
                               <td className="au-item-desc">
-                                <div className="font-semibold text-base-fg">{formatLabel(milestone.label || '') || 'Milestone'}</div>
-                                {milestone.description && <div className="text-[11px] text-muted-fg mt-0.5 whitespace-pre-wrap">{milestone.description}</div>}
+                                <div>{formatLabel(milestone.label || '') || 'Milestone'}</div>
+                                {milestone.description && <small className="whitespace-pre-wrap">{milestone.description}</small>}
                               </td>
                               <td className="au-item-basis">{milestone.percent}%</td>
                               <td className="au-item-basis">{formatCurrency(milestone.base_amount || 0, version.currency)}</td>
@@ -252,25 +252,25 @@ export function AuroraPage({ quotation, version }: { quotation: Quotation, versi
                         })
                       ) : (
                         <tr>
-                          <td colSpan={6} className="text-center text-muted-fg py-4">No milestones added</td>
+                          <td colSpan={6} className="text-center py-4" style={{ color: 'var(--c-slate)' }}>No milestones added</td>
                         </tr>
                       )}
                     </tbody>
                     {version.milestones && version.milestones.length > 0 && (
                       <tfoot>
                         <tr style={{ borderTop: '2px solid #e2e8f0' }}>
-                          <td className="au-item-desc text-right font-bold text-base-fg" style={{ paddingTop: '16px' }}>Total</td>
-                          <td className="au-item-basis font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-desc text-right font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>Total</td>
+                          <td className="au-item-basis font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {version.milestones.reduce((s, m) => s + (Number(m.percent) || 0), 0)}%
                           </td>
-                          <td className="au-item-basis font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-basis font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {formatCurrency(version.milestones.reduce((s, m) => s + (Number(m.base_amount) || 0), 0), version.currency)}
                           </td>
                           <td className="au-item-basis" style={{ paddingTop: '16px' }}></td>
-                          <td className="au-item-basis font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-basis font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {formatCurrency(version.milestones.reduce((s, m) => s + (Number(m.gst_amount) || 0), 0), version.currency)}
                           </td>
-                          <td className="au-item-amt font-bold text-base-fg" style={{ paddingTop: '16px' }}>
+                          <td className="au-item-amt font-bold" style={{ paddingTop: '16px', color: 'var(--c-ink)' }}>
                             {formatCurrency(version.milestones.reduce((s, m) => s + (Number(m.amount) || 0), 0), version.currency)}
                           </td>
                         </tr>

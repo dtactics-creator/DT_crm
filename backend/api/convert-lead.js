@@ -1,6 +1,6 @@
 import { supabase, preflight, fail, V } from './_lib.js';
 import { requirePermission } from './_permissions.js';
-import { nextProjectNo } from './_join.js';
+import { nextProjectNo, nextClientNo } from './_join.js';
 import { logAudit } from './_audit.js';
 
 // Converts a lead into a project:
@@ -26,11 +26,53 @@ export default async function handler(req, res) {
     if (lead.converted_project_id) return fail(res, 400, 'This lead has already been converted to a project.');
 
     const projectNo = await nextProjectNo();
+    const companyName = lead.company || lead.customer_name;
+    
+    // Find or create Client
+    let clientId = null;
+    const { data: existingClient, error: clientErr } = await supabase
+      .from('dt_clients')
+      .select('id, lead_id')
+      .ilike('company_name', companyName)
+      .is('deleted_at', null)
+      .limit(1)
+      .maybeSingle();
+      
+    if (existingClient && !clientErr) {
+      clientId = existingClient.id;
+      // If the manually created client doesn't have an origin lead attached yet, attach this one.
+      if (!existingClient.lead_id) {
+        await supabase.from('dt_clients').update({ lead_id: lead.id, updated_at: new Date().toISOString() }).eq('id', clientId);
+      }
+    } else {
+      const clientNo = await nextClientNo();
+      const clientPayload = {
+        client_no: clientNo,
+        company_name: companyName,
+        contact_person: lead.customer_name,
+        email: lead.primary_email,
+        phone: lead.primary_phone,
+        address: lead.address,
+        lead_id: lead.id,
+        status: 'active'
+      };
+      const { data: newClient, error: newClientErr } = await supabase
+        .from('dt_clients')
+        .insert(clientPayload)
+        .select()
+        .single();
+        
+      if (!newClientErr && newClient) {
+        clientId = newClient.id;
+        await logAudit({ req, user, action: 'CREATE', module: 'Clients', entity: 'Client', entityId: newClient.id, description: `Created client ${newClient.client_no} during lead conversion`, newValues: newClient });
+      }
+    }
 
     const projectPayload = {
       project_no: projectNo,
-      project_name: V.str(req.body.project_name, { field: 'Project name' }) || `${lead.company || lead.customer_name} Project`,
-      client: lead.company || lead.customer_name,
+      project_name: V.str(req.body.project_name, { field: 'Project name' }) || `${companyName} Project`,
+      client: companyName,
+      client_id: clientId,
       lead_id: lead.id,
       lead_no: lead.lead_no,
       project_type: lead.project_type || null,

@@ -11,11 +11,13 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const { lead_id, quotation_id } = req.query || {};
+      const { lead_id, client_id, project_id, quotation_id } = req.query || {};
 
         let query = supabase.from('dt_quotations').select(`
           *,
-          lead:lead_id(customer_name, company),
+          lead:lead_id(customer_name, company, lead_no),
+          client:client_id(company_name, contact_person),
+          project:project_id(project_name, project_no),
           versions:dt_quotation_versions(
             *,
             service_areas:dt_quotation_service_areas(
@@ -28,6 +30,8 @@ export default async function handler(req, res) {
         `).is('deleted_at', null).order('created_at', { ascending: false });
 
       if (lead_id) query = query.eq('lead_id', lead_id);
+      if (client_id) query = query.eq('client_id', client_id);
+      if (project_id) query = query.eq('project_id', project_id);
       if (quotation_id) query = query.eq('id', quotation_id);
 
       const { data, error } = await query;
@@ -113,14 +117,14 @@ export default async function handler(req, res) {
       }
 
       // DEFAULT: CREATE NEW QUOTATION
-      let { lead_id, quotation_no } = req.body;
-      if (!lead_id) return fail(res, 400, 'lead_id is required');
+      let { lead_id, client_id, project_id, quotation_no } = req.body;
+      if (!lead_id && !client_id) return fail(res, 400, 'lead_id or client_id is required');
       
       if (!quotation_no) {
         quotation_no = await nextQuotationNo();
       }
 
-      const qPayload = { lead_id, quotation_no, status: 'Draft' };
+      const qPayload = { lead_id: lead_id || null, client_id: client_id || null, project_id: project_id || null, quotation_no, status: 'Draft' };
       const { data: qData, error: qError } = await supabase.from('dt_quotations').insert(qPayload).select().single();
       if (qError) throw qError;
 

@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  LayoutDashboard, Users, FolderKanban, Database, UserCog,
-  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings
+  LayoutDashboard, Users, FolderKanban, Briefcase, Database, UserCog,
+  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, perm: null },
   { to: '/leads', label: 'Leads', icon: Users, perm: 'leads.view' },
   { to: '/projects', label: 'Projects', icon: FolderKanban, perm: 'projects.view' },
+  { to: '/clients', label: 'Clients', icon: Briefcase, perm: 'clients.view' },
   { to: '/masters', label: 'Masters', icon: Database, perm: 'masters.view' },
   { to: '/employees', label: 'Employees', icon: UserCog, perm: 'employees.view' },
   { to: '/roles', label: 'Roles', icon: ShieldCheck, perm: 'roles.view' },
@@ -21,7 +22,11 @@ const NAV = [
   { to: '/settings', label: 'Settings', icon: Settings, perm: 'masters.edit' },
 ];
 
-const FUTURE = ['Clients', 'Invoices', 'Documents', 'Support'];
+const CAMPAIGN_NAV = [
+  { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: null, end: false },
+];
+
+const FUTURE = ['Invoices', 'Documents', 'Support'];
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: {
   collapsed: boolean;
@@ -31,6 +36,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 }) {
   const { can } = usePermissions();
   const navItems = NAV.filter((item) => !item.perm || can(item.perm));
+  const campaignNavItems = CAMPAIGN_NAV.filter((item) => !item.perm || can(item.perm as any));
   return (
     <>
       {/* Mobile overlay */}
@@ -86,6 +92,35 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               )}
             </NavLink>
           ))}
+
+          <div className="pt-4 space-y-1">
+            {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Campaign</p>}
+            {campaignNavItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={onMobileClose}
+                className={({ isActive }) => cn(
+                  'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
+                  collapsed && 'justify-center px-0',
+                  isActive
+                    ? 'text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300'
+                    : 'text-[color:var(--sidebar-text)] hover:bg-surface-2 hover:text-base-fg',
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.span layoutId="sidebar-active-camp" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
+                    )}
+                    <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
 
           {!collapsed && (
             <div className="pt-5">

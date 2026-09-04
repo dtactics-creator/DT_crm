@@ -6,7 +6,7 @@ import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import { Plus, Trash2, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { collect, required } from '../../lib/validators';
-import type { QuotationVersion, ServiceArea, QuotationCharge, Lead, QuotationMilestone, Quotation, QuotationCommercialItem } from '../../types';
+import type { QuotationVersion, ServiceArea, QuotationCharge, Lead, QuotationMilestone, Quotation, QuotationCommercialItem, Client } from '../../types';
 import QuotationPreview from './QuotationPreview';
 import { useMasters, toOptions } from '../../hooks/useMasters';
 import { useNextNo } from '../../hooks/useNextNo';
@@ -56,6 +56,7 @@ export interface QuotationFormValues {
   subtotal?: number;
   grand_total?: number;
   version_number?: number;
+  project_id?: string;
 }
 
 const empty: QuotationFormValues = {
@@ -95,11 +96,12 @@ const empty: QuotationFormValues = {
   milestones: [
     { label: '', description: '', percent: 0, base_amount: 0, gst_percent: 18, gst_amount: 0, amount: 0, sort_order: 0 }
   ],
+  project_id: '',
 };
 
 const toDateInput = (v: string | null | undefined) => (v ? new Date(v).toISOString().slice(0, 10) : '');
 
-export default function QuotationForm({ open, onClose, onSubmit, initial, saving, title, subtitle, lead }: {
+export default function QuotationForm({ open, onClose, onSubmit, initial, saving, title, subtitle, lead, client, projectId }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (values: QuotationFormValues) => void;
@@ -108,6 +110,8 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
   title: string;
   subtitle?: string;
   lead?: Lead | null;
+  client?: Client | null;
+  projectId?: string | null;
 }) {
   const [v, setV] = useState<QuotationFormValues>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -195,31 +199,32 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
       } else {
         setV({
           ...empty,
-          customer_name: lead?.customer_name || '',
-          company: lead?.company || '',
+          customer_name: lead?.customer_name || client?.company_name || '',
+          company: lead?.company || client?.company_name || '',
           lead_source: lead?.source || '',
           lead_status: lead?.status || '',
-          primary_phone: lead?.primary_phone || '',
+          primary_phone: lead?.primary_phone || client?.phone || '',
           secondary_phone: lead?.secondary_phone || '',
           tertiary_phone: lead?.tertiary_phone || '',
-          primary_email: lead?.primary_email || '',
+          primary_email: lead?.primary_email || client?.email || '',
           secondary_email: lead?.secondary_email || '',
           budget: Number(lead?.budget) || 0,
-          source_person: lead?.source_person || '',
+          source_person: lead?.source_person || client?.contact_person || '',
           lead_received_date: toDateInput(lead?.lead_received_date) || '',
-          address: lead?.address || '',
-          lead_remarks: lead?.remarks || '',
+          address: lead?.address || client?.address || '',
+          lead_remarks: lead?.remarks || client?.notes || '',
           service_areas: [{
             name: 'Transport at Origin',
             location: '',
             remarks: '',
             sort_order: 0,
             charges: [{ charge_name: 'Pickup', basis: 'Flat', currency: 'USD', rate: 0, sort_order: 0 }]
-          }]
+          }],
+          project_id: projectId || ''
         });
       }
     }
-  }, [open, initial, lead]);
+  }, [open, initial, lead, client, projectId]);
 
   const set = (k: keyof QuotationFormValues, val: any) => {
     setV(p => {
@@ -403,7 +408,8 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
     id: 'draft',
     quotation_no: initial?.quotation?.quotation_no || 'DRAFT',
     status: 'Draft',
-    lead_id: 'draft',
+    lead_id: lead?.id || 'draft',
+    client_id: client?.id || null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     deleted_at: null,
@@ -529,6 +535,16 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
                   <Input value="V1" disabled className="bg-subtle/30" />
                 )}
               </Field>
+              {client?.projects && client.projects.length > 0 && (
+                <Field label="Project">
+                  <SearchableSelect
+                    options={client.projects.map((p: any) => ({ label: p.project_name || p.project_no, value: p.id }))}
+                    value={v.project_id || ''}
+                    onChange={(val) => set('project_id', val)}
+                    placeholder="Select a project..."
+                  />
+                </Field>
+              )}
               <Field label="Quotation Date" required error={errors.date}><Input type="date" value={v.date} onChange={(e) => set('date', e.target.value)} invalid={!!errors.date} /></Field>
               <Field label="Valid Until" required error={errors.valid_until}><Input type="date" value={v.valid_until} onChange={(e) => set('valid_until', e.target.value)} invalid={!!errors.valid_until} /></Field>
               {v.template === 'logistics' && <Field label="Enquiry No"><Input value={v.enquiry_no} onChange={(e) => set('enquiry_no', e.target.value)} placeholder="ENQ-2026-..." /></Field>}

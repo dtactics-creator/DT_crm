@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import Projects from './pages/Projects';
+import Clients from './pages/Clients';
 import Masters from './pages/Masters';
 import Employees from './pages/Employees';
 import Roles from './pages/Roles';
@@ -21,6 +22,7 @@ import Profile from './pages/Profile';
 import AuditLogs from './pages/AuditLogs';
 import Quotations from './pages/Quotations';
 import Settings from './pages/Settings';
+import Campaigns from './pages/Campaigns';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +78,7 @@ export default function App() {
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
                       <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
+                      <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
                       <Route path="/masters" element={<RequirePermission perm="masters.view"><Masters /></RequirePermission>} />
                       <Route path="/employees" element={<RequirePermission perm="employees.view"><Employees /></RequirePermission>} />
                       <Route path="/roles" element={<RequirePermission perm="roles.view"><Roles /></RequirePermission>} />
@@ -85,6 +88,7 @@ export default function App() {
                       <Route path="/quotations" element={<RequirePermission perm="quotations.view"><Quotations /></RequirePermission>} />
                       <Route path="/settings" element={<RequirePermission perm="masters.edit"><Settings /></RequirePermission>} />
                       <Route path="/profile" element={<Profile />} />
+                      <Route path="/campaigns" element={<Campaigns />} />
                     </Route>
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>

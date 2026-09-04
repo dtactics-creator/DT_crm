@@ -66,11 +66,13 @@ export default function Quotations() {
       className: 'font-semibold tabular text-brand-600', render: (r) => r.quotation_no,
     },
     {
-      key: 'customer', header: 'Customer', sortValue: (r) => r.lead?.customer_name || '',
+      key: 'customer', header: 'Customer', sortValue: (r) => r.lead?.customer_name || r.client?.company_name || '',
       render: (r) => (
         <div className="min-w-0">
-          <p className="font-semibold text-base-fg truncate">{r.lead?.customer_name || '—'}</p>
-          <p className="text-[12px] text-muted-fg truncate">{r.lead?.company || ''}</p>
+          <p className="font-semibold text-base-fg truncate">{r.lead?.customer_name || r.client?.company_name || '—'}</p>
+          <p className="text-[12px] text-muted-fg truncate">
+            {r.lead?.lead_no ? `${r.lead.lead_no} · ` : ''}{r.lead?.company || r.client?.contact_person || ''}
+          </p>
         </div>
       ),
     },

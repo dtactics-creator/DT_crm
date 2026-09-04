@@ -26,10 +26,11 @@ export function useCreateQuotation() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: (data: Partial<QuotationVersion> & { lead_id: string }) => api.post<Quotation>('/api/quotations', data),
+    mutationFn: (data: Partial<QuotationVersion> & { lead_id?: string | null, client_id?: string | null }) => api.post<Quotation>('/api/quotations', data),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['quotations'] });
       qc.invalidateQueries({ queryKey: ['quotation'] });
+      qc.invalidateQueries({ queryKey: ['clients'] });
       toast(`Quotation ${data.quotation_no} created successfully`, 'success');
     },
     onError: (err: any) => toast(err.message, 'error'),

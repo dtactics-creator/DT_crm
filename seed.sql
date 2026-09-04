@@ -107,11 +107,102 @@ CREATE TABLE IF NOT EXISTS dt_leads3 (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE IF NOT EXISTS dt_campaigns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    image TEXT,
+    cta_label TEXT,
+    cta_url TEXT,
+    coupon_code TEXT,
+    expiry TEXT,
+    brand TEXT,
+    qr BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.dt_campaigns ENABLE ROW LEVEL SECURITY;
+
+-- Allow all authenticated CRM users to read/write
+CREATE POLICY "Enable all for authenticated users" 
+ON public.dt_campaigns FOR ALL 
+USING (auth.role() = 'authenticated') 
+WITH CHECK (auth.role() = 'authenticated');
+
+-- Allow unauthenticated public to READ campaigns for the landing page
+CREATE POLICY "Anyone can view campaigns"
+  ON public.dt_campaigns
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE TABLE IF NOT EXISTS analytics_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_type TEXT NOT NULL,
+    reveal_type TEXT,
+    reveal_title TEXT,
+    brand TEXT,
+    milestone INTEGER,
+    session_id TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can insert analytics"
+  ON public.analytics_events
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "Anyone can view analytics"
+  ON public.analytics_events
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE TABLE IF NOT EXISTS dt_clients (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_no TEXT,
+    company_name TEXT NOT NULL,
+    contact_person TEXT,
+    email TEXT,
+    phone TEXT,
+    address TEXT,
+    website TEXT,
+    status TEXT DEFAULT 'active',
+    notes TEXT,
+    lead_id UUID REFERENCES dt_leads3(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS dt_client_amc (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_id UUID NOT NULL REFERENCES dt_clients(id) ON DELETE CASCADE,
+    amc_name TEXT NOT NULL,
+    description TEXT,
+    amc_amount NUMERIC DEFAULT 0,
+    start_date DATE,
+    end_date DATE,
+    status TEXT DEFAULT 'active',
+    renewal_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
 CREATE TABLE IF NOT EXISTS dt_projects (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_no TEXT,
     project_name TEXT NOT NULL,
     client TEXT NOT NULL,
+    client_id UUID REFERENCES dt_clients(id),
     lead_id UUID REFERENCES dt_leads3(id),
     lead_no TEXT,
     project_type TEXT,
@@ -474,6 +565,8 @@ DELETE FROM audit_logs;
 DELETE FROM dt_lead_url_page_views;
 DELETE FROM dt_lead_url_visits;
 DELETE FROM dt_projects;
+DELETE FROM dt_client_amc;
+DELETE FROM dt_clients;
 DELETE FROM dt_leads3;
 DELETE FROM dt_templates;
 DELETE FROM dt_notifications;
@@ -664,6 +757,10 @@ INSERT INTO dt_role_permissions (role_id, permission) VALUES
   ('a0000000-0000-0000-0000-000000000002','leads.convert'),
   ('a0000000-0000-0000-0000-000000000002','leads.import'),
   ('a0000000-0000-0000-0000-000000000002','leads.export'),
+  ('a0000000-0000-0000-0000-000000000002','clients.view'),
+  ('a0000000-0000-0000-0000-000000000002','clients.create'),
+  ('a0000000-0000-0000-0000-000000000002','clients.edit'),
+  ('a0000000-0000-0000-0000-000000000002','clients.delete'),
   ('a0000000-0000-0000-0000-000000000002','projects.view'),
   ('a0000000-0000-0000-0000-000000000002','employees.view'),
   ('a0000000-0000-0000-0000-000000000002','masters.view'),
@@ -677,6 +774,9 @@ INSERT INTO dt_role_permissions (role_id, permission) VALUES
   ('a0000000-0000-0000-0000-000000000003','leads.edit'),
   ('a0000000-0000-0000-0000-000000000003','leads.convert'),
   ('a0000000-0000-0000-0000-000000000003','leads.export'),
+  ('a0000000-0000-0000-0000-000000000003','clients.view'),
+  ('a0000000-0000-0000-0000-000000000003','clients.create'),
+  ('a0000000-0000-0000-0000-000000000003','clients.edit'),
   ('a0000000-0000-0000-0000-000000000003','masters.view'),
   ('a0000000-0000-0000-0000-000000000003','templates.view'),
   ('a0000000-0000-0000-0000-000000000003','reports.view');
@@ -704,6 +804,7 @@ INSERT INTO dt_role_permissions (role_id, permission) VALUES
   ('a0000000-0000-0000-0000-000000000008','projects.delete'),
   ('a0000000-0000-0000-0000-000000000008','projects.import'),
   ('a0000000-0000-0000-0000-000000000008','projects.export'),
+  ('a0000000-0000-0000-0000-000000000008','clients.view'),
   ('a0000000-0000-0000-0000-000000000008','leads.view'),
   ('a0000000-0000-0000-0000-000000000008','employees.view'),
   ('a0000000-0000-0000-0000-000000000008','masters.view'),

@@ -321,8 +321,45 @@ export interface QuotationVersion extends AuditFields {
 
 export interface Quotation extends AuditFields {
   quotation_no: string;
-  lead_id: string;
+  lead_id: string | null;
+  client_id?: string | null;
+  project_id?: string | null;
   status: string;
-  lead?: { customer_name: string; company: string | null };
+  lead?: { customer_name: string; company: string | null; lead_no?: string };
+  client?: { company_name: string; contact_person: string | null };
+  project?: { project_name: string; project_no: string };
   versions?: QuotationVersion[];
+}
+
+export interface ClientAmc extends AuditFields {
+  client_id: string;
+  project_id?: string | null;
+  amc_name: string;
+  description: string | null;
+  amc_amount: number;
+  start_date: string | null;
+  end_date: string | null;
+  renewal_date: string | null;
+  status: string;
+  notes: string | null;
+  project?: { project_name: string };
+}
+
+export interface Client extends AuditFields {
+  client_no: string | null;
+  company_name: string;
+  contact_person: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  website: string | null;
+  status: string;
+  notes: string | null;
+  lead_id: string | null;
+  project_count?: number;
+  projects?: Project[];
+  amcs?: ClientAmc[];
+  lead?: Lead;
+  quotations?: any[];
+  audit_logs?: any[];
 }
