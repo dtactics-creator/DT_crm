@@ -17,7 +17,7 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const { toast } = useToast();
-  const { data: allEmployees } = useEmployees();
+  const { data: allEmployees, isLoading } = useEmployees();
 
   const email = user?.email ?? '—';
   const actualEmployee = (allEmployees || []).find((e) => e.email === email);
@@ -32,9 +32,15 @@ export default function Profile() {
   const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
   const [savingPw, setSavingPw] = useState(false);
 
-  useEffect(() => { setFullName(metaName); }, [metaName]);
+  useEffect(() => {
+    if (!isLoading) {
+      setFullName(metaName);
+    } else if (metaName && !fullName) {
+      setFullName(metaName);
+    }
+  }, [metaName, isLoading]);
 
-  const displayName = fullName || email.split('@')[0];
+  const displayName = (!isLoading && actualEmployee?.employee_name) ? actualEmployee.employee_name : fullName || email.split('@')[0];
 
   // Name is managed via crm_employees by admins.
 

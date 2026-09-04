@@ -22,6 +22,10 @@ export default defineConfig(async ({ mode }) => {
           target: 'http://localhost:3000',
           changeOrigin: true,
         },
+        '/uploads': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
         '/t': {
           target: 'http://localhost:3000',
           changeOrigin: true,

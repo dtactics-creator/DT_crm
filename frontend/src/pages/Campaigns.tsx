@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Megaphone, Pencil, Trash2, Link as LinkIcon, Power, PowerOff } from 'lucide-react';
+import { Plus, Search, Megaphone, Pencil, Trash2, Link as LinkIcon, Power, PowerOff, UploadCloud, Loader2 } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Button from '../components/ui/Button';
@@ -48,6 +48,15 @@ export default function Campaigns() {
   const [editing, setEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [toDelete, setToDelete] = useState<CampaignRow | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const filtered = useMemo(() => (campaigns || []).filter((c) => {
     const q = search.toLowerCase();
@@ -59,6 +68,8 @@ export default function Campaigns() {
     setForm({ ...emptyForm, sort_order: (campaigns?.length || 0) + 1 });
     setEditing(false);
     setErrors({});
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setModalOpen(true);
   };
 
@@ -66,6 +77,8 @@ export default function Campaigns() {
     setForm({ ...c });
     setEditing(true);
     setErrors({});
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setModalOpen(true);
   };
 
@@ -76,6 +89,20 @@ export default function Campaigns() {
     });
     setErrors(er);
     return Object.keys(er).length === 0;
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1 * 1024 * 1024) {
+      toast('File is too large. Maximum size is 1MB.', 'error');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const saveMut = useMutation({
@@ -108,7 +135,33 @@ export default function Campaigns() {
 
   const submit = async () => {
     if (!validate()) return;
-    await saveMut.mutateAsync(form);
+    
+    let finalForm = { ...form };
+
+    if (selectedFile) {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        
+        finalForm.image = data.url;
+      } catch (err: any) {
+        toast(err.message || 'Error uploading image', 'error');
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
+    await saveMut.mutateAsync(finalForm);
   };
 
   const setF = (k: keyof CampaignFormState, v: any) => setForm((prev) => ({ ...prev, [k]: v }));
@@ -215,8 +268,24 @@ export default function Campaigns() {
             <Textarea value={form.description ?? ''} onChange={(e) => setF('description', e.target.value)} placeholder="Describe the offer or reveal..." />
           </Field>
 
-          <Field label="Image URL">
-            <Input value={form.image ?? ''} onChange={(e) => setF('image', e.target.value)} placeholder="https://example.com/image.png" />
+          <Field label="Campaign Image">
+            <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                <Input value={form.image ?? ''} onChange={(e) => setF('image', e.target.value)} placeholder="https://example.com/image.png or upload..." />
+              </div>
+              <div>
+                <Button type="button" variant="secondary" onClick={() => document.getElementById('img-upload')?.click()} disabled={uploading}>
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4 mr-2" />}
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </Button>
+                <input type="file" id="img-upload" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              </div>
+            </div>
+            { (previewUrl || form.image) && (
+              <div className="mt-3 rounded-xl border border-app overflow-hidden h-40 bg-surface-2 flex items-center justify-center">
+                <img src={previewUrl || form.image || undefined} alt="Campaign preview" className="max-h-full max-w-full object-contain" />
+              </div>
+            )}
           </Field>
 
           <div className="grid grid-cols-2 gap-4">

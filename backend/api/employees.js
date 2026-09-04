@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
       // Create the login account first so we don't create an orphan employee row
       // if the email is already taken.
-      await upsertAuthUser(payload.email, password);
+      await upsertAuthUser(null, payload.email, password, payload.employee_name);
 
       const bcrypt = (await import('bcryptjs')).default;
       payload.password_hash = await bcrypt.hash(password, 10);
@@ -43,15 +43,16 @@ export default async function handler(req, res) {
       const payload = validate(req.body);
       payload.updated_at = new Date().toISOString();
 
-      // If a new password is supplied, create/update the login account.
+      const { data: oldData } = await supabase.from('crm_employees').select('*').eq('id', id).single();
       const password = validatePassword(req.body.password, false);
+      
+      // Update the login account with new email, password, and name
+      await upsertAuthUser(oldData?.email, payload.email, password, payload.employee_name);
+      
       if (password) {
-        await upsertAuthUser(payload.email, password);
         const bcrypt = (await import('bcryptjs')).default;
         payload.password_hash = await bcrypt.hash(password, 10);
       }
-
-      const { data: oldData } = await supabase.from('crm_employees').select('*').eq('id', id).single();
       const { data, error } = await supabase.from('crm_employees').update(payload).eq('id', id).select().single();
       if (error) throw error;
       const { password_hash, ...safeData } = data;
@@ -65,7 +66,8 @@ export default async function handler(req, res) {
       if (!id) return fail(res, 400, 'Employee id is required');
       const { data: oldData } = await supabase.from('crm_employees').select('*').eq('id', id).single();
       const { error } = await supabase.from('crm_employees')
-        .update({ deleted_at: new Date().toISOString() }).eq('id', id);
+        // .update({ deleted_at: new Date().toISOString() }).eq('id', id);
+        .delete().eq('id', id);
       if (error) throw error;
       if (oldData) await logAudit({ req, user, action: 'DELETE', module: 'Employees', entity: 'Employee', entityId: id, description: `Deleted employee: ${oldData.employee_name}`, oldValues: oldData });
       return res.status(200).json({ ok: true });
@@ -78,23 +80,40 @@ export default async function handler(req, res) {
   }
 }
 
-// Create a Supabase auth account, or update the password if one already exists.
-async function upsertAuthUser(email, password) {
-  const { error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-  if (!error) return;
+// Create a Supabase auth account, or update the existing one if oldEmail is provided or it already exists.
+async function upsertAuthUser(oldEmail, newEmail, password, name) {
+  const searchEmail = oldEmail || newEmail;
+  const existing = await findAuthUserByEmail(searchEmail);
 
-  // Already registered -> find the user and update the password instead.
-  const already = /already|registered|exists/i.test(error.message || '');
-  if (!already) throw new Error(`Could not create login: ${error.message}`);
-
-  const existing = await findAuthUserByEmail(email);
-  if (!existing) throw new Error('A login already exists for this email.');
-  const { error: updErr } = await supabase.auth.admin.updateUserById(existing.id, { password });
-  if (updErr) throw new Error(`Could not update login password: ${updErr.message}`);
+  if (existing) {
+    // Update existing user
+    const updates = { email: newEmail, user_metadata: { name, full_name: name } };
+    if (password) updates.password = password;
+    const { error: updErr } = await supabase.auth.admin.updateUserById(existing.id, updates);
+    if (updErr) throw new Error(`Could not update login: ${updErr.message}`);
+  } else {
+    // Create new user
+    const { error } = await supabase.auth.admin.createUser({
+      email: newEmail,
+      password: password || 'TempPass123!', // Ensure password is provided for creation
+      email_confirm: true,
+      user_metadata: { name, full_name: name }
+    });
+    if (error) {
+      const already = /already|registered|exists/i.test(error.message || '');
+      if (!already) throw new Error(`Could not create login: ${error.message}`);
+      
+      // If it exists but wasn't found by findAuthUserByEmail, fallback to updating by newEmail
+      const fallback = await findAuthUserByEmail(newEmail);
+      if (fallback) {
+        const updates = { user_metadata: { name, full_name: name } };
+        if (password) updates.password = password;
+        await supabase.auth.admin.updateUserById(fallback.id, updates);
+      } else {
+        throw new Error('A login already exists for this email.');
+      }
+    }
+  }
 }
 
 async function findAuthUserByEmail(email) {
