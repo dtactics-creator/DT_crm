@@ -49,6 +49,7 @@ export default async function handler(req, res) {
       const clientPayload = {
         client_no: clientNo,
         company_name: companyName,
+        customer_name: lead.customer_name, // Added for new schema
         contact_person: lead.customer_name,
         email: lead.primary_email,
         phone: lead.primary_phone,
@@ -64,6 +65,18 @@ export default async function handler(req, res) {
         
       if (!newClientErr && newClient) {
         clientId = newClient.id;
+        
+        // Automatically create the primary contact person in the new contacts table
+        if (lead.customer_name) {
+          await supabase.from('dt_client_contacts').insert([{
+            client_id: newClient.id,
+            full_name: lead.customer_name,
+            mobile: lead.primary_phone || lead.secondary_phone,
+            email: lead.primary_email || lead.secondary_email,
+            is_primary: true
+          }]);
+        }
+
         await logAudit({ req, user, action: 'CREATE', module: 'Clients', entity: 'Client', entityId: newClient.id, description: `Created client ${newClient.client_no} during lead conversion`, newValues: newClient });
       }
     }

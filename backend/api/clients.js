@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         // Fetch single client with their projects, AMCs, and origin Lead
         const { data: client, error } = await supabase
           .from('dt_clients')
-          .select('*, projects:dt_projects(*, lead:lead_id(lead_no, source, budget, converted_at)), amcs:dt_client_amc(*, project:project_id(project_name)), lead:lead_id(*)')
+          .select('*, contacts:dt_client_contacts(*), projects:dt_projects(*, lead:lead_id(lead_no, source, budget, converted_at)), amcs:dt_client_amc(*, project:project_id(project_name)), lead:lead_id(*)')
           .eq('id', id)
           .is('deleted_at', null)
           .single();
@@ -79,6 +79,23 @@ export default async function handler(req, res) {
         
       if (error) throw error;
       
+      if (Array.isArray(req.body.contacts) && req.body.contacts.length > 0) {
+        const contactsToInsert = req.body.contacts.map(c => ({
+          client_id: data.id,
+          full_name: c.full_name,
+          department: c.department,
+          mobile: c.mobile,
+          landline: c.landline,
+          email: c.email,
+          remarks: c.remarks,
+          is_primary: c.is_primary || false
+        })).filter(c => c.full_name);
+        
+        if (contactsToInsert.length > 0) {
+          await supabase.from('dt_client_contacts').insert(contactsToInsert);
+        }
+      }
+      
       await logAudit({ req, user, action: 'CREATE', module: 'Clients', entity: 'Client', entityId: data.id, description: `Created client: ${data.company_name}`, newValues: data });
       return res.status(201).json(data);
     }
@@ -94,6 +111,27 @@ export default async function handler(req, res) {
       const { data, error } = await supabase.from('dt_clients').update(payload).eq('id', id).select().single();
       
       if (error) throw error;
+      
+      if (Array.isArray(req.body.contacts)) {
+        // Simple replace all strategy for contacts
+        await supabase.from('dt_client_contacts').delete().eq('client_id', id);
+        
+        const contactsToInsert = req.body.contacts.map(c => ({
+          client_id: id,
+          full_name: c.full_name,
+          department: c.department,
+          mobile: c.mobile,
+          landline: c.landline,
+          email: c.email,
+          remarks: c.remarks,
+          is_primary: c.is_primary || false
+        })).filter(c => c.full_name);
+        
+        if (contactsToInsert.length > 0) {
+          await supabase.from('dt_client_contacts').insert(contactsToInsert);
+        }
+      }
+      
       if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Clients', entity: 'Client', entityId: id, description: `Updated client: ${data.company_name}`, oldValues: oldData, newValues: data });
       
       return res.status(200).json(data);
@@ -121,11 +159,16 @@ export default async function handler(req, res) {
 
 function validate(body) {
   return {
+    customer_name: V.str(body.customer_name, { field: 'Customer name' }),
     company_name: V.str(body.company_name, { field: 'Company name', required: true, min: 2 }),
+    vat_gst_no: V.str(body.vat_gst_no, { field: 'VAT/GST No' }),
     contact_person: V.str(body.contact_person, { field: 'Contact person' }),
     email: V.str(body.email, { field: 'Email' }),
     phone: V.str(body.phone, { field: 'Phone' }),
     address: V.str(body.address, { field: 'Address' }),
+    country: V.str(body.country, { field: 'Country' }),
+    state: V.str(body.state, { field: 'State' }),
+    city: V.str(body.city, { field: 'City' }),
     website: V.str(body.website, { field: 'Website' }),
     status: V.str(body.status, { field: 'Status' }) || 'active',
     notes: V.str(body.notes, { field: 'Notes', max: 4000 })

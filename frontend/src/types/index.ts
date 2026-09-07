@@ -345,13 +345,29 @@ export interface ClientAmc extends AuditFields {
   project?: { project_name: string };
 }
 
+export interface ClientContact extends AuditFields {
+  client_id: string;
+  full_name: string;
+  department: string | null;
+  mobile: string | null;
+  landline: string | null;
+  email: string | null;
+  remarks: string | null;
+  is_primary: boolean;
+}
+
 export interface Client extends AuditFields {
   client_no: string | null;
+  customer_name: string | null;
   company_name: string;
+  vat_gst_no: string | null;
   contact_person: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
+  country: string | null;
+  state: string | null;
+  city: string | null;
   website: string | null;
   status: string;
   notes: string | null;
@@ -359,6 +375,7 @@ export interface Client extends AuditFields {
   project_count?: number;
   projects?: Project[];
   amcs?: ClientAmc[];
+  contacts?: ClientContact[];
   lead?: Lead;
   quotations?: any[];
   audit_logs?: any[];

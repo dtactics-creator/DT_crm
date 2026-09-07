@@ -87,6 +87,7 @@ function validate(body) {
     project_no: V.str(body.project_no, { field: 'Project No', max: 40 }),
     project_name: V.str(body.project_name, { field: 'Project name', required: true, min: 2 }),
     client: V.str(body.client, { field: 'Client', required: true, min: 1 }),
+    client_id: V.uuid(body.client_id),
     lead_id: V.uuid(body.lead_id),
     lead_no: V.str(body.lead_no, { field: 'Lead reference', max: 40 }),
     project_type: V.str(body.project_type, { field: 'Project type' }),

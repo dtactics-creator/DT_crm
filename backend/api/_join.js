@@ -73,16 +73,16 @@ export async function nextQuotationNo() {
   const { data, error } = await supabase
     .from('dt_quotations')
     .select('quotation_no')
-    .like('quotation_no', `${yy}-DTQ-%`)
+    .like('quotation_no', `${yy}DTQ%`)
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) throw error;
   let max = 0;
   for (const row of data || []) {
-    const m = String(row.quotation_no || '').match(new RegExp(`^${yy}-DTQ-(\\d+)$`));
+    const m = String(row.quotation_no || '').match(new RegExp(`^${yy}DTQ(\\d+)$`));
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
-  return `${yy}-DTQ-${String(max + 1).padStart(3, '0')}`;
+  return `${yy}DTQ${String(max + 1).padStart(3, '0')}`;
 }
 
 // Generate the next sequential document number, e.g. LD-1001 or PRJ-2001.
@@ -103,21 +103,22 @@ export async function nextNumber(table, column, prefix, start) {
   return `${prefix}${max + 1}`;
 }
 
-// Generate the next client number in the format YY-CLI-001.
 export async function nextClientNo() {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yymm = `${yy}${mm}`;
   const { data, error } = await supabase
     .from('dt_clients')
     .select('client_no')
-    .like('client_no', `${yy}-CLI-%`)
+    .like('client_no', `${yymm}CL%`)
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) throw error;
   let max = 0;
   for (const row of data || []) {
-    const m = String(row.client_no || '').match(new RegExp(`^${yy}-CLI-(\\d+)$`));
+    const m = String(row.client_no || '').match(new RegExp(`^${yymm}CL(\\d+)$`));
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
-  return `${yy}-CLI-${String(max + 1).padStart(3, '0')}`;
+  return `${yymm}CL${String(max + 1).padStart(3, '0')}`;
 }

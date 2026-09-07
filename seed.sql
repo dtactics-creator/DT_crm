@@ -167,15 +167,35 @@ CREATE POLICY "Anyone can view analytics"
 CREATE TABLE IF NOT EXISTS dt_clients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_no TEXT,
+    customer_name TEXT,
     company_name TEXT NOT NULL,
+    vat_gst_no TEXT,
     contact_person TEXT,
     email TEXT,
     phone TEXT,
     address TEXT,
+    country TEXT,
+    state TEXT,
+    city TEXT,
     website TEXT,
     status TEXT DEFAULT 'active',
     notes TEXT,
     lead_id UUID REFERENCES dt_leads3(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS dt_client_contacts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_id UUID NOT NULL REFERENCES dt_clients(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL,
+    department TEXT,
+    mobile TEXT,
+    landline TEXT,
+    email TEXT,
+    remarks TEXT,
+    is_primary BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMP WITH TIME ZONE,
     deleted_at TIMESTAMP WITH TIME ZONE
@@ -557,6 +577,12 @@ ALTER TABLE dt_projects ADD COLUMN IF NOT EXISTS industry TEXT;
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS converted_project_id UUID REFERENCES dt_projects(id);
 ALTER TABLE dt_leads3 ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP WITH TIME ZONE;
 
+ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS customer_name TEXT;
+ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS vat_gst_no TEXT;
+ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS state TEXT;
+ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS city TEXT;
+
 -- ---------------------------------------------------------------------------
 -- 0. Clean slate (comment this block out to keep existing rows)
 -- ---------------------------------------------------------------------------
@@ -566,6 +592,7 @@ DELETE FROM dt_lead_url_page_views;
 DELETE FROM dt_lead_url_visits;
 DELETE FROM dt_projects;
 DELETE FROM dt_client_amc;
+DELETE FROM dt_client_contacts;
 DELETE FROM dt_clients;
 DELETE FROM dt_leads3;
 DELETE FROM dt_templates;

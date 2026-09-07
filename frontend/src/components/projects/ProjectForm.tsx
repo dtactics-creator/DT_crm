@@ -9,18 +9,18 @@ import { Plus, Trash2, Link2 } from 'lucide-react';
 import { toOptions } from '../../hooks/useMasters';
 import { useNextNo } from '../../hooks/useNextNo';
 import { collect, required, minLen, maxLen, nonNegativeNumber, integerInRange, dateOrder, url as urlValid } from '../../lib/validators';
-import type { Project, MasterItem, Employee, Lead, ProjectUrl } from '../../types';
+import type { Project, MasterItem, Employee, Lead, ProjectUrl, Client } from '../../types';
 
 export interface ProjectFormValues {
   id?: string;
-  project_no: string; project_name: string; client: string; lead_id: string;
+  project_no: string; project_name: string; client: string; client_id: string; lead_id: string;
   project_type: string; industry: string; project_manager_id: string; assigned_employee_id: string;
   technology_stack: string[]; urls: ProjectUrl[]; project_cost: string; status: string; priority: string;
   progress: string; start_date: string; expected_delivery: string; remarks: string;
 }
 
 const empty: ProjectFormValues = {
-  project_no: '', project_name: '', client: '', lead_id: '', project_type: '', industry: '', project_manager_id: '',
+  project_no: '', project_name: '', client: '', client_id: '', lead_id: '', project_type: '', industry: '', project_manager_id: '',
   assigned_employee_id: '', technology_stack: [], urls: [], project_cost: '', status: '', priority: 'medium',
   progress: '0', start_date: '', expected_delivery: '', remarks: '',
 };
@@ -28,7 +28,7 @@ const empty: ProjectFormValues = {
 
 const toDateInput = (v: string | null) => (v ? new Date(v).toISOString().slice(0, 10) : '');
 
-export default function ProjectForm({ open, onClose, onSubmit, initial, masters, employees, managers, leads, saving }: {
+export default function ProjectForm({ open, onClose, onSubmit, initial, masters, employees, managers, leads, clients, saving }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (values: ProjectFormValues) => void;
@@ -37,6 +37,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   employees: Employee[] | undefined;
   managers: Employee[] | undefined;
   leads: Lead[] | undefined;
+  clients?: Client[];
   saving: boolean;
 }) {
   const [v, setV] = useState<ProjectFormValues>(empty);
@@ -53,7 +54,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   const stackOpts = toOptions(masters, 'technology_stack');
   const managerOpts = (managers || []).map((m) => ({ value: m.id, label: m.employee_name, hint: m.role }));
   const empOpts = (employees || []).filter((e) => e.status === 'active').map((e) => ({ value: e.id, label: e.employee_name, hint: e.role }));
-  const leadOpts = (leads || []).map((l) => ({ value: l.id, label: `${l.lead_no ?? ''} · ${l.company || l.customer_name}`.trim() }));
+  const clientOpts = (clients || []).map((c) => ({ value: c.id, label: `${c.client_no ?? ''} · ${c.company_name}`.trim() }));
 
   useEffect(() => {
     if (open) {
@@ -61,7 +62,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
       if (initial) {
         setV({
           id: initial.id, project_no: initial.project_no ?? '', project_name: initial.project_name,
-          client: initial.client, lead_id: initial.lead_id ?? '', project_type: initial.project_type ?? '',
+          client: initial.client, client_id: initial.client_id ?? '', lead_id: initial.lead_id ?? '', project_type: initial.project_type ?? '',
           industry: initial.industry ?? '',
           project_manager_id: initial.project_manager_id ?? '', assigned_employee_id: initial.assigned_employee_id ?? '',
           technology_stack: Array.isArray(initial.technology_stack) ? initial.technology_stack : [],
@@ -89,7 +90,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   const validate = () => {
     const e = collect({
       project_name: required(v.project_name, 'Project name') || minLen(v.project_name, 2, 'Project name') || maxLen(v.project_name, 150, 'Project name'),
-      client: required(v.client, 'Client') || maxLen(v.client, 150, 'Client'),
+      client_id: required(v.client_id, 'Client'),
       project_type: required(v.project_type, 'Project type'),
       status: required(v.status, 'Status'),
       project_cost: nonNegativeNumber(v.project_cost, 'Budget'),
@@ -136,11 +137,19 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
             <Field label="Project name" required error={errors.project_name}>
               <Input value={v.project_name} onChange={(e) => set('project_name', e.target.value)} invalid={!!errors.project_name} placeholder="Acme CRM Platform" />
             </Field>
-            <Field label="Client" required error={errors.client}>
-              <Input value={v.client} onChange={(e) => set('client', e.target.value)} invalid={!!errors.client} placeholder="Acme Corp" />
-            </Field>
-            <Field label="Lead reference" hint="Link the originating lead">
-              <SearchableSelect value={v.lead_id} onChange={(x) => set('lead_id', x)} options={leadOpts} placeholder="None" clearable />
+            <Field label="Client" required error={errors.client_id}>
+              <SearchableSelect 
+                value={v.client_id} 
+                onChange={(x) => {
+                  set('client_id', x);
+                  const selected = clients?.find(c => c.id === x);
+                  if (selected) set('client', selected.company_name);
+                }} 
+                options={clientOpts} 
+                placeholder="Select a client" 
+                invalid={!!errors.client_id} 
+                clearable 
+              />
             </Field>
             <Field label="Project type" required error={errors.project_type}>
               <SearchableSelect value={v.project_type} onChange={(x) => set('project_type', x)} options={typeOpts} placeholder="Select type" invalid={!!errors.project_type} />

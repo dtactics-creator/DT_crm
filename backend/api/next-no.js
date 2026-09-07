@@ -1,16 +1,16 @@
 import { preflight, fail } from './_lib.js';
 import { requirePermission } from './_permissions.js';
-import { nextLeadNo, nextProjectNo, nextQuotationNo } from './_join.js';
+import { nextLeadNo, nextProjectNo, nextQuotationNo, nextClientNo } from './_join.js';
 
 // Returns the next auto-generated document numbers for previewing in forms.
-// GET /api/next-no?type=lead | project
+// GET /api/next-no?type=lead | project | quotation | client
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
   if (req.method !== 'GET') return fail(res, 405, 'Method not allowed');
 
   const type = req.query?.type;
   // Previewing a number is part of creating that record.
-  const perm = type === 'project' ? 'projects.create' : type === 'quotation' ? 'quotations.create' : 'leads.create';
+  const perm = type === 'project' ? 'projects.create' : type === 'quotation' ? 'quotations.create' : type === 'client' ? 'clients.create' : 'leads.create';
   const user = await requirePermission(req, res, perm);
   if (!user) return;
 
@@ -18,6 +18,7 @@ export default async function handler(req, res) {
     if (type === 'lead') return res.status(200).json({ next: await nextLeadNo() });
     if (type === 'project') return res.status(200).json({ next: await nextProjectNo() });
     if (type === 'quotation') return res.status(200).json({ next: await nextQuotationNo() });
+    if (type === 'client') return res.status(200).json({ next: await nextClientNo() });
     return fail(res, 400, 'Unknown type');
   } catch (err) {
     return fail(res, 500, err.message);

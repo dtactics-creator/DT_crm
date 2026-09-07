@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Badge from '../components/ui/Badge';
@@ -7,7 +8,8 @@ import QuotationPreview from '../components/quotations/QuotationPreview';
 import QuotationForm, { type QuotationFormValues } from '../components/quotations/QuotationForm';
 import type { Quotation, QuotationVersion } from '../types';
 import { formatDate } from '../lib/utils';
-import { Eye, Receipt, FileText } from 'lucide-react';
+import { Eye, Receipt, FileText, Search } from 'lucide-react';
+import Input from '../components/ui/Input';
 import EmptyState from '../components/ui/EmptyState';
 import Modal from '../components/ui/Modal';
 import RowActions from '../components/ui/RowActions';
@@ -30,6 +32,29 @@ export default function Quotations() {
   const [versionSelectionData, setVersionSelectionData] = useState<Quotation | null>(null);
   const [activeTab, setActiveTab] = useState<'quotations' | 'leads'>('quotations');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [params, setParams] = useSearchParams();
+
+  useEffect(() => {
+    if (quotations && quotations.length > 0) {
+      const previewId = params.get('preview');
+      if (previewId) {
+        const qToPreview = quotations.find((q) => q.id === previewId);
+        if (qToPreview) {
+          if (qToPreview.versions && qToPreview.versions.length > 1) {
+            setVersionSelectionData(qToPreview);
+          } else if (qToPreview.versions?.[0]) {
+            setPreviewData({ q: qToPreview, v: qToPreview.versions[0] });
+          }
+        }
+        setParams(prev => {
+          const newParams = new URLSearchParams(prev);
+          newParams.delete('preview');
+          return newParams;
+        }, { replace: true });
+      }
+    }
+  }, [quotations, params, setParams]);
 
   const { user } = useAuth();
   const { data: allEmployees } = useEmployees();
@@ -59,6 +84,17 @@ export default function Quotations() {
       default: return '#64748b';
     }
   };
+
+  const filteredQuotations = (quotations || []).filter(r => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      r.quotation_no?.toLowerCase().includes(q) ||
+      r.lead?.customer_name?.toLowerCase().includes(q) ||
+      r.client?.company_name?.toLowerCase().includes(q) ||
+      r.lead?.company?.toLowerCase().includes(q)
+    );
+  });
 
   const columns: Column<Quotation>[] = [
     {
@@ -203,26 +239,34 @@ export default function Quotations() {
 
       <div className="bg-surface border border-app rounded-2xl rounded-tl-none card-shadow mt-4">
         {activeTab === 'quotations' ? (
-          isLoading ? (
-          <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
-        ) : (
-          <DataTable
-            data={quotations || []} columns={columns} rowKey={(r) => r.id}
-            onRowClick={(r) => {
-              if (r.versions && r.versions.length > 1) {
-                setVersionSelectionData(r);
-              } else if (r.versions?.[0]) {
-                setPreviewData({ q: r, v: r.versions[0] });
-              }
-            }}
-            stickyHeader maxBodyHeight="560px"
-            emptyState={
-              <EmptyState icon={<Receipt className="h-6 w-6" />}
-                title="No quotations found"
-                description="Select a lead from the Leads tab to create one."
-              />
-            } />
-          )
+          <div className="flex flex-col">
+            <div className="p-4 border-b border-app">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
+                <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search quotations by number, customer..." className="pl-10" />
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
+            ) : (
+              <DataTable
+                data={filteredQuotations} columns={columns} rowKey={(r) => r.id}
+                onRowClick={(r) => {
+                  if (r.versions && r.versions.length > 1) {
+                    setVersionSelectionData(r);
+                  } else if (r.versions?.[0]) {
+                    setPreviewData({ q: r, v: r.versions[0] });
+                  }
+                }}
+                stickyHeader maxBodyHeight="560px"
+                emptyState={
+                  <EmptyState icon={<Receipt className="h-6 w-6" />}
+                    title={searchQuery ? "No matching quotations" : "No quotations found"}
+                    description={searchQuery ? "Try a different search term." : "Select a lead from the Leads tab to create one."}
+                  />
+                } />
+            )}
+          </div>
         ) : (
           leadsLoading ? (
             <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>

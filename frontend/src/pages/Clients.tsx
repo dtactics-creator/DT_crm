@@ -1,129 +1,26 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Briefcase, ChevronLeft, Pencil, Trash2 } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useClients, useClientDetails } from '../hooks/useClients';
 import { usePermissions } from '../contexts/PermissionContext';
-import { useCreateQuotation } from '../hooks/useQuotations';
-import QuotationForm, { type QuotationFormValues } from '../components/quotations/QuotationForm';
-import AmcForm from '../components/clients/AmcForm';
+import ClientForm, { ClientFormValues } from '../components/clients/ClientForm';
+import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
 import { Link } from 'react-router-dom';
-import type { Client } from '../types';
+import type { Client, Project } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { useMasters, makeLookup } from '../hooks/useMasters';
+import { useEmployees } from '../hooks/useEmployees';
+import { useLeads } from '../hooks/useLeads';
+import { useCrud } from '../hooks/useCrud';
+import { useCreateClient, useUpdateClient } from '../hooks/useClients';
 
-function ClientProjectCard({ p, detail, lookup, can, setQuotationClient, setQuotationProject, setAmcClient, setAmcProject }: any) {
-  const [isOpen, setIsOpen] = useState(true);
-  const pQuotations = detail.quotations?.filter((q: any) => q.project_id === p.id || (q.lead_id && q.lead_id === p.lead_id)) || [];
-  const pAmcs = detail.amcs?.filter((a: any) => a.project_id === p.id) || [];
-
-  return (
-    <div className="bg-surface border border-app rounded-2xl card-shadow overflow-hidden mb-6 transition-all">
-      {/* Project Header */}
-      <div 
-        className="p-5 sm:p-6 border-b border-app bg-surface-2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-surface-2 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center gap-3">
-          <button className="text-muted-fg hover:text-base-fg p-1 -ml-1 rounded-md transition-colors">
-            {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          </button>
-          <div>
-            <h3 className="font-bold text-lg text-brand-600 hover:underline" onClick={(e) => e.stopPropagation()}><Link to="/projects">{p.project_name}</Link></h3>
-            <p className="text-xs uppercase tracking-wider text-muted-fg tabular mt-1">{p.project_no}</p>
-          </div>
-        </div>
-        <Badge label={p.status} color="#3b82f6" />
-      </div>
-
-      {isOpen && (
-        <div className="p-5 sm:p-6 space-y-6">
-          {/* Project Details */}
-          <div className="bg-surface-2 rounded-xl p-4 border border-app">
-            <h4 className="font-semibold text-sm mb-3">Project Details</h4>
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <p><span className="text-muted-fg font-medium">Type:</span> {p.project_type ? lookup.label('project_type', p.project_type) : '—'}</p>
-              <p><span className="text-muted-fg font-medium">Cost:</span> {formatCurrency(p.project_cost || 0)}</p>
-              <p><span className="text-muted-fg font-medium">Progress:</span> {p.progress || 0}%</p>
-              <p><span className="text-muted-fg font-medium">Expected Delivery:</span> {p.expected_delivery ? new Date(p.expected_delivery).toLocaleDateString() : '—'}</p>
-            </div>
-          </div>
-
-          {/* Origin Lead for this Project */}
-          {p.lead ? (
-            <div className="bg-surface-2 rounded-xl p-4 border border-app">
-              <h4 className="font-semibold text-sm mb-3">Origin Lead</h4>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <p><span className="text-muted-fg font-medium">Lead No:</span> <Link to="/leads" className="text-brand-600 hover:underline font-semibold" onClick={(e) => e.stopPropagation()}>{p.lead.lead_no || '—'}</Link></p>
-                <p><span className="text-muted-fg font-medium">Source:</span> {p.lead.source || '—'}</p>
-                <p><span className="text-muted-fg font-medium">Budget:</span> ${p.lead.budget || 0}</p>
-                <p><span className="text-muted-fg font-medium">Converted On:</span> {p.lead.converted_at ? new Date(p.lead.converted_at).toLocaleDateString() : '—'}</p>
-              </div>
-            </div>
-          ) : p.lead_no ? (
-            <div className="bg-surface-2 rounded-xl p-4 border border-app">
-               <h4 className="font-semibold text-sm mb-3">Origin Lead</h4>
-               <p className="text-xs text-muted-fg">Lead Ref: <span className="font-semibold text-base-fg">{p.lead_no}</span></p>
-            </div>
-          ) : null}
-
-          {/* Quotations & AMCs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Quotations */}
-            <div className="border border-app rounded-xl p-4">
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-sm">Quotations</h4>
-                {can('quotations.create') && <Button size="sm" variant="secondary" icon={<Plus className="h-3 w-3" />} onClick={(e) => { e.stopPropagation(); setQuotationClient(detail); setQuotationProject(p.id); }}>Add</Button>}
-              </div>
-              {pQuotations.length > 0 ? (
-                <ul className="space-y-2">
-                  {pQuotations.map((q: any) => (
-                    <li key={q.id} className="flex justify-between items-center p-2.5 bg-surface-2 rounded-lg border border-app hover:border-strong transition-colors">
-                      <div>
-                        <p className="font-semibold text-xs text-brand-600 hover:underline"><Link to="/quotations" onClick={(e) => e.stopPropagation()}>{q.quotation_no}</Link></p>
-                        <p className="text-[10px] text-muted-fg mt-0.5">{q.versions?.length || 0} Versions</p>
-                      </div>
-                      <Badge label={q.status} color="#f59e0b" />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-fg text-xs mt-2">No quotations.</p>
-              )}
-            </div>
-
-            {/* AMCs */}
-            <div className="border border-app rounded-xl p-4">
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-sm">AMCs</h4>
-                {can('clients.create') && <Button size="sm" variant="secondary" icon={<Plus className="h-3 w-3" />} onClick={(e) => { e.stopPropagation(); setAmcClient(detail); setAmcProject(p.id); }}>Add</Button>}
-              </div>
-              {pAmcs.length > 0 ? (
-                <ul className="space-y-2">
-                  {pAmcs.map((a: any) => (
-                    <li key={a.id} className="flex justify-between items-start p-2.5 bg-surface-2 rounded-lg border border-app hover:border-strong transition-colors">
-                      <div>
-                        <p className="font-semibold text-xs text-base-fg">{a.amc_name}</p>
-                        <p className="text-[10px] text-muted-fg mt-0.5">{a.start_date} to {a.end_date}</p>
-                      </div>
-                      <Badge label={a.status} color="#10b981" />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-fg text-xs mt-2">No AMCs.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// ClientProjectCard removed in favor of DataTable
 
 export default function Clients() {
   const { can } = usePermissions();
@@ -134,22 +31,47 @@ export default function Clients() {
   const { data: clientDetails, isLoading: isDetailsLoading } = useClientDetails(activeClient?.id);
   const detail = clientDetails || activeClient;
   
-  const [quotationClient, setQuotationClient] = useState<Client | null>(null);
-  const [quotationProject, setQuotationProject] = useState<string | null>(null);
-  const [amcClient, setAmcClient] = useState<Client | null>(null);
-  const [amcProject, setAmcProject] = useState<string | null>(null);
-  const createQuotation = useCreateQuotation();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
 
-  const handleCreateQuotation = async (values: QuotationFormValues) => {
-    if (!quotationClient) return;
-    await createQuotation.mutateAsync({
-      ...values as any,
-      lead_id: quotationClient.lead_id || null,
-      client_id: quotationClient.id,
-      project_id: quotationProject || undefined,
-    });
-    setQuotationClient(null);
-    setQuotationProject(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  
+  const { data: employees } = useEmployees();
+  const { data: leads } = useLeads();
+  const { create: createProj, update: updateProj, remove: removeProj } = useCrud('projects', ['projects', 'client', 'clients']);
+
+  const handleSaveProject = async (v: ProjectFormValues) => {
+    const payload = {
+      ...(v.id ? { id: v.id } : {}),
+      project_no: v.project_no || null, project_name: v.project_name, client: v.client, client_id: v.client_id || null,
+      lead_id: v.lead_id || null, lead_no: (leads || []).find((l) => l.id === v.lead_id)?.lead_no || null,
+      project_type: v.project_type || null, industry: v.industry || null, project_manager_id: v.project_manager_id || null,
+      assigned_employee_id: v.assigned_employee_id || null, technology_stack: v.technology_stack, urls: v.urls,
+      project_cost: v.project_cost ? Number(v.project_cost) : 0, status: v.status, priority: v.priority,
+      progress: v.progress ? Number(v.progress) : 0, start_date: v.start_date || null, expected_delivery: v.expected_delivery || null,
+      remarks: v.remarks || null,
+    };
+    if (v.id) await updateProj.mutateAsync(payload); else await createProj.mutateAsync(payload);
+    setEditingProject(null);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!deletingProject) return;
+    await removeProj.mutateAsync(deletingProject.id);
+    setDeletingProject(null);
+  };
+
+  const handleSaveClient = async (values: ClientFormValues) => {
+    if (editingClient) {
+      await updateClient.mutateAsync({ ...values, id: editingClient.id } as any);
+    } else {
+      await createClient.mutateAsync(values as any);
+    }
+    setIsFormOpen(false);
+    setEditingClient(null);
   };
 
   const columns: Column<Client>[] = [
@@ -160,26 +82,57 @@ export default function Clients() {
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={r.status.toUpperCase()} color={r.status === 'active' ? '#10b981' : '#64748b'} dot /> },
   ];
 
+  const projectColumns: Column<any>[] = [
+    { key: 'project_no', header: 'Project No', sortValue: (r) => r.project_no, render: (r) => <span className="text-muted-fg text-xs tabular-nums">{r.project_no}</span> },
+    { key: 'project_name', header: 'Project Name', sortValue: (r) => r.project_name, render: (r) => <Link to="/projects" className="font-semibold text-brand-600 hover:underline">{r.project_name}</Link> },
+    { key: 'type', header: 'Type', sortValue: (r) => r.project_type, render: (r) => r.project_type ? lookup.label('project_type', r.project_type) : '—' },
+    { key: 'cost', header: 'Cost', sortValue: (r) => r.project_cost, render: (r) => formatCurrency(r.project_cost || 0) },
+    { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={r.status} color="#3b82f6" /> },
+    { key: 'lead', header: 'Origin Lead', render: (r) => r.lead ? <Link to="/leads" className="text-brand-600 hover:underline">{r.lead.lead_no}</Link> : (r.lead_no || '—') },
+    { key: 'quotation', header: 'Latest Quotation', render: (r) => {
+      const pQuotations = detail?.quotations?.filter((q: any) => q.project_id === r.id || (q.lead_id && q.lead_id === r.lead_id)) || [];
+      if (!pQuotations.length) return <span className="text-muted-fg">—</span>;
+      const latest = [...pQuotations].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+      return <Link to={`/quotations?preview=${latest.id}`} className="text-brand-600 hover:underline font-medium">{latest.quotation_no}</Link>;
+    }},
+    { key: 'actions', header: '', render: (r) => (
+      <div className="flex gap-1 justify-end">
+        {can('projects.edit') && <button onClick={(e) => { e.stopPropagation(); setEditingProject(r); }} className="p-1.5 text-muted-fg hover:text-base-fg hover:bg-surface-3 rounded-md transition-colors" title="Edit"><Pencil className="h-4 w-4" /></button>}
+        {can('projects.delete') && <button onClick={(e) => { e.stopPropagation(); setDeletingProject(r); }} className="p-1.5 text-muted-fg hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete"><Trash2 className="h-4 w-4" /></button>}
+      </div>
+    )}
+  ];
+
   if (detail) {
     return (
       <div className="p-5 sm:p-8 max-w-[1500px] mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <Button variant="secondary" icon={<ChevronLeft className="h-4 w-4" />} onClick={() => setActiveClient(null)}>Back to Clients</Button>
+          {can('clients.edit') && (
+            <Button variant="secondary" onClick={() => { setEditingClient(detail); setIsFormOpen(true); }}>Edit Client</Button>
+          )}
         </div>
         <PageHeader title={detail.company_name} subtitle={`Client No: ${detail.client_no || '—'}`} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="space-y-6 mt-6">
           
-          {/* LEFT COLUMN: Common Details Group */}
-          <div className="space-y-6">
+          {/* Top Row: Client Details & Activity Log side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Client Details */}
             <div className="bg-surface border border-app rounded-2xl card-shadow p-6">
               <h3 className="font-bold text-lg mb-4">Client Details</h3>
               <div className="space-y-3 text-sm">
-                <p><span className="text-muted-fg font-medium">Contact Person:</span> {detail.contact_person}</p>
-                <p><span className="text-muted-fg font-medium">Email:</span> {detail.email || '—'}</p>
-                <p><span className="text-muted-fg font-medium">Phone:</span> {detail.phone || '—'}</p>
-                <p><span className="text-muted-fg font-medium">Website:</span> {detail.website || '—'}</p>
+                {(() => {
+                  const primaryContact = detail.contacts?.find((c: any) => c.is_primary) || detail.contacts?.[0];
+                  return (
+                    <>
+                      <p><span className="text-muted-fg font-medium">Contact Person:</span> {primaryContact?.full_name || detail.contact_person || '—'}</p>
+                      <p><span className="text-muted-fg font-medium">Email:</span> {primaryContact?.email || detail.email || '—'}</p>
+                      <p><span className="text-muted-fg font-medium">Phone:</span> {primaryContact?.mobile || primaryContact?.landline || detail.phone || '—'}</p>
+                      <p><span className="text-muted-fg font-medium">Website:</span> {detail.website || '—'}</p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -205,27 +158,20 @@ export default function Clients() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Project Groups */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Bottom Section: Project Groups */}
+          <div className="space-y-6">
             
             {!detail.projects?.length ? (
                <div className="bg-surface border border-app rounded-2xl card-shadow p-8 text-center">
                  <p className="text-muted-fg">No projects found for this client.</p>
                </div>
             ) : (
-              detail.projects.map((p: any) => (
-                <ClientProjectCard 
-                  key={p.id} 
-                  p={p} 
-                  detail={detail} 
-                  lookup={lookup} 
-                  can={can} 
-                  setQuotationClient={setQuotationClient} 
-                  setQuotationProject={setQuotationProject} 
-                  setAmcClient={setAmcClient} 
-                  setAmcProject={setAmcProject} 
-                />
-              ))
+               <div className="bg-surface border border-app rounded-2xl card-shadow overflow-hidden">
+                 <div className="p-4 border-b border-app bg-surface-2/30">
+                   <h3 className="font-bold text-lg">Projects</h3>
+                 </div>
+                 <DataTable data={detail.projects} columns={projectColumns} rowKey={(r) => r.id} />
+               </div>
             )}
 
             {/* Unassigned Quotations / AMCs */}
@@ -276,6 +222,22 @@ export default function Clients() {
             })()}
           </div>
         </div>
+
+        <ClientForm
+          open={isFormOpen}
+          onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
+          saving={createClient.isPending || updateClient.isPending}
+          onSubmit={handleSaveClient}
+          title="Edit Client"
+          initial={editingClient}
+        />
+
+        <ProjectForm open={!!editingProject} onClose={() => setEditingProject(null)}
+          initial={editingProject} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
+          onSubmit={handleSaveProject} saving={createProj.isPending || updateProj.isPending} />
+
+        <ConfirmDialog open={!!deletingProject} onClose={() => setDeletingProject(null)} onConfirm={handleDeleteProject}
+          title="Delete project" message={`Are you sure you want to delete ${deletingProject?.project_name}?`} loading={removeProj.isPending} />
       </div>
     );
   }
@@ -287,7 +249,11 @@ export default function Clients() {
         subtitle="Manage your clients, their project history, and annual maintenance."
         actions={
           <>
-            {can('clients.create') && <Button icon={<Plus className="h-4 w-4" />}>New Client</Button>}
+            {can('clients.create') && (
+              <Button icon={<Plus className="h-4 w-4" />} onClick={() => { setEditingClient(null); setIsFormOpen(true); }}>
+                New Client
+              </Button>
+            )}
           </>
         }
       />
@@ -306,20 +272,14 @@ export default function Clients() {
           <DataTable data={clients} columns={columns} rowKey={(r) => r.id} onRowClick={(r) => setActiveClient(r)} stickyHeader />
         </div>
       )}
-
-      {!!quotationClient && (
-        <QuotationForm
-          open={!!quotationClient}
-          onClose={() => { setQuotationClient(null); setQuotationProject(null); }}
-          saving={createQuotation.isPending}
-          onSubmit={handleCreateQuotation}
-          title="New Quotation"
-          client={quotationClient}
-          projectId={quotationProject}
-        />
-      )}
       
-      <AmcForm open={!!amcClient} onClose={() => { setAmcClient(null); setAmcProject(null); }} client={amcClient} projectId={amcProject} />
+      <ClientForm
+        open={isFormOpen && !activeClient}
+        onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
+        saving={createClient.isPending || updateClient.isPending}
+        onSubmit={handleSaveClient}
+        title="New Client"
+      />
     </div>
   );
 }
