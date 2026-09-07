@@ -41,7 +41,7 @@ export function useUpdateClient() {
 export function useDeleteClient() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<{ ok: boolean }>('/api/clients', { id }),
+    mutationFn: (id: string) => api.del<{ ok: boolean }>('/api/clients', { id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },

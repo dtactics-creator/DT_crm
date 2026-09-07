@@ -153,6 +153,7 @@ export interface Project extends AuditFields {
   project_no: string | null;
   project_name: string;
   client: string;
+  client_id?: string | null;
   lead_id: string | null;
   lead_no: string | null;
   project_type: string | null;
