@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -67,49 +68,97 @@ body {
 }
 
 @layer utilities {
-  .bg-app { background-color: var(--bg); }
-  .bg-surface { background-color: var(--surface); }
-  .bg-surface-2 { background-color: var(--surface-2); }
-  .bg-sidebar { background-color: var(--sidebar); }
-  .text-base-fg { color: var(--text); }
-  .text-muted-fg { color: var(--text-muted); }
-  .text-subtle-fg { color: var(--text-subtle); }
-  .border-app { border-color: var(--border); }
-  .border-strong { border-color: var(--border-strong); }
-  .ring-brand { --tw-ring-color: var(--ring); }
+  .bg-app {
+    background-color: var(--bg);
+  }
+
+  .bg-surface {
+    background-color: var(--surface);
+  }
+
+  .bg-surface-2 {
+    background-color: var(--surface-2);
+  }
+
+  .bg-sidebar {
+    background-color: var(--sidebar);
+  }
+
+  .text-base-fg {
+    color: var(--text);
+  }
+
+  .text-muted-fg {
+    color: var(--text-muted);
+  }
+
+  .text-subtle-fg {
+    color: var(--text-subtle);
+  }
+
+  .border-app {
+    border-color: var(--border);
+  }
+
+  .border-strong {
+    border-color: var(--border-strong);
+  }
+
+  .ring-brand {
+    --tw-ring-color: var(--ring);
+  }
 
   .card-shadow {
     box-shadow: 0 1px 2px 0 hsl(var(--shadow-color) / 0.06),
-                0 1px 3px 0 hsl(var(--shadow-color) / 0.08);
+      0 1px 3px 0 hsl(var(--shadow-color) / 0.08);
   }
+
   .card-shadow-lg {
     box-shadow: 0 4px 12px -2px hsl(var(--shadow-color) / 0.10),
-                0 10px 30px -8px hsl(var(--shadow-color) / 0.14);
+      0 10px 30px -8px hsl(var(--shadow-color) / 0.14);
   }
+
   .elevated {
     box-shadow: 0 24px 60px -20px hsl(var(--shadow-color) / 0.35),
-                0 8px 24px -12px hsl(var(--shadow-color) / 0.22);
+      0 8px 24px -12px hsl(var(--shadow-color) / 0.22);
   }
-  .tabular { font-variant-numeric: tabular-nums; }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: 999px;
   border: 3px solid var(--bg);
 }
-::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); }
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-subtle);
+}
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
+
 .skeleton {
   position: relative;
   overflow: hidden;
   background: var(--surface-2);
 }
+
 .skeleton::after {
   content: "";
   position: absolute;
@@ -119,26 +168,197 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
-input, select, textarea, button { font-family: inherit; }
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
 
-@media print { 
-  * { 
-    -webkit-print-color-adjust: exact !important; 
-    print-color-adjust: exact !important; 
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
+
   @page {
     size: A4;
     margin: 0;
   }
-  body.printing-mode > *:not(.print-only) {
+
+  body.printing-mode>*:not(.print-only) {
     display: none !important;
   }
-  .print-only { 
+
+  .print-only {
     display: block !important;
-    position: static !important; 
+    position: static !important;
     width: 210mm !important;
     max-width: 210mm !important;
     margin: 0 auto !important;
     background: white !important;
-  } 
+  }
+}
+
+/* Magic Lamp Template Animations */
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+
+  50% {
+    transform: translateY(-24px) translateX(10px);
+  }
+}
+
+@keyframes lamp-idle {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
+}
+
+@keyframes lamp-shake {
+
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+
+  20% {
+    transform: translateX(-8px) rotate(-3deg);
+  }
+
+  40% {
+    transform: translateX(8px) rotate(3deg);
+  }
+
+  60% {
+    transform: translateX(-6px) rotate(-2deg);
+  }
+
+  80% {
+    transform: translateX(6px) rotate(2deg);
+  }
+}
+
+@keyframes smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.4);
+  }
+
+  30% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-220px) scale(2.6);
+  }
+}
+
+@keyframes card-emerge {
+  0% {
+    opacity: 0;
+    transform: translateY(80px) scale(0.6);
+    filter: blur(8px);
+  }
+
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ray-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes sparkle-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.2);
+  }
+}
+
+@layer utilities {
+  .animate-twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+  }
+
+  .animate-float-slow {
+    animation: float-slow 9s ease-in-out infinite;
+  }
+
+  .animate-lamp-idle {
+    animation: lamp-idle 5s ease-in-out infinite;
+  }
+
+  .animate-lamp-shake {
+    animation: lamp-shake 0.4s ease-in-out infinite;
+  }
+
+  .animate-card-emerge {
+    animation: card-emerge 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-ray-spin {
+    animation: ray-spin 24s linear infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
 }

@@ -31,7 +31,7 @@ export default function AppLayout() {
         />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar crumbs={crumbs} onMobileMenu={() => setMobileOpen(true)} />
-          <main className="flex-1 min-w-0">
+          <main className="flex-1 min-w-0 relative">
             <Outlet />
           </main>
         </div>

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
-export default function Drawer({ open, onClose, title, subtitle, children, footer, width = 'max-w-xl' }: {
+export default function Drawer({ open, onClose, title, subtitle, children, footer, width = 'w-[85%] max-w-[85%]' }: {
   open: boolean;
   onClose: () => void;
   title: string;

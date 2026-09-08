@@ -14,6 +14,10 @@ export interface CampaignRow {
   qr: boolean;
   is_active: boolean;
   sort_order: number;
+  start_datetime: string | null;
+  end_datetime: string | null;
+  template_id: string | null;
+  template_config: any | null;
   created_at?: string;
 }
 
@@ -30,7 +34,22 @@ export async function fetchAllCampaigns(): Promise<CampaignRow[]> {
     throw new Error(error.message);
   }
 
-  return data || [];
+  const campaigns = data || [];
+  const now = new Date();
+
+  // Auto-deactivate expired campaigns
+  const toDeactivate = campaigns.filter(c => 
+    c.is_active && c.end_datetime && new Date(c.end_datetime) <= now
+  );
+
+  if (toDeactivate.length > 0) {
+    toDeactivate.forEach(c => c.is_active = false);
+    Promise.all(toDeactivate.map(c => 
+      supabase.from('dt_campaigns').update({ is_active: false }).eq('id', c.id)
+    )).catch(err => console.error('Failed to auto-deactivate campaigns', err));
+  }
+
+  return campaigns;
 }
 
 export async function saveCampaign(form: CampaignFormState): Promise<void> {
@@ -47,6 +66,10 @@ export async function saveCampaign(form: CampaignFormState): Promise<void> {
     qr: form.qr,
     is_active: form.is_active,
     sort_order: Number(form.sort_order) || 0,
+    start_datetime: form.start_datetime ? new Date(form.start_datetime).toISOString() : null,
+    end_datetime: form.end_datetime ? new Date(form.end_datetime).toISOString() : null,
+    template_id: form.template_id || null,
+    template_config: form.template_config || null,
   };
 
   if (form.id) {

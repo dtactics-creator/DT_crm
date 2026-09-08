@@ -105,7 +105,6 @@ export default function TrackingDetailDrawer({ open, onClose, leadId, leadName, 
     <Drawer
       open={open}
       onClose={onClose}
-      width="max-w-[85%]"
       title={`Tracking Analytics · ${lookup.label('url_type', url.type)}`}
       subtitle={`${leadNo || 'Lead'} · ${leadName}`}
       footer={

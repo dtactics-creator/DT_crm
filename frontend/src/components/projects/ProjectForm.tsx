@@ -117,7 +117,6 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   return (
     <Drawer
       open={open} onClose={onClose}
-      width="max-w-[85%]"
       title={initial ? 'Edit project' : 'New project'}
       subtitle={initial ? `${initial.project_no} · ${initial.client}` : 'Set up a new client project'}
       footer={

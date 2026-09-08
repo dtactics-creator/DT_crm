@@ -22,7 +22,7 @@ interface FormState { id?: string; label: string; color: string; sort_order: num
 import { usePermissions } from '../../contexts/PermissionContext';
 import { required, maxLen } from '../../lib/validators';
 
-export default function MasterTab({ category, singular }: { category: string; singular: string }) {
+export default function MasterTab({ category, singular, permPrefix = 'masters' }: { category: string; singular: string; permPrefix?: string }) {
   const { can } = usePermissions();
   const { data: masters, isLoading } = useMasters();
   const { create, update, remove } = useCrud('masters', ['masters']);
@@ -89,8 +89,8 @@ export default function MasterTab({ category, singular }: { category: string; si
     { key: 'status', header: 'Status', render: () => <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Active</span> },
     { key: 'actions', header: '', headerClassName: 'w-24', className: 'text-right', render: (r) => (
       <div className="flex items-center justify-end gap-1">
-        {can('masters.edit') && <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors"><Pencil className="h-4 w-4" /></button>}
-        {can('masters.delete') && <button onClick={(e) => { e.stopPropagation(); setToDelete(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>}
+        {can(`${permPrefix}.edit`) && <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors"><Pencil className="h-4 w-4" /></button>}
+        {can(`${permPrefix}.delete`) && <button onClick={(e) => { e.stopPropagation(); setToDelete(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>}
       </div>
     ) },
   ];
@@ -102,7 +102,7 @@ export default function MasterTab({ category, singular }: { category: string; si
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${singular.toLowerCase()}…`} className="pl-10" />
         </div>
-        {can('masters.create') && <Button icon={<Plus className="h-4 w-4" />} onClick={openNew} className="sm:ml-auto">Add {singular.toLowerCase()}</Button>}
+        {can(`${permPrefix}.create`) && <Button icon={<Plus className="h-4 w-4" />} onClick={openNew} className="sm:ml-auto">Add {singular.toLowerCase()}</Button>}
       </div>
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
@@ -112,7 +112,7 @@ export default function MasterTab({ category, singular }: { category: string; si
           <DataTable data={filtered} columns={columns} rowKey={(r) => r.id} pageSize={8}
             emptyState={<EmptyState icon={<Database className="h-6 w-6" />} title={search ? 'No matches' : `No ${singular.toLowerCase()} yet`}
               description={search ? 'Try a different search.' : `Add your first ${singular.toLowerCase()} value.`}
-              action={can('masters.create') ? <Button icon={<Plus className="h-4 w-4" />} onClick={openNew}>Add {singular.toLowerCase()}</Button> : null} />} />
+              action={can(`${permPrefix}.create`) ? <Button icon={<Plus className="h-4 w-4" />} onClick={openNew}>Add {singular.toLowerCase()}</Button> : null} />} />
         )}
       </div>
 

@@ -63,7 +63,7 @@ export default function AmcForm({ open, onClose, client, projectId }: { open: bo
   };
 
   return (
-    <Drawer open={open} onClose={onClose} title="New AMC" width="max-w-[500px]" footer={
+    <Drawer open={open} onClose={onClose} title="New AMC" footer={
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button onClick={submit} loading={mutation.isPending}>Save</Button>

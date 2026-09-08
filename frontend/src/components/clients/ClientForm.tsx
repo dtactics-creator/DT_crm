@@ -119,7 +119,7 @@ export default function ClientForm({ open, onClose, onSubmit, initial, saving, t
 
   return (
     <Drawer
-      open={open} onClose={onClose} width="max-w-[80%]"
+      open={open} onClose={onClose}
       title={title} subtitle={subtitle}
       footer={
         <div className="flex items-center justify-end w-full gap-3">

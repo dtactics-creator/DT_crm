@@ -14,11 +14,15 @@ export const PERMISSION_CATALOG = [
   // Dashboard is available to every authenticated user, so it is intentionally
   // NOT listed here as a grantable permission.
   { module: 'leads', label: 'Leads', actions: ['view', 'create', 'edit', 'delete', 'convert', 'import', 'export', 'view_budget'] },
+  { module: 'clients', label: 'Clients', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'projects', label: 'Projects', actions: ['view', 'create', 'edit', 'delete', 'import', 'export', 'view_cost'] },
   { module: 'masters', label: 'Masters', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'employees', label: 'Employees', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'roles', label: 'Roles & Permissions', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'templates', label: 'Templates', actions: ['view', 'create', 'edit', 'delete'] },
+  { module: 'campaign_masters', label: 'Campaign Master', actions: ['view', 'create', 'edit', 'delete'] },
+  { module: 'campaigns', label: 'Campaign List', actions: ['view', 'create', 'edit', 'delete'] },
+  { module: 'campaign_templates', label: 'Campaign Templates', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'reports', label: 'Reports', actions: ['view'] },
   { module: 'audit_logs', label: 'Audit Logs', actions: ['view', 'export'] },
   { module: 'quotations', label: 'Quotations', actions: ['view', 'create', 'edit', 'delete'] },

@@ -491,7 +491,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
   return (
     <>
       <Drawer
-        open={open} onClose={onClose} width="max-w-[85%]"
+        open={open} onClose={onClose}
         title={title} subtitle={subtitle}
         footer={
           <div className="flex items-center justify-between w-full">

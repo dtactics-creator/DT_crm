@@ -6,6 +6,38 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+
+function SidebarTooltip({ children, content, disabled }: { children: React.ReactNode, content: string, disabled?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+  return (
+    <div 
+      onMouseEnter={(e) => {
+        if (disabled) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        setCoords({ top: rect.top + rect.height / 2, left: rect.right + 12 });
+        setOpen(true);
+      }}
+      onMouseLeave={() => setOpen(false)}
+      className="w-full"
+    >
+      {children}
+      {open && !disabled && createPortal(
+        <div 
+          className="fixed z-[100] px-2.5 py-1.5 rounded-md bg-slate-800 dark:bg-slate-700 text-white text-xs font-medium tracking-wide whitespace-nowrap shadow-xl flex items-center -translate-y-1/2 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+          style={{ top: coords.top, left: coords.left }}
+        >
+          {content}
+          <div className="absolute -left-1 top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-slate-800 dark:border-r-slate-700" />
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, perm: null },
@@ -23,7 +55,9 @@ const NAV = [
 ];
 
 const CAMPAIGN_NAV = [
-  { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: null, end: false },
+  { to: '/campaign-masters', label: 'Campaign Master', icon: Database, perm: 'campaign_masters.view', end: false },
+  { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: 'campaigns.view', end: false },
+  { to: '/campaign-templates', label: 'Campaign Templates', icon: Sparkles, perm: 'campaign_templates.view', end: false },
 ];
 
 const FUTURE = ['Invoices', 'Documents', 'Support'];
@@ -68,36 +102,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Workspace</p>}
           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={onMobileClose}
-              className={({ isActive }) => cn(
-                'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
-                collapsed && 'justify-center px-0',
-                isActive
-                  ? 'text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300'
-                  : 'text-[color:var(--sidebar-text)] hover:bg-surface-2 hover:text-base-fg',
-              )}
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <motion.span layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
-                  )}
-                  <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </>
-              )}
-            </NavLink>
-          ))}
-
-          <div className="pt-4 space-y-1">
-            {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Campaign</p>}
-            {campaignNavItems.map((item) => (
+            <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
               <NavLink
-                key={item.to}
                 to={item.to}
                 end={item.end}
                 onClick={onMobileClose}
@@ -112,13 +118,43 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 {({ isActive }) => (
                   <>
                     {isActive && (
-                      <motion.span layoutId="sidebar-active-camp" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
+                      <motion.span layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
                     )}
                     <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </>
                 )}
               </NavLink>
+            </SidebarTooltip>
+          ))}
+
+          <div className="pt-4 space-y-1">
+            {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Campaign</p>}
+            {campaignNavItems.map((item) => (
+              <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  onClick={onMobileClose}
+                  className={({ isActive }) => cn(
+                    'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
+                    collapsed && 'justify-center px-0',
+                    isActive
+                      ? 'text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300'
+                      : 'text-[color:var(--sidebar-text)] hover:bg-surface-2 hover:text-base-fg',
+                  )}
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.span layoutId="sidebar-active-camp" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
+                      )}
+                      <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </>
+                  )}
+                </NavLink>
+              </SidebarTooltip>
             ))}
           </div>
 
@@ -137,16 +173,18 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
         {/* Collapse toggle */}
         <div className="p-3 border-t border-app shrink-0 hidden lg:block">
-          <button
-            onClick={onToggle}
-            className={cn(
-              'flex items-center gap-2 w-full rounded-xl px-3 h-9 text-[13px] font-semibold text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors',
-              collapsed && 'justify-center px-0',
-            )}
-          >
-            <ChevronLeft className={cn('h-4 w-4 transition-transform', collapsed && 'rotate-180')} />
-            {!collapsed && 'Collapse'}
-          </button>
+          <SidebarTooltip content="Expand" disabled={!collapsed}>
+            <button
+              onClick={onToggle}
+              className={cn(
+                'group relative flex items-center gap-2 w-full rounded-xl px-3 h-9 text-[13px] font-semibold text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors',
+                collapsed && 'justify-center px-0',
+              )}
+            >
+              <ChevronLeft className={cn('h-4 w-4 transition-transform', collapsed && 'rotate-180')} />
+              {!collapsed && 'Collapse'}
+            </button>
+          </SidebarTooltip>
         </div>
         <button onClick={onMobileClose} className="lg:hidden absolute top-4 right-3 h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2">
           <PanelLeftClose className="h-4.5 w-4.5" />

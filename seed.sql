@@ -139,6 +139,27 @@ CREATE POLICY "Anyone can view campaigns"
   TO anon, authenticated
   USING (true);
 
+CREATE TABLE IF NOT EXISTS dt_campaign_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    thumbnail TEXT,
+    is_default BOOLEAN DEFAULT false,
+    status TEXT DEFAULT 'draft',
+    schema JSONB NOT NULL,
+    default_config JSONB NOT NULL,
+    component_name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.dt_campaign_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all for authenticated users" 
+ON public.dt_campaign_templates FOR ALL 
+USING (auth.role() = 'authenticated') 
+WITH CHECK (auth.role() = 'authenticated');
+
 CREATE TABLE IF NOT EXISTS analytics_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     event_type TEXT NOT NULL,
@@ -582,6 +603,11 @@ ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS vat_gst_no TEXT;
 ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS country TEXT;
 ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS state TEXT;
 ALTER TABLE dt_clients ADD COLUMN IF NOT EXISTS city TEXT;
+
+ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS start_datetime TIMESTAMP WITH TIME ZONE;
+ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS end_datetime TIMESTAMP WITH TIME ZONE;
+ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS template_id UUID REFERENCES dt_campaign_templates(id);
+ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS template_config JSONB;
 
 -- ---------------------------------------------------------------------------
 -- 0. Clean slate (comment this block out to keep existing rows)
