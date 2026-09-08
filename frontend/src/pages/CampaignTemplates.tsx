@@ -84,9 +84,9 @@ export default function CampaignTemplates() {
             </div>
           )}
           <div>
-            <p className="font-semibold text-base-fg flex items-center gap-2">
+            <p className="font-semibold text-base-fg flex items-center gap-2" title="Default Template">
               {c.name}
-              {c.is_default && <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" title="Default Template" />}
+              {c.is_default && <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" />}
             </p>
             <p className="text-[12px] text-muted-fg mt-0.5 truncate max-w-[250px]">{c.description || 'No description'}</p>
           </div>
@@ -107,7 +107,7 @@ export default function CampaignTemplates() {
       ),
     },
     {
-      key: 'updated', header: 'Updated', sortValue: (c) => c.updated_at,
+      key: 'updated', header: 'Updated', sortValue: (c) => c.updated_at || '',
       render: (c) => <span className="text-[13px] text-muted-fg whitespace-nowrap">{formatDate(c.updated_at)}</span>
     },
     {
