@@ -23,6 +23,7 @@ export const PERMISSION_CATALOG = [
   { module: 'campaign_masters', label: 'Campaign Master', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'campaigns', label: 'Campaign List', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'campaign_templates', label: 'Campaign Templates', actions: ['view', 'create', 'edit', 'delete'] },
+  { module: 'campaign_setups', label: 'Campaign Setup', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'reports', label: 'Reports', actions: ['view'] },
   { module: 'audit_logs', label: 'Audit Logs', actions: ['view', 'export'] },
   { module: 'quotations', label: 'Quotations', actions: ['view', 'create', 'edit', 'delete'] },

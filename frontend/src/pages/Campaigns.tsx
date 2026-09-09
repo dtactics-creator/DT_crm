@@ -149,6 +149,7 @@ export default function Campaigns() {
 
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+    setF('image', '');
   };
 
   const saveMut = useMutation({
@@ -170,7 +171,24 @@ export default function Campaigns() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: deleteCampaign,
+    mutationFn: async (id: string) => {
+      const c = campaigns?.find((camp) => camp.id === id);
+      if (c) {
+        const urlsToClean: string[] = [];
+        if (c.image) urlsToClean.push(c.image);
+        const template = templates?.find((t) => t.id === c.template_id);
+        const imageProps = template?.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
+        imageProps.forEach((prop: any) => {
+          if (c.template_config && c.template_config[prop.id]) {
+            urlsToClean.push(c.template_config[prop.id]);
+          }
+        });
+        if (urlsToClean.length > 0) {
+          import('../lib/utils').then(({ deleteStorageImages }) => deleteStorageImages(urlsToClean));
+        }
+      }
+      return deleteCampaign(id);
+    },
     onSuccess: () => {
       toast('Campaign deleted successfully', 'success');
       setToDelete(null);
@@ -208,6 +226,7 @@ export default function Campaigns() {
     }
 
     const dataToSave = { ...finalForm };
+    const oldUrlsToClean: string[] = [];
     
     // Auto-fill template config if template_id changes for a new selection
     if (dataToSave.template_id) {
@@ -215,6 +234,15 @@ export default function Campaigns() {
       if (selectedTpl && !editing) {
         dataToSave.template_config = selectedTpl.default_config;
       }
+    }
+
+    const originalCampaign = editing ? campaigns?.find(c => c.id === form.id) : null;
+    if (originalCampaign && originalCampaign.image && originalCampaign.image !== dataToSave.image) {
+      oldUrlsToClean.push(originalCampaign.image);
+    }
+
+    if (oldUrlsToClean.length > 0) {
+      import('../lib/utils').then(({ deleteStorageImages }) => deleteStorageImages(oldUrlsToClean));
     }
 
     saveMut.mutate(dataToSave);
@@ -231,6 +259,19 @@ export default function Campaigns() {
     return `${minutes}m`;
   };
 
+  const renderDateTime = (val: string | null | undefined) => {
+    if (!val) return <span className="text-[13px] text-muted-fg">—</span>;
+    const str = formatDateTime(val);
+    if (str === '—') return <span className="text-[13px] text-muted-fg">—</span>;
+    const [date, time] = str.split(' ');
+    return (
+      <div className="flex flex-col min-w-0">
+        <span className="text-[13px] text-base-fg font-medium">{date}</span>
+        <span className="text-[12px] text-muted-fg mt-0.5">{time}</span>
+      </div>
+    );
+  };
+
   const columns: Column<CampaignRow>[] = [
     {
       key: 'title', header: 'Campaign', sortValue: (c) => c.title.toLowerCase(),
@@ -243,7 +284,10 @@ export default function Campaigns() {
               <Megaphone className="h-5 w-5 text-brand-600 dark:text-brand-300" />
             </div>
           )}
-          <p className="font-semibold text-base-fg truncate">{c.title}</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-base-fg truncate">{c.title}</p>
+            {c.description && <p className="text-[12px] text-muted-fg truncate mt-0.5 max-w-[200px]">{c.description}</p>}
+          </div>
         </div>
       ),
     },
@@ -253,11 +297,11 @@ export default function Campaigns() {
     },
     {
       key: 'start_datetime', header: 'Start Date',
-      render: (c) => <span className="text-[13px] text-muted-fg whitespace-nowrap">{c.start_datetime ? formatDateTime(c.start_datetime) : '—'}</span>
+      render: (c) => renderDateTime(c.start_datetime)
     },
     {
       key: 'end_datetime', header: 'End Date',
-      render: (c) => <span className="text-[13px] text-muted-fg whitespace-nowrap">{c.end_datetime ? formatDateTime(c.end_datetime) : '—'}</span>
+      render: (c) => renderDateTime(c.end_datetime)
     },
     {
       key: 'type', header: 'Type',
@@ -354,15 +398,17 @@ export default function Campaigns() {
       <Drawer open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Edit campaign' : 'New campaign'}
         footer={<div className="flex items-center justify-end gap-2"><Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button><Button onClick={submit} loading={saveMut.isPending}>{editing ? 'Save changes' : 'Create campaign'}</Button></div>}>
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Template (Optional)">
-              <SearchableSelect
-                value={form.template_id ?? ''}
-                onChange={(v) => setF('template_id', v)}
-                options={templateOpts}
-                placeholder="Select Template..."
-              />
-            </Field>
+          <div className={cn("grid gap-4", editing ? "grid-cols-1" : "grid-cols-2")}>
+            {!editing && (
+              <Field label="Template (Optional)">
+                <SearchableSelect
+                  value={form.template_id ?? ''}
+                  onChange={(v) => setF('template_id', v)}
+                  options={templateOpts}
+                  placeholder="Select Template..."
+                />
+              </Field>
+            )}
             <Field label="Type" required error={errors.type}>
               <SearchableSelect
                 value={form.type}
@@ -386,6 +432,30 @@ export default function Campaigns() {
 
           <Field label="Title" required error={errors.title}>
             <Input value={form.title} onChange={(e) => setF('title', e.target.value)} placeholder="Campaign title" invalid={!!errors.title} />
+          </Field>
+
+          <Field label="Description">
+            <Textarea value={form.description} onChange={(e) => setF('description', e.target.value)} placeholder="Campaign description" rows={3} />
+          </Field>
+
+          <Field label="Campaign Image">
+            <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                <Input value={form.image ?? ''} onChange={(e) => setF('image', e.target.value)} placeholder="https://example.com/image.png or upload..." />
+              </div>
+              <div>
+                <Button type="button" variant="secondary" onClick={() => document.getElementById('img-upload')?.click()} disabled={uploading}>
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4 mr-2" />}
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </Button>
+                <input type="file" id="img-upload" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              </div>
+            </div>
+            { (previewUrl || form.image) && (
+              <div className="mt-3 rounded-xl border border-app overflow-hidden h-40 bg-surface-2 flex items-center justify-center">
+                <img src={previewUrl || form.image || undefined} alt="Campaign preview" className="max-h-full max-w-full object-contain" />
+              </div>
+            )}
           </Field>
 
           <div className="grid grid-cols-2 gap-4">

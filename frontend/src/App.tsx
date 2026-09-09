@@ -25,6 +25,7 @@ import Settings from './pages/Settings';
 import Campaigns from './pages/Campaigns';
 import CampaignMasters from './pages/CampaignMasters';
 import CampaignTemplates from './pages/CampaignTemplates';
+import CampaignSetup from './pages/CampaignSetup';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +94,7 @@ export default function App() {
                       <Route path="/campaigns" element={<Campaigns />} />
                       <Route path="/campaign-masters" element={<CampaignMasters />} />
                       <Route path="/campaign-templates" element={<CampaignTemplates />} />
+                      <Route path="/campaign-setup" element={<CampaignSetup />} />
                     </Route>
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>

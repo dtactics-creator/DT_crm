@@ -149,6 +149,8 @@ CREATE TABLE IF NOT EXISTS dt_campaign_templates (
     schema JSONB NOT NULL,
     default_config JSONB NOT NULL,
     component_name TEXT NOT NULL,
+    start_datetime TIMESTAMP WITH TIME ZONE,
+    end_datetime TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
@@ -609,6 +611,7 @@ ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS end_datetime TIMESTAMP WITH TI
 ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS template_id UUID REFERENCES dt_campaign_templates(id);
 ALTER TABLE dt_campaigns ADD COLUMN IF NOT EXISTS template_config JSONB;
 
+
 -- ---------------------------------------------------------------------------
 -- 0. Clean slate (comment this block out to keep existing rows)
 -- ---------------------------------------------------------------------------
@@ -1052,3 +1055,60 @@ COMMIT;
 -- Next: create a Supabase Auth user with email admin@dtactics.io to sign in
 -- as the full-access administrator.
 -- ============================================================================
+-- Create dt_campaign_setups table
+CREATE TABLE IF NOT EXISTS public.dt_campaign_setups (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    play_mode TEXT DEFAULT 'loop',
+    start_datetime TIMESTAMPTZ,
+    end_datetime TIMESTAMPTZ,
+    status TEXT DEFAULT 'draft',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    updated_by UUID
+);
+
+-- Create dt_campaign_setup_templates table
+CREATE TABLE IF NOT EXISTS public.dt_campaign_setup_templates (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    campaign_setup_id UUID NOT NULL REFERENCES public.dt_campaign_setups(id) ON DELETE CASCADE,
+    template_id UUID NOT NULL REFERENCES public.dt_campaign_templates(id) ON DELETE RESTRICT,
+    sort_order INT DEFAULT 0,
+    start_datetime TIMESTAMPTZ,
+    end_datetime TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(campaign_setup_id, template_id)
+);
+
+-- Enable RLS
+ALTER TABLE public.dt_campaign_setups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.dt_campaign_setup_templates ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for dt_campaign_setups
+CREATE POLICY "Enable read access for authenticated users" ON public.dt_campaign_setups
+    FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" ON public.dt_campaign_setups
+    FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Enable update for authenticated users" ON public.dt_campaign_setups
+    FOR UPDATE TO authenticated USING (true);
+
+CREATE POLICY "Enable delete for authenticated users" ON public.dt_campaign_setups
+    FOR DELETE TO authenticated USING (true);
+
+-- RLS Policies for dt_campaign_setup_templates
+CREATE POLICY "Enable read access for authenticated users" ON public.dt_campaign_setup_templates
+    FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" ON public.dt_campaign_setup_templates
+    FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Enable update for authenticated users" ON public.dt_campaign_setup_templates
+    FOR UPDATE TO authenticated USING (true);
+
+CREATE POLICY "Enable delete for authenticated users" ON public.dt_campaign_setup_templates
+    FOR DELETE TO authenticated USING (true);
+

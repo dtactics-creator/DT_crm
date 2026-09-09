@@ -16,7 +16,41 @@ const upload = multer({
   }
 }).single('image');
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
+  if (req.method === 'DELETE') {
+    try {
+      const { urls } = req.body;
+      if (!urls || !Array.isArray(urls)) {
+        return res.status(400).json({ error: 'Missing or invalid urls array' });
+      }
+
+      const filenames = urls.map(url => {
+        // Handle full Supabase URLs and extract the filename.
+        // e.g. "https://xxxx.supabase.co/storage/v1/object/public/campaigns/12345.jpg"
+        const parts = url.split('/');
+        return parts[parts.length - 1];
+      }).filter(Boolean);
+
+      if (filenames.length === 0) {
+        return res.status(200).json({ success: true, message: 'No valid filenames to delete' });
+      }
+
+      const { data, error } = await supabase.storage
+        .from('campaigns')
+        .remove(filenames);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+
+      return res.status(200).json({ success: true, deleted: filenames });
+    } catch (err) {
+      console.error('Delete handler error:', err);
+      return res.status(500).json({ error: 'Failed to delete images from storage' });
+    }
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

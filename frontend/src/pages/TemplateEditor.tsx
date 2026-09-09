@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X, Save, AlertCircle, Sparkles, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { X, Save, AlertCircle, Sparkles, PanelRightClose, PanelRightOpen, Loader2, UploadCloud } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import Field from '../components/ui/Field';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { saveTemplate, type CampaignTemplateRow, type CampaignTemplateFormState } from '../lib/templatesRepo';
 import { useToast } from '../components/ui/Toast';
@@ -34,7 +35,7 @@ const defaultGenieSchema = {
       id: 'general', title: 'General Settings',
       properties: [
         { id: 'background', label: 'Background Color', type: 'text', default: '#1e1b4b' },
-        { id: 'bgImage', label: 'Background Image URL', type: 'text', default: 'night-desert.jpg' },
+        { id: 'bgImage', label: 'Background Image', type: 'image', default: 'night-desert.jpg' },
       ]
     },
     {
@@ -52,7 +53,7 @@ const defaultGenieSchema = {
     {
       id: 'assets', title: 'Visual Assets',
       properties: [
-        { id: 'lampImage', label: 'Lamp Image URL', type: 'text', default: 'magic-lamp.png' },
+        { id: 'lampImage', label: 'Lamp Image', type: 'image', default: 'magic-lamp.png' },
       ]
     }
   ]
@@ -94,6 +95,24 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isResizing]);
+
+  const [pendingFiles, setPendingFiles] = useState<Record<string, File>>({});
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, propId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1 * 1024 * 1024) {
+      toast('File is too large. Maximum size is 1MB.', 'error');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setPendingFiles(prev => ({ ...prev, [propId]: file }));
+    setConfig(propId, url);
+    if (e.target) e.target.value = '';
+  };
 
   const [form, setForm] = useState<CampaignTemplateFormState>({
     name: 'New Template',
@@ -156,9 +175,50 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
   };
 
   const saveMut = useMutation({
-    mutationFn: () => saveTemplate(form),
+    mutationFn: async () => {
+      let finalConfig = { ...form.default_config };
+      const oldUrlsToClean: string[] = [];
+
+      for (const [propId, file] of Object.entries(pendingFiles)) {
+        if (!file) continue;
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+        if (template && template.default_config[propId]) {
+          oldUrlsToClean.push(template.default_config[propId]);
+        }
+
+        finalConfig[propId] = data.url;
+      }
+
+      let finalThumbnail = form.thumbnail;
+      const assetProps = form.schema?.sections?.find((s: any) => s.id === 'assets' || s.title === 'Visual Assets')?.properties?.filter((p: any) => p.type === 'image') || [];
+      const imageProps = assetProps.length > 0 ? assetProps : form.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
+      if (imageProps.length > 0) {
+        finalThumbnail = finalConfig[imageProps[0].id] || form.thumbnail;
+      }
+      
+      const formToSave = { ...form, default_config: finalConfig, thumbnail: finalThumbnail };
+
+      if (oldUrlsToClean.length > 0) {
+        import('../lib/utils').then(({ deleteStorageImages }) => {
+          deleteStorageImages(oldUrlsToClean);
+        });
+      }
+
+      return saveTemplate(formToSave);
+    },
     onSuccess: () => {
       toast('Template saved successfully', 'success');
+      setPendingFiles({});
       onSaved();
     },
     onError: (e: Error) => toast(`Error saving template: ${e.message}`, 'error'),
@@ -199,7 +259,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
             </div>
             <div className="h-16 px-5 border-b border-app flex items-center justify-between shrink-0 bg-surface-2">
               <div className="flex items-center gap-2 text-brand-600">
-                <Sparkles className="h-5 w-5" />
+                {/* <Sparkles className="h-5 w-5" /> */}
                 <h2 className="font-bold text-base-fg">Template Builder</h2>
               </div>
               <div className="flex items-center gap-1">
@@ -213,45 +273,75 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
-              {/* <div className="space-y-4 bg-surface-2 p-4 rounded-xl border border-app">
-                <h3 className="text-sm font-semibold text-base-fg uppercase tracking-wider">Meta Information</h3>
-                <div>
-                  <label className="block text-[13px] font-medium text-base-fg mb-1.5">Template Name</label>
-                  <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-medium text-base-fg mb-1.5">Description</label>
-                  <Input value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-base-fg mb-1.5">Status</label>
+              <div className="rounded-xl border border-app bg-surface-2 p-4 shadow-sm space-y-4">
+                <h3 className="text-[11.5px] font-bold text-subtle-fg uppercase tracking-wider">Meta Information</h3>
+                <div className="space-y-4">
+                  <Field label="Template Name">
+                    <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter template name" />
+                  </Field>
+                  <Field label="Description">
+                    <Input value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Enter template description" />
+                  </Field>
+                  <Field label="Status">
                     <SearchableSelect
                       value={form.status}
                       onChange={v => setForm(f => ({ ...f, status: v }))}
-                      options={[{ value: 'active', label: 'Active' }, { value: 'draft', label: 'Draft' }]}
+                      options={[{ value: 'active', label: 'Live (Active)' }, { value: 'draft', label: 'Draft (Inactive)' }]}
                     />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-base-fg mb-1.5">Component</label>
-                    <Input value={form.component_name} readOnly className="bg-surface opacity-70" />
-                  </div>
+                  </Field>
                 </div>
-              </div> */}
+              </div>
 
               {form.schema.sections.map((sec: any) => (
-                <div key={sec.id} className="space-y-4">
-                  <h3 className="text-sm font-semibold text-base-fg uppercase tracking-wider pt-2 border-t border-app">{sec.title}</h3>
-                  {sec.properties.map((prop: any) => (
-                    <div key={prop.id}>
-                      <label className="block text-[13px] font-medium text-base-fg mb-1.5">{prop.label}</label>
-                      <Input
-                        value={form.default_config[prop.id] ?? prop.default}
-                        onChange={e => setConfig(prop.id, e.target.value)}
-                        placeholder={`Enter ${prop.label.toLowerCase()}`}
-                      />
-                    </div>
-                  ))}
+                <div key={sec.id} className="rounded-xl border border-app bg-surface-2 p-4 shadow-sm space-y-4">
+                  <h3 className="text-[11.5px] font-bold text-subtle-fg uppercase tracking-wider">{sec.title}</h3>
+                  <div className="space-y-4">
+                    {sec.properties.map((prop: any) => (
+                      <Field key={prop.id} label={prop.label}>
+                        {prop.type === 'image' ? (
+                          <div className="flex gap-3 items-start">
+                            <div className="flex-1">
+                              <Input
+                                value={form.default_config[prop.id] ?? prop.default}
+                                onChange={e => {
+                                  setConfig(prop.id, e.target.value);
+                                  setPendingFiles(prev => {
+                                    const next = { ...prev };
+                                    delete next[prop.id];
+                                    return next;
+                                  });
+                                }}
+                                placeholder={`Enter ${prop.label.toLowerCase()} URL or upload...`}
+                              />
+                            </div>
+                            <div>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => document.getElementById(`img-upload-${prop.id}`)?.click()}
+                              >
+                                <UploadCloud className="h-4 w-4 mr-2" />
+                                Upload
+                              </Button>
+                              <input
+                                type="file"
+                                id={`img-upload-${prop.id}`}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, prop.id)}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <Input
+                            value={form.default_config[prop.id] ?? prop.default}
+                            onChange={e => setConfig(prop.id, e.target.value)}
+                            placeholder={`Enter ${prop.label.toLowerCase()}`}
+                          />
+                        )}
+                      </Field>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

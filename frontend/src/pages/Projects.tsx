@@ -281,8 +281,8 @@ export default function Projects() {
         initial={editing} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
         onSubmit={handleSubmit} saving={create.isPending || update.isPending} />
 
-      <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail} masters={masters}
-        onEdit={() => { setEditing(detail); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
+      <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
+        onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
 
       <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.project_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
 

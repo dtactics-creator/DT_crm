@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, FolderKanban, Briefcase, Database, UserCog,
-  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone
+  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
@@ -58,6 +58,7 @@ const CAMPAIGN_NAV = [
   { to: '/campaign-masters', label: 'Campaign Master', icon: Database, perm: 'campaign_masters.view', end: false },
   { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: 'campaigns.view', end: false },
   { to: '/campaign-templates', label: 'Campaign Templates', icon: Sparkles, perm: 'campaign_templates.view', end: false },
+  { to: '/campaign-setup', label: 'Campaign Setup', icon: LayoutList, perm: 'campaign_setup.view', end: false },
 ];
 
 const FUTURE = ['Invoices', 'Documents', 'Support'];

@@ -69,3 +69,18 @@ export function avatarColor(seed: string): string {
   for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
+
+export async function deleteStorageImages(urls: string[]) {
+  const validUrls = urls.filter(u => u && u.includes('/storage/v1/object/public/campaigns/'));
+  if (validUrls.length === 0) return;
+
+  try {
+    await fetch('/api/upload', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls: validUrls })
+    });
+  } catch (err) {
+    console.error('Error deleting images from storage:', err);
+  }
+}

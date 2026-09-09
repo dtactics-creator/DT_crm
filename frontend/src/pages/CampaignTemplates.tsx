@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Pencil, Trash2, Sparkles, CheckCircle2, Copy } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Sparkles, CheckCircle2, Copy, Power, PowerOff } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -10,7 +10,7 @@ import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { fetchAllTemplates, deleteTemplate, toggleTemplateStatus, saveTemplate, type CampaignTemplateRow } from '../lib/templatesRepo';
 import { useToast } from '../components/ui/Toast';
-import { formatDate } from '../lib/utils';
+import { formatDate, formatDateTime } from '../lib/utils';
 import TemplateEditor from './TemplateEditor';
 import { usePermissions } from '../contexts/PermissionContext';
 import DataTable, { type Column } from '../components/DataTable';
@@ -62,7 +62,23 @@ export default function CampaignTemplates() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: deleteTemplate,
+    mutationFn: async (id: string) => {
+      const template = templates?.find((t) => t.id === id);
+      if (template) {
+        const urlsToClean: string[] = [];
+        if (template.thumbnail) urlsToClean.push(template.thumbnail);
+        const imageProps = template.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
+        imageProps.forEach((prop: any) => {
+          if (template.default_config && template.default_config[prop.id]) {
+            urlsToClean.push(template.default_config[prop.id]);
+          }
+        });
+        if (urlsToClean.length > 0) {
+          import('../lib/utils').then(({ deleteStorageImages }) => deleteStorageImages(urlsToClean));
+        }
+      }
+      return deleteTemplate(id);
+    },
     onSuccess: () => {
       toast('Template deleted successfully', 'success');
       setToDelete(null);
@@ -71,85 +87,135 @@ export default function CampaignTemplates() {
     onError: (e: Error) => toast(`Error deleting template: ${e.message}`, 'error'),
   });
 
+  const formatDiff = (diff: number) => {
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
+  const renderDateTime = (val: string | null | undefined) => {
+    if (!val) return <span className="text-[13px] text-muted-fg">—</span>;
+    const str = formatDateTime(val);
+    if (str === '—') return <span className="text-[13px] text-muted-fg">—</span>;
+    const [date, time] = str.split(' ');
+    return (
+      <div className="flex flex-col min-w-0">
+        <span className="text-[13px] text-base-fg font-medium">{date}</span>
+        <span className="text-[12px] text-muted-fg mt-0.5">{time}</span>
+      </div>
+    );
+  };
+
   const columns: Column<CampaignTemplateRow>[] = [
     {
       key: 'name', header: 'Template', sortValue: (c) => c.name.toLowerCase(),
-      render: (c) => (
-        <div className="flex items-center gap-4 min-w-[200px]">
-          {c.thumbnail ? (
-            <img src={c.thumbnail} alt={c.name} className="h-10 w-10 rounded-lg object-cover border border-app shrink-0" />
-          ) : (
-            <div className="h-10 w-10 rounded-lg bg-brand-50 dark:bg-brand-600/12 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5 text-brand-600 dark:text-brand-300" />
+      render: (c) => {
+        let displayImage = c.thumbnail;
+        if (!displayImage) {
+          const assetProps = c.schema?.sections?.find((s: any) => s.id === 'assets' || s.title === 'Visual Assets')?.properties?.filter((p: any) => p.type === 'image') || [];
+          const imageProps = assetProps.length > 0 ? assetProps : c.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
+          if (imageProps.length > 0 && c.default_config) {
+            displayImage = c.default_config[imageProps[0].id];
+          }
+        }
+        return (
+          <div className="flex items-center gap-4 min-w-[200px]">
+            {displayImage ? (
+              <img src={displayImage} alt={c.name} className="h-10 w-10 rounded-lg object-cover border border-app shrink-0 bg-surface-2" />
+            ) : (
+              <div className="h-10 w-10 rounded-lg bg-brand-50 dark:bg-brand-600/12 flex items-center justify-center shrink-0">
+                <Sparkles className="h-5 w-5 text-brand-600 dark:text-brand-300" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="font-semibold text-base-fg flex items-center gap-2 truncate" title="Default Template">
+                {c.name}
+                {c.is_default && <CheckCircle2 className="h-3.5 w-3.5 text-brand-600 shrink-0" />}
+              </p>
+              {c.description && <p className="text-[12px] text-muted-fg mt-0.5 truncate max-w-[200px]">{c.description}</p>}
             </div>
-          )}
-          <div>
-            <p className="font-semibold text-base-fg flex items-center gap-2" title="Default Template">
-              {c.name}
-              {c.is_default && <CheckCircle2 className="h-3.5 w-3.5 text-brand-600" />}
-            </p>
-            <p className="text-[12px] text-muted-fg mt-0.5 truncate max-w-[250px]">{c.description || 'No description'}</p>
           </div>
-        </div>
-      ),
+        );
+      },
     },
+    // {
+    //   key: 'component_name', header: 'Component Type', sortValue: (c) => c.component_name,
+    //   render: (c) => (
+    //     <span className="text-[13px] font-medium text-base-fg bg-surface-2 px-2.5 py-1 rounded-md border border-app">
+    //       {c.component_name}
+    //     </span>
+    //   )
+    // },
     {
-      key: 'component', header: 'Component',
-      render: (c) => <span className="text-[13px] font-medium text-muted-fg">{c.component_name}</span>
+      key: 'created_at', header: 'Created On', sortValue: (c) => c.created_at || '',
+      render: (c) => renderDateTime(c.created_at || '')
     },
     {
       key: 'status', header: 'Status', sortValue: (c) => c.status,
-      render: (c) => (
-        <Badge
-          label={c.status === 'active' ? 'Active' : 'Draft'}
-          color={c.status === 'active' ? '#10b981' : '#64748b'}
-        />
-      ),
-    },
-    {
-      key: 'updated', header: 'Updated', sortValue: (c) => c.updated_at || '',
-      render: (c) => <span className="text-[13px] text-muted-fg whitespace-nowrap">{formatDate(c.updated_at)}</span>
+      render: (c) => {
+        return (
+          <Badge
+            label={c.status === 'active' ? 'Live' : 'Draft'}
+            color={c.status === 'active' ? '#10b981' : '#64748b'}
+          />
+        );
+      },
     },
     {
       key: 'actions', header: '', headerClassName: 'w-40', className: 'text-right',
-      render: (c) => (
-        <div className="flex items-center justify-end gap-1">
-          {!c.is_default && can('campaign_templates.edit') && (
-            <button onClick={(e) => { e.stopPropagation(); setAsDefaultMut.mutate(c); }} title="Set Default" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 transition-colors">
-              <CheckCircle2 className="h-4 w-4" />
-            </button>
-          )}
-          {can('campaign_templates.edit') && (
-            <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} title="Edit" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
-              <Pencil className="h-4 w-4" />
-            </button>
-          )}
-          {can('campaign_templates.delete') && (
-            <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} title="Delete" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      ),
+      render: (c) => {
+        const isActive = c.status === 'active';
+        return (
+          <div className="flex items-center justify-end gap-1">
+            {can('campaign_templates.edit') && (
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleStatusMut.mutate({ id: c.id, status: isActive ? 'inactive' : 'active' }); }}
+                title={isActive ? 'Deactivate' : 'Activate'}
+                className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
+              >
+                {isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+              </button>
+            )}
+            {!c.is_default && can('campaign_templates.edit') && (
+              <button onClick={(e) => { e.stopPropagation(); setAsDefaultMut.mutate(c); }} title="Set Default" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 transition-colors">
+                <CheckCircle2 className="h-4 w-4" />
+              </button>
+            )}
+            {can('campaign_templates.edit') && (
+              <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} title="Edit" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
+            {can('campaign_templates.delete') && (
+              <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} title="Delete" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-5 sm:p-8 max-w-[1400px] mx-auto h-[calc(100vh-64px)] flex flex-col">
+    <div className="p-5 sm:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="Campaign Templates"
         subtitle="Manage reusable designs for your marketing campaigns."
         actions={can('campaign_templates.create') ? <Button icon={<Plus className="h-4 w-4" />} onClick={openNew}>Create Template</Button> : null}
       />
 
-      <div className="flex p-4 bg-surface border-x border-t border-app rounded-t-2xl shadow-sm shrink-0">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search templates…" className="pl-10" />
+      <div className="bg-surface border border-app rounded-2xl card-shadow">
+        <div className="flex p-4 border-b border-app">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search templates…" className="pl-10" />
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 bg-surface border border-app rounded-b-2xl overflow-hidden shadow-sm flex flex-col">
         {isLoading ? (
           <div className="p-5 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
         ) : (
@@ -170,9 +236,9 @@ export default function CampaignTemplates() {
         )}
       </div>
 
-      <TemplateEditor 
-        open={editorOpen} 
-        onClose={() => setEditorOpen(false)} 
+      <TemplateEditor
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
         template={editingTemplate}
         onSaved={() => {
           setEditorOpen(false);

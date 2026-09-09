@@ -74,6 +74,26 @@ mountApiRoutes().then(() => {
     }
   });
 
+  app.get('/api/default-template', async (req, res) => {
+    try {
+      const dbClient = await import(pathToFileURL(path.join(__dirname, 'api', 'db-client.js')).href);
+      const supabase = dbClient.default;
+      const { data, error } = await supabase
+        .from('dt_campaign_templates')
+        .select('*')
+        .eq('is_default', true)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') return res.json(null);
+        return res.status(500).json({ error: error.message });
+      }
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get('/t/:tracking_token', async (req, res) => {
     try {
       const module = await import(pathToFileURL(path.join(__dirname, 'api', 't.js')).href);
