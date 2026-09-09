@@ -18,6 +18,18 @@ import { fetchAllCampaignSetups, saveCampaignSetup, deleteCampaignSetup, Campaig
 import { fetchAllTemplates, CampaignTemplateRow } from '../lib/templatesRepo';
 import { formatDateTime } from '../lib/utils';
 
+const toLocalInputFormat = (utcStr: string | null | undefined) => {
+  if (!utcStr) return '';
+  const d = new Date(utcStr);
+  if (Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}-${m}-${day}T${h}:${min}`;
+};
+
 export default function CampaignSetup() {
   const { toast } = useToast();
   const { can } = usePermissions();
@@ -96,12 +108,12 @@ export default function CampaignSetup() {
       description: s.description || '',
       status: s.status,
       play_mode: s.play_mode || 'loop',
-      start_datetime: s.start_datetime ? s.start_datetime.substring(0, 16) : '',
-      end_datetime: s.end_datetime ? s.end_datetime.substring(0, 16) : '',
+      start_datetime: toLocalInputFormat(s.start_datetime),
+      end_datetime: toLocalInputFormat(s.end_datetime),
       templates: (s.templates || []).map(t => ({
         template_id: t.template_id,
-        start_datetime: t.start_datetime ? t.start_datetime.substring(0, 16) : '',
-        end_datetime: t.end_datetime ? t.end_datetime.substring(0, 16) : ''
+        start_datetime: toLocalInputFormat(t.start_datetime),
+        end_datetime: toLocalInputFormat(t.end_datetime)
       }))
     });
     setEditingSetup(s);
@@ -342,8 +354,13 @@ export default function CampaignSetup() {
                   }
                   if (start) {
                     const nextDay = new Date(start);
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    end = nextDay.toISOString().slice(0, 16);
+                    nextDay.setHours(nextDay.getHours() + 24);
+                    const y = nextDay.getFullYear();
+                    const m = String(nextDay.getMonth() + 1).padStart(2, '0');
+                    const d = String(nextDay.getDate()).padStart(2, '0');
+                    const h = String(nextDay.getHours()).padStart(2, '0');
+                    const min = String(nextDay.getMinutes()).padStart(2, '0');
+                    end = `${y}-${m}-${d}T${h}:${min}`;
                   }
                   handleTemplatesChange([...form.templates, { template_id: '', start_datetime: start, end_datetime: end }]);
                 }}
@@ -363,8 +380,13 @@ export default function CampaignSetup() {
                   }
                   if (start) {
                     const nextDay = new Date(start);
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    end = nextDay.toISOString().slice(0, 16);
+                    nextDay.setHours(nextDay.getHours() + 24);
+                    const y = nextDay.getFullYear();
+                    const m = String(nextDay.getMonth() + 1).padStart(2, '0');
+                    const d = String(nextDay.getDate()).padStart(2, '0');
+                    const h = String(nextDay.getHours()).padStart(2, '0');
+                    const min = String(nextDay.getMinutes()).padStart(2, '0');
+                    end = `${y}-${m}-${d}T${h}:${min}`;
                   }
                   handleTemplatesChange([...form.templates, { template_id: '', start_datetime: start, end_datetime: end }]);
                 }}
@@ -394,7 +416,10 @@ export default function CampaignSetup() {
                         <Input 
                           type="datetime-local" 
                           value={t.start_datetime} 
+                          readOnly={idx > 0}
+                          className={idx > 0 ? "bg-surface-2 text-muted-fg cursor-not-allowed opacity-60" : ""}
                           onChange={(e) => {
+                            if (idx > 0) return;
                             const newT = [...form.templates];
                             newT[idx].start_datetime = e.target.value;
                             handleTemplatesChange(newT);

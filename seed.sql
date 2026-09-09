@@ -162,6 +162,12 @@ ON public.dt_campaign_templates FOR ALL
 USING (auth.role() = 'authenticated') 
 WITH CHECK (auth.role() = 'authenticated');
 
+CREATE POLICY "Anyone can view campaign templates"
+  ON public.dt_campaign_templates
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
 CREATE TABLE IF NOT EXISTS analytics_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     event_type TEXT NOT NULL,
@@ -1090,6 +1096,10 @@ ALTER TABLE public.dt_campaign_setup_templates ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Enable read access for authenticated users" ON public.dt_campaign_setups
     FOR SELECT TO authenticated USING (true);
 
+CREATE POLICY "Anyone can view campaign setups"
+    ON public.dt_campaign_setups
+    FOR SELECT TO anon USING (true);
+
 CREATE POLICY "Enable insert for authenticated users" ON public.dt_campaign_setups
     FOR INSERT TO authenticated WITH CHECK (true);
 
@@ -1102,6 +1112,10 @@ CREATE POLICY "Enable delete for authenticated users" ON public.dt_campaign_setu
 -- RLS Policies for dt_campaign_setup_templates
 CREATE POLICY "Enable read access for authenticated users" ON public.dt_campaign_setup_templates
     FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Anyone can view campaign setup templates"
+    ON public.dt_campaign_setup_templates
+    FOR SELECT TO anon USING (true);
 
 CREATE POLICY "Enable insert for authenticated users" ON public.dt_campaign_setup_templates
     FOR INSERT TO authenticated WITH CHECK (true);
