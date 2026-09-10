@@ -443,7 +443,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
           </motion.div>
 
           {/* Live Preview Panel */}
-          <div className="flex-1 h-full relative overflow-hidden bg-surface">
+          <div className="flex-1 h-full relative z-0 overflow-hidden bg-surface">
             <TemplatePreview config={form.default_config} componentName={form.component_name} />
           </div>
         </motion.div>
