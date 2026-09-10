@@ -81,7 +81,7 @@ function validate(body) {
   return {
     category: V.str(body.category, { field: 'Category', required: true }),
     label,
-    value: (V.str(body.value, { field: 'Value' }) || label).toLowerCase().replace(/\s+/g, '_'),
+    value: V.str(body.value, { field: 'Value' }) || label.toLowerCase().replace(/\s+/g, '_'),
     color: V.str(body.color, { field: 'Color', max: 20 }),
     symbol: V.str(body.symbol, { field: 'Symbol', max: 10 }),
     sort_order: V.num(body.sort_order, { field: 'Sort order', def: 0 }),

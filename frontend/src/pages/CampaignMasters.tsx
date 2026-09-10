@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers } from 'lucide-react';
+import { Layers, Type } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import MasterTab from '../components/masters/MasterTab';
 import { cn } from '../lib/utils';
@@ -9,6 +9,7 @@ type TabKind = { key: string; label: string; icon: typeof Layers; kind: 'master'
 
 const TABS: TabKind[] = [
   { key: 'campaign_type', label: 'Campaign Types', icon: Layers, kind: 'master', category: 'campaign_type', singular: 'Campaign Type' },
+  { key: 'campaign_font', label: 'Fonts', icon: Type, kind: 'master', category: 'campaign_font', singular: 'Font' },
 ];
 
 export default function CampaignMasters() {

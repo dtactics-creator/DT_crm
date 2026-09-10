@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X, Save, AlertCircle, Sparkles, PanelRightClose, PanelRightOpen, Loader2, UploadCloud } from 'lucide-react';
+import { X, Save, AlertCircle, Sparkles, PanelRightClose, PanelRightOpen, Loader2, UploadCloud, ChevronDown, ChevronRight } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Field from '../components/ui/Field';
@@ -9,18 +9,35 @@ import { saveTemplate, type CampaignTemplateRow, type CampaignTemplateFormState 
 import { useToast } from '../components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebar } from '../components/layout/AppLayout';
+import { useMasters, toOptions } from '../hooks/useMasters';
+import { ColorControl } from '../components/ui/ColorPicker';
 
 import GenieWishTemplate from '../components/templates/GenieWishTemplate';
 
 const TemplatePreview = ({ config, componentName }: { config: any, componentName: string }) => {
+  const [dummyReveal, setDummyReveal] = useState<any>(null);
+
+  const handleReveal = () => {
+    setDummyReveal({
+      type: 'Offer',
+      brand: 'Preview Brand',
+      title: '25% OFF YOUR NEXT ORDER',
+      description: 'Get 25% off your next purchase with this exclusive promo code.',
+      couponCode: 'MAGIC25',
+      expiry: '7 Days',
+      cta: { label: 'Shop Now', url: '#' },
+      image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=640&auto=format&fit=crop',
+    });
+  };
+
   if (componentName === 'GenieWish') {
     return (
       <div className="w-full h-full relative overflow-y-auto overflow-x-hidden">
         <GenieWishTemplate
           config={config}
-          reveal={null}
-          onReveal={() => { }}
-          onReset={() => { }}
+          reveal={dummyReveal}
+          onReveal={handleReveal}
+          onReset={() => setDummyReveal(null)}
         />
       </div>
     );
@@ -32,28 +49,25 @@ const TemplatePreview = ({ config, componentName }: { config: any, componentName
 const defaultGenieSchema = {
   sections: [
     {
-      id: 'general', title: 'General Settings',
+      id: 'home', title: 'Home',
       properties: [
-        { id: 'background', label: 'Background Color', type: 'text', default: '#1e1b4b' },
+        { id: 'background', label: 'Page Background Color', type: 'color', default: '#1e1b4b' },
         { id: 'bgImage', label: 'Background Image', type: 'image', default: 'night-desert.jpg' },
-      ]
-    },
-    {
-      id: 'typography', title: 'Typography',
-      properties: [
-        { id: 'googleFontUrl', label: 'Google Font URL', type: 'text', default: 'https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap' },
-        { id: 'titleFontFamily', label: 'Title Font Family', type: 'text', default: '"Cinzel Decorative", serif' },
-        { id: 'bodyFontFamily', label: 'Body Font Family', type: 'text', default: '"Cormorant Garamond", serif' },
         { id: 'title', label: 'Main Title', type: 'text', default: 'Rub the Magic Lamp and Discover Your Surprise!' },
-        { id: 'titleColor', label: 'Title Color', type: 'text', default: '#fbbf24' },
+        { id: 'titleColor', label: 'Title Color', type: 'color', default: '#fbbf24' },
+        { id: 'titleFontFamily', label: 'Title Font Family', type: 'text', default: '"Cinzel Decorative", serif' },
         { id: 'subtitle', label: 'Subtitle', type: 'text', default: 'Arabian Nights' },
-        { id: 'subtitleColor', label: 'Subtitle Color', type: 'text', default: '#fcd34d' },
+        { id: 'subtitleColor', label: 'Subtitle Color', type: 'color', default: '#fcd34d' },
+        { id: 'bodyFontFamily', label: 'Body Font Family', type: 'text', default: '"Cormorant Garamond", serif' },
+        { id: 'lampImage', label: 'Lamp Image', type: 'image', default: 'magic-lamp.png' },
       ]
     },
     {
-      id: 'assets', title: 'Visual Assets',
+      id: 'reveal', title: 'Reveal Form',
       properties: [
-        { id: 'lampImage', label: 'Lamp Image', type: 'image', default: 'magic-lamp.png' },
+        { id: 'modalBackground', label: 'Modal Background', type: 'color', default: '#080b13' },
+        { id: 'modalButtonColor', label: 'Button Background', type: 'color', default: '#fbbf24' },
+        { id: 'modalButtonTextColor', label: 'Button Text', type: 'color', default: '#080b13' },
       ]
     }
   ]
@@ -67,9 +81,18 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
 }) {
   const { toast } = useToast();
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ home: true, reveal: false });
+
+  const toggleSection = (id: string) => {
+    setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
   const { setCollapsed: setMainSidebarCollapsed } = useSidebar();
   const [sidebarWidth, setSidebarWidth] = useState(450);
   const [isResizing, setIsResizing] = useState(false);
+  const [activeColorProp, setActiveColorProp] = useState<string | null>(null);
+
+  const { data: masters } = useMasters();
+  const fontOpts = useMemo(() => toOptions(masters, 'campaign_font'), [masters]);
 
   useEffect(() => {
     if (open) {
@@ -123,12 +146,13 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
     schema: defaultGenieSchema as any,
     default_config: {
       background: '#1e1b4b', bgImage: 'night-desert.jpg',
-      googleFontUrl: 'https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap',
       titleFontFamily: '"Cinzel Decorative", serif',
       bodyFontFamily: '"Cormorant Garamond", serif',
       title: 'Rub the Magic Lamp and Discover Your Surprise!', titleColor: '#fbbf24',
       subtitle: 'Arabian Nights', subtitleColor: '#fcd34d',
-      lampImage: 'magic-lamp.png'
+      lampImage: 'magic-lamp.png',
+      modalBackground: '#080b13',
+      modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13'
     },
     component_name: 'GenieWish',
   });
@@ -143,7 +167,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
           thumbnail: template.thumbnail || '',
           is_default: template.is_default,
           status: template.status,
-          schema: template.schema,
+          schema: template.component_name === 'GenieWish' ? (defaultGenieSchema as any) : template.schema,
           default_config: template.default_config,
           component_name: template.component_name,
         });
@@ -162,13 +186,43 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
             bodyFontFamily: '"Cormorant Garamond", serif',
             title: 'Rub the Magic Lamp and Discover Your Surprise!', titleColor: '#fbbf24',
             subtitle: 'Arabian Nights', subtitleColor: '#fcd34d',
-            lampImage: 'magic-lamp.png'
+            lampImage: 'magic-lamp.png',
+            modalBackground: '#080b13',
+            modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13'
           },
           component_name: 'GenieWish',
         });
       }
     }
   }, [open, template]);
+
+  useEffect(() => {
+    if (!masters) return;
+    const fonts = masters.filter(m => m.category === 'campaign_font');
+    const titleFont = fonts.find(f => f.value === form.default_config.titleFontFamily);
+    const bodyFont = fonts.find(f => f.value === form.default_config.bodyFontFamily);
+
+    const extractUrl = (str?: string | null) => {
+      if (!str) return null;
+      const urlPart = str.split('|||')[0];
+      const match = urlPart.match(/href="([^"]+)"/);
+      if (match) return match[1];
+      if (urlPart.startsWith('http')) return urlPart;
+      return null;
+    };
+
+    const url1 = extractUrl(titleFont?.description);
+    const url2 = extractUrl(bodyFont?.description);
+
+    const urls = [];
+    if (url1) urls.push(url1);
+    if (url2 && url2 !== url1) urls.push(url2);
+    const newGoogleFontUrl = urls.join(',');
+
+    if (form.default_config.googleFontUrl !== newGoogleFontUrl) {
+      setForm(prev => ({ ...prev, default_config: { ...prev.default_config, googleFontUrl: newGoogleFontUrl } }));
+    }
+  }, [masters, form.default_config.titleFontFamily, form.default_config.bodyFontFamily]);
 
   const setConfig = (k: string, v: any) => {
     setForm(prev => ({ ...prev, default_config: { ...prev.default_config, [k]: v } }));
@@ -205,7 +259,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       if (imageProps.length > 0) {
         finalThumbnail = finalConfig[imageProps[0].id] || form.thumbnail;
       }
-      
+
       const formToSave = { ...form, default_config: finalConfig, thumbnail: finalThumbnail };
 
       if (oldUrlsToClean.length > 0) {
@@ -293,55 +347,86 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
               </div>
 
               {form.schema.sections.map((sec: any) => (
-                <div key={sec.id} className="rounded-xl border border-app bg-surface-2 p-4 shadow-sm space-y-4">
-                  <h3 className="text-[11.5px] font-bold text-subtle-fg uppercase tracking-wider">{sec.title}</h3>
-                  <div className="space-y-4">
-                    {sec.properties.map((prop: any) => (
-                      <Field key={prop.id} label={prop.label}>
-                        {prop.type === 'image' ? (
-                          <div className="flex gap-3 items-start">
-                            <div className="flex-1">
-                              <Input
-                                value={form.default_config[prop.id] ?? prop.default}
-                                onChange={e => {
-                                  setConfig(prop.id, e.target.value);
-                                  setPendingFiles(prev => {
-                                    const next = { ...prev };
-                                    delete next[prop.id];
-                                    return next;
-                                  });
-                                }}
-                                placeholder={`Enter ${prop.label.toLowerCase()} URL or upload...`}
-                              />
-                            </div>
-                            <div>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => document.getElementById(`img-upload-${prop.id}`)?.click()}
-                              >
-                                <UploadCloud className="h-4 w-4 mr-2" />
-                                Upload
-                              </Button>
-                              <input
-                                type="file"
-                                id={`img-upload-${prop.id}`}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(e, prop.id)}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <Input
-                            value={form.default_config[prop.id] ?? prop.default}
-                            onChange={e => setConfig(prop.id, e.target.value)}
-                            placeholder={`Enter ${prop.label.toLowerCase()}`}
-                          />
-                        )}
-                      </Field>
-                    ))}
+                <div key={sec.id} className="rounded-xl border border-app bg-surface-2 shadow-sm">
+                  <div 
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-3 transition-colors"
+                    onClick={() => toggleSection(sec.id)}
+                  >
+                    <h3 className="text-[11.5px] font-bold text-subtle-fg uppercase tracking-wider">{sec.title}</h3>
+                    {expandedSections[sec.id] ? <ChevronDown className="h-4 w-4 text-muted-fg" /> : <ChevronRight className="h-4 w-4 text-muted-fg" />}
                   </div>
+                  <AnimatePresence initial={false}>
+                    {expandedSections[sec.id] && (
+                      <motion.div
+                        initial={{ height: 0, overflow: 'hidden' }}
+                        animate={{ height: 'auto', overflow: 'visible' }}
+                        exit={{ height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      >
+                        <div className="space-y-4 p-4 pt-0">
+                          {sec.properties.map((prop: any) => (
+                            <Field key={prop.id} label={prop.label}>
+                              {prop.type === 'image' ? (
+                                <div className="flex gap-3 items-start">
+                                  <div className="flex-1">
+                                    <Input
+                                      value={form.default_config[prop.id] ?? prop.default}
+                                      onChange={e => {
+                                        setConfig(prop.id, e.target.value);
+                                        setPendingFiles(prev => {
+                                          const next = { ...prev };
+                                          delete next[prop.id];
+                                          return next;
+                                        });
+                                      }}
+                                      placeholder={`Enter ${prop.label.toLowerCase()} URL or upload...`}
+                                    />
+                                  </div>
+                                  <div>
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      onClick={() => document.getElementById(`img-upload-${prop.id}`)?.click()}
+                                    >
+                                      <UploadCloud className="h-4 w-4 mr-2" />
+                                      Upload
+                                    </Button>
+                                    <input
+                                      type="file"
+                                      id={`img-upload-${prop.id}`}
+                                      className="hidden"
+                                      accept="image/*"
+                                      onChange={(e) => handleImageUpload(e, prop.id)}
+                                    />
+                                  </div>
+                                </div>
+                              ) : prop.type === 'color' || prop.id.toLowerCase().includes('color') || prop.id === 'background' ? (
+                                <ColorControl
+                                  value={form.default_config[prop.id] ?? prop.default}
+                                  onChange={(v) => setConfig(prop.id, v)}
+                                  isActive={activeColorProp === prop.id}
+                                  onToggle={() => setActiveColorProp(prev => prev === prop.id ? null : prop.id)}
+                                />
+                              ) : prop.id.toLowerCase().includes('font') && !prop.id.toLowerCase().includes('url') ? (
+                                <SearchableSelect
+                                  value={form.default_config[prop.id] ?? prop.default}
+                                  onChange={v => setConfig(prop.id, v)}
+                                  options={fontOpts}
+                                  placeholder={`Select ${prop.label.toLowerCase()}`}
+                                />
+                              ) : (
+                                <Input
+                                  value={form.default_config[prop.id] ?? prop.default}
+                                  onChange={e => setConfig(prop.id, e.target.value)}
+                                  placeholder={`Enter ${prop.label.toLowerCase()}`}
+                                />
+                              )}
+                            </Field>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>

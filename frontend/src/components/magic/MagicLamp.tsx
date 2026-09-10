@@ -227,7 +227,7 @@ export function MagicLamp({
           height={768}
           draggable={false}
           className={`relative z-10 w-[88%] drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)] ${
-            bursting ? "animate-lamp-shake" : rubbing ? "" : "animate-lamp-idle"
+            disabled ? "animate-lamp-idle" : bursting ? "animate-lamp-shake" : rubbing ? "" : "animate-lamp-idle"
           }`}
           style={{
             filter: `drop-shadow(0 0 ${8 + glow * 40}px oklch(0.88 0.16 85 / ${glow}))`,

@@ -31,7 +31,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => { setOpen((v) => !v); setQ(''); }}
         className={cn(
-          'w-full h-10 pl-3.5 pr-9 rounded-lg bg-slate-50 dark:bg-slate-900/50 text-left text-sm flex items-center gap-2',
+          'w-full h-10 pl-3.5 pr-9 rounded-lg bg-surface-2 text-left text-sm flex items-center gap-2',
           'border transition-all duration-150 outline-none focus:ring-2 focus:ring-offset-0 ring-brand',
           invalid ? 'border-red-400' : 'border-app', open && 'ring-2',
         )}>
@@ -109,7 +109,7 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
   return (
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => { setOpen((v) => !v); setQ(''); }}
-        className={cn('w-full min-h-10 py-1.5 pl-2 pr-9 rounded-lg bg-slate-50 dark:bg-slate-900/50 text-left text-sm flex items-center flex-wrap gap-1.5',
+        className={cn('w-full min-h-10 py-1.5 pl-2 pr-9 rounded-lg bg-surface-2 text-left text-sm flex items-center flex-wrap gap-1.5',
           'border border-app transition-all outline-none focus:ring-2 ring-brand', open && 'ring-2')}>
         {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5">{placeholder}</span> : selectedOpts.map((o) => (
           <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface-2 border border-app px-2 py-0.5 text-[12px] font-medium text-base-fg">

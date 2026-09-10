@@ -25,7 +25,7 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
     <main className="relative min-h-screen overflow-hidden bg-gradient-night" style={{ background: config.background }}>
       {config.googleFontUrl && (
         <style>
-          {`@import url('${config.googleFontUrl}');`}
+          {config.googleFontUrl.split(',').map((url: string) => `@import url('${url.trim()}');`).join('\n')}
         </style>
       )}
       
@@ -65,13 +65,13 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
 
       {/* Reveal overlay */}
       {reveal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-md">
           <div className="pointer-events-none absolute inset-0">
             <StarField />
           </div>
 
           <div className="relative z-10 w-full max-w-md">
-            <RevealCard reveal={reveal} onAgain={rubAgain} onClose={rubAgain} />
+            <RevealCard reveal={reveal} config={config} onAgain={rubAgain} onClose={rubAgain} />
           </div>
         </div>
       )}
