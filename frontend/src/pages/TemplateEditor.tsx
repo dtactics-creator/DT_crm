@@ -63,11 +63,12 @@ const defaultGenieSchema = {
       ]
     },
     {
-      id: 'reveal', title: 'Reveal Form',
+      id: 'reveal', title: 'Reveal Card',
       properties: [
         { id: 'modalBackground', label: 'Modal Background', type: 'color', default: '#080b13' },
         { id: 'modalButtonColor', label: 'Button Background', type: 'color', default: '#fbbf24' },
         { id: 'modalButtonTextColor', label: 'Button Text', type: 'color', default: '#080b13' },
+        { id: 'modalAccentColor', label: 'Accent & Glow', type: 'color', default: '#fbbf24' },
       ]
     }
   ]
@@ -152,7 +153,8 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       subtitle: 'Arabian Nights', subtitleColor: '#fcd34d',
       lampImage: 'magic-lamp.png',
       modalBackground: '#080b13',
-      modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13'
+      modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13',
+      modalAccentColor: '#fbbf24'
     },
     component_name: 'GenieWish',
   });
@@ -188,7 +190,8 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
             subtitle: 'Arabian Nights', subtitleColor: '#fcd34d',
             lampImage: 'magic-lamp.png',
             modalBackground: '#080b13',
-            modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13'
+            modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13',
+            modalAccentColor: '#fbbf24'
           },
           component_name: 'GenieWish',
         });
@@ -348,7 +351,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
 
               {form.schema.sections.map((sec: any) => (
                 <div key={sec.id} className="rounded-xl border border-app bg-surface-2 shadow-sm">
-                  <div 
+                  <div
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-3 transition-colors"
                     onClick={() => toggleSection(sec.id)}
                   >

@@ -53,6 +53,7 @@ export function RevealCard({
   const bgColor = config?.modalBackground || config?.background || "#080b13";
   const btnBgColor = config?.modalButtonColor || titleColor;
   const btnTextColor = config?.modalButtonTextColor || "#080b13";
+  const accentColor = config?.modalAccentColor || titleColor;
 
   const qrUrl =
     "https://api.qrserver.com/v1/create-qr-code/?size=220x220&bgcolor=10131f&color=fbbf24&data=" +
@@ -141,7 +142,7 @@ export function RevealCard({
             opacity-[0.16]
           "
           style={{
-            backgroundColor: titleColor,
+            backgroundColor: accentColor,
           }}
         />
 
@@ -217,8 +218,8 @@ export function RevealCard({
             <span
               className="h-1.5 w-1.5 rounded-full"
               style={{
-                backgroundColor: titleColor,
-                boxShadow: `0 0 10px ${titleColor}`,
+                backgroundColor: accentColor,
+                boxShadow: `0 0 10px ${accentColor}`,
               }}
             />
 
@@ -348,7 +349,7 @@ export function RevealCard({
                   blur-xl
                 "
                 style={{
-                  backgroundColor: titleColor,
+                  backgroundColor: accentColor,
                 }}
               />
 
@@ -508,7 +509,7 @@ export function RevealCard({
                   w-[2px]
                 "
                 style={{
-                  backgroundColor: titleColor,
+                  backgroundColor: accentColor,
                   opacity: 0.7,
                 }}
               />
@@ -567,9 +568,9 @@ export function RevealCard({
                   "
                   style={{
                     backgroundColor: copied
-                      ? `${titleColor}18`
+                      ? `${accentColor}18`
                       : "rgba(255,255,255,0.06)",
-                    color: copied ? titleColor : undefined,
+                    color: copied ? accentColor : undefined,
                     opacity: copied ? 1 : 0.5,
                   }}
                 >
@@ -604,7 +605,7 @@ export function RevealCard({
 
                   <span
                     style={{
-                      color: copied ? titleColor : undefined,
+                      color: copied ? accentColor : undefined,
                       opacity: copied ? 1 : 0.25,
                     }}
                   >

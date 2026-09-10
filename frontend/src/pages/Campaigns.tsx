@@ -465,6 +465,9 @@ export default function Campaigns() {
             <Field label="Expire Date & Time">
               <Input type="datetime-local" value={form.end_datetime ? new Date(new Date(form.end_datetime).getTime() - new Date(form.end_datetime).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''} onChange={(e) => setF('end_datetime', e.target.value ? new Date(e.target.value).toISOString() : '')} />
             </Field>
+            <Field label="Expiry Text">
+              <Input value={form.expiry ?? ''} onChange={(e) => setF('expiry', e.target.value)} placeholder="e.g., Valid until Dec 31" />
+            </Field>
             <Field label="Sort Order">
               <Input type="number" value={form.sort_order.toString()} onChange={(e) => setF('sort_order', Number(e.target.value))} />
             </Field>
