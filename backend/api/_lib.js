@@ -27,13 +27,34 @@ export function preflight(req, res) {
   return false;
 }
 
+const _userCache = new Map();
+
 // Verify the incoming JWT and return the user (or null).
 export async function getUser(req) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return null;
-  return data.user;
+  
+  const now = Date.now();
+  const cached = _userCache.get(token);
+  if (cached && cached.expires > now) {
+    return await cached.promise;
+  }
+
+  const promise = supabase.auth.getUser(token).then(({ data, error }) => {
+    if (error || !data?.user) return null;
+    return data.user;
+  });
+
+  _userCache.set(token, { expires: now + 10000, promise });
+
+  // Cleanup old entries randomly to avoid memory leaks
+  if (Math.random() < 0.05) {
+    for (const [k, v] of _userCache.entries()) {
+      if (v.expires <= now) _userCache.delete(k);
+    }
+  }
+
+  return await promise;
 }
 
 export async function requireAuth(req, res) {

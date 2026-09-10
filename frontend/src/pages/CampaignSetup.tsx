@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2, LayoutList, Calendar } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, LayoutList, Calendar, Power, PowerOff } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -59,7 +59,7 @@ export default function CampaignSetup() {
   const [form, setForm] = useState<CampaignSetupFormState>({
     name: '',
     description: '',
-    status: 'draft',
+    status: 'inactive',
     play_mode: 'loop',
     start_datetime: '',
     end_datetime: '',
@@ -96,10 +96,62 @@ export default function CampaignSetup() {
   });
 
   const openNew = () => {
-    setForm({ name: '', description: '', status: 'draft', play_mode: 'loop', start_datetime: '', end_datetime: '', templates: [] });
+    setForm({ name: '', description: '', status: 'inactive', play_mode: 'loop', start_datetime: '', end_datetime: '', templates: [] });
     setEditingSetup(null);
     setModalOpen(true);
   };
+
+  const toggleStatusMut = useMutation({
+    mutationFn: (setup: CampaignSetupRow) => {
+      const newStatus = setup.status === 'active' ? 'inactive' : 'active';
+      const validTemplates = (setup.templates || []).filter(t => t.template_id).map(t => ({
+        template_id: t.template_id,
+        start_datetime: t.start_datetime ? new Date(t.start_datetime).toISOString() : '',
+        end_datetime: t.end_datetime ? new Date(t.end_datetime).toISOString() : ''
+      }));
+      
+      const formPayload: CampaignSetupFormState = {
+        id: setup.id,
+        name: setup.name,
+        description: setup.description || '',
+        status: newStatus,
+        play_mode: setup.play_mode || 'loop',
+        start_datetime: setup.start_datetime ? new Date(setup.start_datetime).toISOString() : null,
+        end_datetime: setup.end_datetime ? new Date(setup.end_datetime).toISOString() : null,
+        templates: validTemplates
+      };
+      
+      return saveCampaignSetup(formPayload);
+    },
+    onMutate: async (c) => {
+      await queryClient.cancelQueries({ queryKey: ['campaign-setups'] });
+      const previousSetups = queryClient.getQueryData(['campaign-setups']);
+      
+      queryClient.setQueryData(['campaign-setups'], (old: CampaignSetupRow[] | undefined) => {
+        if (!old) return old;
+        return old.map(row => {
+          if (row.id === c.id) {
+            return { ...row, status: c.status === 'active' ? 'inactive' : 'active' };
+          }
+          return row;
+        });
+      });
+      
+      return { previousSetups };
+    },
+    onSuccess: () => {
+      toast('Status updated successfully', 'success');
+    },
+    onError: (err: any, newC, context: any) => {
+      if (context?.previousSetups) {
+        queryClient.setQueryData(['campaign-setups'], context.previousSetups);
+      }
+      toast(err.message || 'Failed to update status', 'error');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaign-setups'] });
+    }
+  });
 
   const openEdit = (s: CampaignSetupRow) => {
     setForm({
@@ -110,10 +162,12 @@ export default function CampaignSetup() {
       play_mode: s.play_mode || 'loop',
       start_datetime: toLocalInputFormat(s.start_datetime),
       end_datetime: toLocalInputFormat(s.end_datetime),
-      templates: (s.templates || []).map(t => ({
-        template_id: t.template_id,
-        start_datetime: toLocalInputFormat(t.start_datetime),
-        end_datetime: toLocalInputFormat(t.end_datetime)
+      templates: (s.templates || [])
+        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+        .map(t => ({
+          template_id: t.template_id,
+          start_datetime: toLocalInputFormat(t.start_datetime),
+          end_datetime: toLocalInputFormat(t.end_datetime)
       }))
     });
     setEditingSetup(s);
@@ -121,7 +175,7 @@ export default function CampaignSetup() {
   };
 
   const handleTemplatesChange = (newTemplates: any[]) => {
-    const recalculated = [...newTemplates];
+    const recalculated = newTemplates.map(t => ({ ...t }));
     for (let i = 1; i < recalculated.length; i++) {
       if (recalculated[i - 1].end_datetime) {
         recalculated[i].start_datetime = recalculated[i - 1].end_datetime;
@@ -155,8 +209,22 @@ export default function CampaignSetup() {
         return toast('Template start date must be before end date', 'error');
       }
     }
-    
-    saveMut.mutate({ ...form, templates: validTemplates });
+
+    const payloadTemplates = validTemplates.map(t => ({
+      ...t,
+      start_datetime: t.start_datetime ? new Date(t.start_datetime).toISOString() : '',
+      end_datetime: t.end_datetime ? new Date(t.end_datetime).toISOString() : ''
+    }));
+
+    const finalStart = form.start_datetime ? new Date(form.start_datetime).toISOString() : null;
+    const finalEnd = form.end_datetime ? new Date(form.end_datetime).toISOString() : null;
+
+    saveMut.mutate({ 
+      ...form, 
+      start_datetime: finalStart,
+      end_datetime: finalEnd,
+      templates: payloadTemplates 
+    });
   };
 
   const formatDiff = (diff: number) => {
@@ -248,29 +316,45 @@ export default function CampaignSetup() {
     },
     {
       key: 'status', header: 'Status', sortValue: (c) => c.status,
-      render: (c) => (
-        <Badge
-          label={c.status.charAt(0).toUpperCase() + c.status.slice(1)}
-          color={c.status === 'active' ? '#10b981' : c.status === 'draft' ? '#f59e0b' : '#64748b'}
-        />
-      ),
+      render: (c) => {
+        const isExpired = c.end_datetime && new Date(c.end_datetime) <= new Date();
+        const isActive = c.status === 'active';
+        return (
+          <Badge
+            label={isActive ? 'Live' : (isExpired ? 'Expired' : 'Inactive')}
+            color={isActive ? '#10b981' : (isExpired ? '#ef4444' : '#64748b')}
+          />
+        );
+      },
     },
     {
-      key: 'actions', header: '', headerClassName: 'w-32', className: 'text-right',
-      render: (c) => (
-        <div className="flex items-center justify-end gap-1">
-          {can('campaign_setups.edit' as any) && (
-            <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} title="Edit" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
-              <Pencil className="h-4 w-4" />
-            </button>
-          )}
+      key: 'actions', header: '', headerClassName: 'w-40', className: 'text-right',
+      render: (c) => {
+        const isActive = c.status === 'active';
+        return (
+          <div className="flex items-center justify-end gap-1">
+            {can('campaign_setups.edit' as any) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleStatusMut.mutate(c); }}
+                title={isActive ? 'Deactivate' : 'Activate'}
+                className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
+              >
+                {isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+              </button>
+            )}
+            {can('campaign_setups.edit' as any) && (
+              <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} title="Edit" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
           {can('campaign_setups.delete' as any) && (
             <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} title="Delete" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
               <Trash2 className="h-4 w-4" />
             </button>
           )}
         </div>
-      ),
+      );
+      },
     },
   ];
 
@@ -404,8 +488,7 @@ export default function CampaignSetup() {
                         <SearchableSelect
                           value={t.template_id}
                           onChange={(val) => {
-                            const newT = [...form.templates];
-                            newT[idx].template_id = val;
+                            const newT = form.templates.map((temp, i) => i === idx ? { ...temp, template_id: val } : { ...temp });
                             handleTemplatesChange(newT);
                           }}
                           options={activeTemplates}
@@ -420,8 +503,7 @@ export default function CampaignSetup() {
                           className={idx > 0 ? "bg-surface-2 text-muted-fg cursor-not-allowed opacity-60" : ""}
                           onChange={(e) => {
                             if (idx > 0) return;
-                            const newT = [...form.templates];
-                            newT[idx].start_datetime = e.target.value;
+                            const newT = form.templates.map((temp, i) => i === idx ? { ...temp, start_datetime: e.target.value } : { ...temp });
                             handleTemplatesChange(newT);
                           }} 
                         />
@@ -431,8 +513,7 @@ export default function CampaignSetup() {
                           type="datetime-local" 
                           value={t.end_datetime} 
                           onChange={(e) => {
-                            const newT = [...form.templates];
-                            newT[idx].end_datetime = e.target.value;
+                            const newT = form.templates.map((temp, i) => i === idx ? { ...temp, end_datetime: e.target.value } : { ...temp });
                             handleTemplatesChange(newT);
                           }} 
                         />
@@ -480,7 +561,6 @@ export default function CampaignSetup() {
                 value={form.status}
                 onChange={(v) => setForm({ ...form, status: v })}
                 options={[
-                  { value: 'draft', label: 'Draft' },
                   { value: 'active', label: 'Active' },
                   { value: 'inactive', label: 'Inactive' }
                 ]}

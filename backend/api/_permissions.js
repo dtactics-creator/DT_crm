@@ -1,4 +1,4 @@
-import { supabase } from './_lib.js';
+import { supabase, getUser } from './_lib.js';
 
 /**
  * CENTRALIZED PERMISSION CATALOG (single source of truth).
@@ -108,26 +108,26 @@ export async function requirePermission(req, res, permission) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) { res.status(401).json({ error: 'Unauthorized — please sign in.' }); return null; }
 
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) { res.status(401).json({ error: 'Unauthorized — please sign in.' }); return null; }
+  const user = await getUser(req);
+  if (!user) { res.status(401).json({ error: 'Unauthorized — please sign in.' }); return null; }
 
-  const { isAdmin, permissions, employee } = await getEffectivePermissions(data.user);
+  const { isAdmin, permissions, employee } = await getEffectivePermissions(user);
   
   // Attach employee data to the user object for auditing
   if (employee) {
-    data.user.employee_name = employee.employee_name;
-    data.user.role = employee.role;
-    data.user.employee_id = employee.id;
+    user.employee_name = employee.employee_name;
+    user.role = employee.role;
+    user.employee_id = employee.id;
   }
 
   if (!permission || isAdmin || permissions.includes(permission) || permissions.includes('*')) {
-    return data.user;
+    return user;
   }
   
   // Need to dynamically import logAudit to avoid circular dependencies if it imports this file later
   import('./_audit.js').then(({ logAudit }) => {
     const [mod, action] = permission.split('.');
-    logAudit({ req, user: data.user, action: action?.toUpperCase() || 'ACCESS_DENIED', module: mod, description: `Permission denied: required ${permission}`, status: 'FAILED', errorMessage: 'Forbidden' });
+    logAudit({ req, user: user, action: action?.toUpperCase() || 'ACCESS_DENIED', module: mod, description: `Permission denied: required ${permission}`, status: 'FAILED', errorMessage: 'Forbidden' });
   }).catch(() => {});
 
   res.status(403).json({ error: `Forbidden — you do not have permission to ${permission.replace('.', ' ')}.` });
