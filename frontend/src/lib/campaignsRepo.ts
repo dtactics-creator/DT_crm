@@ -27,7 +27,8 @@ export async function fetchAllCampaigns(): Promise<CampaignRow[]> {
   const { data, error } = await supabase
     .from('dt_campaigns')
     .select('*')
-    .order('sort_order', { ascending: true });
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching campaigns:', error);

@@ -54,6 +54,7 @@ export function RevealCard({
   const btnBgColor = config?.modalButtonColor || titleColor;
   const btnTextColor = config?.modalButtonTextColor || "#080b13";
   const accentColor = config?.modalAccentColor || titleColor;
+  const textColor = config?.modalTextColor || "#ffffff";
 
   const qrUrl =
     "https://api.qrserver.com/v1/create-qr-code/?size=220x220&bgcolor=10131f&color=fbbf24&data=" +
@@ -107,6 +108,23 @@ export function RevealCard({
   };
 
   return (
+    <>
+      <style>{`
+        .theme-glass {
+          border-color: color-mix(in srgb, ${textColor} 12%, transparent);
+          background-color: color-mix(in srgb, ${textColor} 4%, transparent);
+        }
+        .theme-glass:hover {
+          border-color: color-mix(in srgb, ${textColor} 20%, transparent);
+          background-color: color-mix(in srgb, ${textColor} 8%, transparent);
+        }
+        .theme-border {
+          border-color: color-mix(in srgb, ${textColor} 12%, transparent);
+        }
+        .theme-border-strong {
+          border-color: color-mix(in srgb, ${textColor} 15%, transparent);
+        }
+      `}</style>
     <div
       className="
         relative
@@ -118,12 +136,11 @@ export function RevealCard({
         overflow-hidden
         rounded-[26px]
         border
-        border-white/[0.11]
-        text-white
+        theme-border
         shadow-[0_24px_70px_rgba(0,0,0,0.55)]
         animate-card-emerge
       "
-      style={{ backgroundColor: bgColor }}
+      style={{ backgroundColor: bgColor, color: textColor }}
     >
       {/* =====================================================
           BACKGROUND
@@ -187,12 +204,10 @@ export function RevealCard({
           justify-center
           rounded-full
           border
-          border-white/[0.09]
-          bg-white/[0.035]
+          theme-glass
           backdrop-blur-md
           transition-all
           duration-200
-          hover:bg-white/[0.09]
           active:scale-90
           group
         "
@@ -288,8 +303,7 @@ export function RevealCard({
                 overflow-hidden
                 rounded-[19px]
                 border
-                border-white/[0.09]
-                bg-white/[0.025]
+                theme-glass
                 p-1
               "
             >
@@ -332,11 +346,14 @@ export function RevealCard({
           <div className="flex justify-center px-5 pt-1">
             <div
               className="
+                aspect-[3/4]
+                w-[135px]
+                shrink-0
                 relative
                 rounded-[20px]
                 border
-                border-white/[0.1]
-                bg-white/[0.035]
+                theme-border-strong
+                bg-black/40
                 p-2.5
               "
             >
@@ -402,7 +419,7 @@ export function RevealCard({
           "
         >
           {/* Reward label */}
-          <div
+          {/* <div
             className="
               mb-2
               flex
@@ -429,7 +446,7 @@ export function RevealCard({
             </span>
 
             <span className="h-px w-5 bg-white/10" />
-          </div>
+          </div> */}
 
           {/* =================================================
               TITLE
@@ -475,177 +492,49 @@ export function RevealCard({
           </p>
 
           {/* =================================================
-              COUPON
+              COUPON & EXPIRY
           ================================================= */}
 
-          {reveal.couponCode && (
-            <button
-              onClick={copyCode}
-              className="
-                group
-                relative
-                mt-4
-                w-full
-                overflow-hidden
-                rounded-[15px]
-                border
-                border-white/[0.09]
-                bg-white/[0.035]
-                text-left
-                transition-all
-                duration-200
-                hover:border-white/[0.16]
-                hover:bg-white/[0.055]
-                active:scale-[0.985]
-              "
-            >
-              {/* Accent */}
-              <span
-                className="
-                  absolute
-                  left-0
-                  top-0
-                  h-full
-                  w-[2px]
-                "
-                style={{
-                  backgroundColor: accentColor,
-                  opacity: 0.7,
-                }}
-              />
-
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                  gap-3
-                  px-4
-                  py-3
-                "
-              >
-                <div className="min-w-0">
-                  <div
-                    className="
-                      mb-0.5
-                      text-[13px]
-                      font-semibold
-                      uppercase
-                      tracking-[0.22em]
-                      opacity-60
-                    "
-                    style={{
-                      fontFamily: bodyFont,
-                    }}
-                  >
-                    Promo code
-                  </div>
-
-                  <span
-                    className="
-                      block
-                      truncate
-                      font-mono
-                      text-[14px]
-                      font-semibold
-                      tracking-[0.12em]
-                      opacity-90
-                    "
-                  >
-                    {reveal.couponCode}
-                  </span>
-                </div>
-
-                <div
-                  className="
-                    flex
-                    h-8
-                    w-8
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-lg
-                  "
-                  style={{
-                    backgroundColor: copied
-                      ? `${accentColor}18`
-                      : "rgba(255,255,255,0.06)",
-                    color: copied ? accentColor : undefined,
-                    opacity: copied ? 1 : 0.5,
-                  }}
-                >
-                  {copied ? (
-                    <Check className="h-3.5 w-3.5" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" />
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t border-white/[0.05] px-4 py-1.5">
-                <div
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                    text-[13px]
-                    font-medium
-                    uppercase
-                    tracking-[0.16em]
-                  "
-                  style={{
-                    fontFamily: bodyFont,
-                  }}
-                >
-                  <span className="opacity-20">
-                    {copied
-                      ? "Copied to clipboard"
-                      : "Tap to copy"}
-                  </span>
-
-                  <span
-                    style={{
-                      color: copied ? accentColor : undefined,
-                      opacity: copied ? 1 : 0.25,
-                    }}
-                  >
-                    {copied ? "Done" : "Copy"}
-                  </span>
-                </div>
-              </div>
-            </button>
-          )}
-
-          {/* =================================================
-              EXPIRY
-          ================================================= */}
-
-          {reveal.expiry && (
+          {(reveal.couponCode || reveal.expiry) && (
             <div
               className="
-                mt-2.5
+                mt-5
                 flex
                 items-center
                 justify-center
-                gap-1.5
+                gap-2
+                px-3
+                py-2.5
               "
+              style={{ fontFamily: bodyFont }}
             >
-              <span className="h-px w-4 bg-white/[0.08]" />
+              {reveal.couponCode && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[12px] uppercase tracking-wider opacity-60">Coupon No:</span>
+                  <span className="font-mono text-[13px] font-semibold opacity-90">{reveal.couponCode}</span>
+                  <button
+                    onClick={copyCode}
+                    className="ml-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md theme-glass transition-colors active:scale-95"
+                    title={copied ? "Copied!" : "Copy code"}
+                  >
+                    {copied ? (
+                      <Check className="h-3 w-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-3 w-3 opacity-70" />
+                    )}
+                  </button>
+                </div>
+              )}
 
-              <p
-                className="
-                  text-[14px]
-                  tracking-wide
-                  opacity-60
-                "
-                style={{
-                  fontFamily: bodyFont,
-                }}
-              >
-                {reveal.expiry}
-              </p>
+              {reveal.couponCode && reveal.expiry && (
+                <span className="mx-1 h-4 w-px shrink-0 theme-border border-r" />
+              )}
 
-              <span className="h-px w-4 bg-white/[0.08]" />
+              {reveal.expiry && (
+                <div className="min-w-0 truncate text-[12px] tracking-wide opacity-60">
+                  {reveal.expiry}
+                </div>
+              )}
             </div>
           )}
 
@@ -730,15 +619,12 @@ export function RevealCard({
                   gap-1.5
                   rounded-[15px]
                   border
-                  border-white/[0.09]
-                  bg-white/[0.02]
+                  theme-glass
                   py-2.5
                   text-[13px]
                   font-medium
                   transition-all
                   duration-200
-                  hover:border-white/[0.16]
-                  hover:bg-white/[0.05]
                   active:scale-[0.97]
                   group
                 "
@@ -761,15 +647,12 @@ export function RevealCard({
                   gap-1.5
                   rounded-[15px]
                   border
-                  border-white/[0.09]
-                  bg-white/[0.02]
+                  theme-glass
                   py-2.5
                   text-[13px]
                   font-medium
                   transition-all
                   duration-200
-                  hover:border-white/[0.16]
-                  hover:bg-white/[0.05]
                   active:scale-[0.97]
                   group
                 "
@@ -807,6 +690,7 @@ export function RevealCard({
           }}
         />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

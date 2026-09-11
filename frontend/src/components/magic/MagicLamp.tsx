@@ -254,33 +254,7 @@ export function MagicLamp({
         ))}
       </div>
 
-      {/* Progress (Hidden per user request) */}
-      <div className="mt-6 w-[280px] max-w-full sm:w-[360px] hidden">
-        <div className="mb-1.5 flex items-center justify-between font-body">
-          <span className="text-sm font-semibold uppercase tracking-widest text-gold">
-            Magic Energy
-          </span>
-          <span className="font-mono text-sm text-gold-bright">{pct}%</span>
-        </div>
-        <div className="relative h-3 overflow-hidden rounded-full border border-gold/30 bg-secondary">
-          <div
-            className="h-full bg-gradient-gold transition-[width] duration-150"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="mt-1 flex justify-between px-0.5 font-mono text-[10px] text-muted-foreground text-slate-400">
-          {[0, 25, 50, 75, 100].map((m) => (
-            <span key={m} className={energy >= m ? "text-gold" : ""}>
-              {m}%
-            </span>
-          ))}
-        </div>
-        {!disabled && (
-          <p className="mt-3 text-center font-body text-sm text-slate-400">
-            {rubbing ? "Keep rubbing…" : "Drag across the lamp to release the genie"}
-          </p>
-        )}
-      </div>
+
     </div>
   );
 }

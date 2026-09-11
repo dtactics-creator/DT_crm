@@ -227,7 +227,7 @@ export default function Campaigns() {
 
     const dataToSave = { ...finalForm };
     const oldUrlsToClean: string[] = [];
-    
+
     // Auto-fill template config if template_id changes for a new selection
     if (dataToSave.template_id) {
       const selectedTpl = templates?.find(t => t.id === dataToSave.template_id);
@@ -398,17 +398,7 @@ export default function Campaigns() {
       <Drawer open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Edit campaign' : 'New campaign'}
         footer={<div className="flex items-center justify-end gap-2"><Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button><Button onClick={submit} loading={saveMut.isPending}>{editing ? 'Save changes' : 'Create campaign'}</Button></div>}>
         <div className="space-y-5">
-          <div className={cn("grid gap-4", editing ? "grid-cols-1" : "grid-cols-2")}>
-            {!editing && (
-              <Field label="Template (Optional)">
-                <SearchableSelect
-                  value={form.template_id ?? ''}
-                  onChange={(v) => setF('template_id', v)}
-                  options={templateOpts}
-                  placeholder="Select Template..."
-                />
-              </Field>
-            )}
+          <div className="grid grid-cols-2 gap-4">
             <Field label="Type" required error={errors.type}>
               <SearchableSelect
                 value={form.type}
@@ -418,9 +408,7 @@ export default function Campaigns() {
                 invalid={!!errors.type}
               />
             </Field>
-          </div>
-          <div className="grid grid-cols-1">
-            <Field label="Brand">
+            <Field label="Client">
               <SearchableSelect
                 value={form.brand ?? ''}
                 onChange={(v) => setF('brand', v)}
@@ -430,13 +418,27 @@ export default function Campaigns() {
             </Field>
           </div>
 
-          <Field label="Title" required error={errors.title}>
-            <Input value={form.title} onChange={(e) => setF('title', e.target.value)} placeholder="Campaign title" invalid={!!errors.title} />
-          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Title" required error={errors.title}>
+              <Input value={form.title} onChange={(e) => setF('title', e.target.value)} placeholder="Campaign title" invalid={!!errors.title} />
+            </Field>
+            <Field label="Promo Code">
+              <Input value={form.coupon_code ?? ''} onChange={(e) => setF('coupon_code', e.target.value)} placeholder="e.g., SUMMER50" />
+            </Field>
+          </div>
 
           <Field label="Description">
             <Textarea value={form.description} onChange={(e) => setF('description', e.target.value)} placeholder="Campaign description" rows={3} />
           </Field>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Button Text">
+              <Input value={form.cta_label ?? ''} onChange={(e) => setF('cta_label', e.target.value)} placeholder="e.g. Shop Now" />
+            </Field>
+            <Field label="Button URL">
+              <Input value={form.cta_url ?? ''} onChange={(e) => setF('cta_url', e.target.value)} placeholder="https://..." />
+            </Field>
+          </div>
 
           <Field label="Campaign Image">
             <div className="flex gap-3 items-start">
@@ -451,7 +453,7 @@ export default function Campaigns() {
                 <input type="file" id="img-upload" className="hidden" accept="image/*" onChange={handleImageUpload} />
               </div>
             </div>
-            { (previewUrl || form.image) && (
+            {(previewUrl || form.image) && (
               <div className="mt-3 rounded-xl border border-app overflow-hidden h-40 bg-surface-2 flex items-center justify-center">
                 <img src={previewUrl || form.image || undefined} alt="Campaign preview" className="max-h-full max-w-full object-contain" />
               </div>
@@ -473,10 +475,7 @@ export default function Campaigns() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <Field label="Show QR Code">
-              <SearchableSelect value={form.qr ? 'yes' : 'no'} onChange={(v) => setF('qr', v === 'yes')} options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
-            </Field>
+          <div className="grid grid-cols-1 gap-4 pt-2">
             <Field label="Status">
               <SearchableSelect value={form.is_active ? 'active' : 'inactive'} onChange={(v) => setF('is_active', v === 'active')} options={[{ value: 'active', label: 'Live (Active)' }, { value: 'inactive', label: 'Draft (Inactive)' }]} />
             </Field>

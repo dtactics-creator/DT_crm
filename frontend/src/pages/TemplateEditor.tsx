@@ -66,6 +66,7 @@ const defaultGenieSchema = {
       id: 'reveal', title: 'Reveal Card',
       properties: [
         { id: 'modalBackground', label: 'Modal Background', type: 'color', default: '#080b13' },
+        { id: 'modalTextColor', label: 'Modal Text Color', type: 'color', default: '#ffffff' },
         { id: 'modalButtonColor', label: 'Button Background', type: 'color', default: '#fbbf24' },
         { id: 'modalButtonTextColor', label: 'Button Text', type: 'color', default: '#080b13' },
         { id: 'modalAccentColor', label: 'Accent & Glow', type: 'color', default: '#fbbf24' },
@@ -153,6 +154,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       subtitle: 'Arabian Nights', subtitleColor: '#fcd34d',
       lampImage: 'magic-lamp.png',
       modalBackground: '#080b13',
+      modalTextColor: '#ffffff',
       modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13',
       modalAccentColor: '#fbbf24'
     },
@@ -190,6 +192,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
             subtitle: 'Arabian Nights', subtitleColor: '#fcd34d',
             lampImage: 'magic-lamp.png',
             modalBackground: '#080b13',
+            modalTextColor: '#ffffff',
             modalButtonColor: '#fbbf24', modalButtonTextColor: '#080b13',
             modalAccentColor: '#fbbf24'
           },

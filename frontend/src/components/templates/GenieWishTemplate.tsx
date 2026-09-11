@@ -22,7 +22,7 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
   }, [onReset]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-night" style={{ background: config.background }}>
+    <main className="absolute inset-0 w-full overflow-hidden bg-gradient-night" style={{ background: config.background }}>
       {config.googleFontUrl && (
         <style>
           {config.googleFontUrl.split(',').map((url: string) => `@import url('${url.trim()}');`).join('\n')}
@@ -43,7 +43,7 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
       <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
       <StarField />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-4 py-14 text-center">
+      <div className="relative z-10 mx-auto flex h-full max-w-3xl flex-col items-center justify-center px-4 text-center">
         <p className={`mb-3 text-sm uppercase tracking-[0.35em] ${config.subtitleColor === '#fcd34d' ? 'text-gold opacity-80' : ''}`} style={{ fontFamily: config.bodyFontFamily || 'var(--font-body)', ...(config.subtitleColor !== '#fcd34d' ? { color: config.subtitleColor } : {}) }}>
           {config.subtitle || 'Arabian Nights'}
         </p>
@@ -57,10 +57,6 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
         <div className="mt-8">
           <MagicLamp key={lampKey} onReveal={handleReveal} disabled={reveal !== null} lampImage={config.lampImage} />
         </div>
-
-        <p className="mt-10 text-sm text-slate-400" style={{ fontFamily: config.bodyFontFamily || 'var(--font-body)' }}>
-          ✦ A new wonder awaits with every visit ✦
-        </p>
       </div>
 
       {/* Reveal overlay */}
