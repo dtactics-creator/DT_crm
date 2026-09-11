@@ -43,7 +43,7 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
       <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
       <StarField />
 
-      <div className="relative z-10 mx-auto flex h-full max-w-3xl flex-col items-center justify-center px-4 text-center">
+      <div className="relative z-10 mx-auto flex h-full max-w-3xl flex-col items-center justify-center px-4 text-center pt-16 sm:pt-24">
         <p className={`mb-3 text-sm uppercase tracking-[0.35em] ${config.subtitleColor === '#fcd34d' ? 'text-gold opacity-80' : ''}`} style={{ fontFamily: config.bodyFontFamily || 'var(--font-body)', ...(config.subtitleColor !== '#fcd34d' ? { color: config.subtitleColor } : {}) }}>
           {config.subtitle || 'Arabian Nights'}
         </p>
