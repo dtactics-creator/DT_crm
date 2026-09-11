@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import type { DashboardStats, ReportData, Lead, Project } from '../types';
-
-
+import type { ReportData, Lead, Project } from '../types';
+import type { DashboardPayload } from '../types/dashboard';
 
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
-      return await api.get<DashboardStats>('/api/dashboard');
+      return await api.get<DashboardPayload>('/api/dashboard');
     },
   });
 }

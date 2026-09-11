@@ -84,3 +84,54 @@ export async function deleteStorageImages(urls: string[]) {
     console.error('Error deleting images from storage:', err);
   }
 }
+
+export function formatPercent(value: number | null | undefined, digits = 1): string {
+  const n = Number(value ?? 0);
+  return `${(Number.isFinite(n) ? n : 0).toFixed(digits)}%`;
+}
+
+export function pctChange(current: number, previous: number): number | null {
+  if (!previous) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+const int = new Intl.NumberFormat('en-US');
+export function formatNumber(value: number | null | undefined): string {
+  const n = Number(value ?? 0);
+  return int.format(Number.isFinite(n) ? n : 0);
+}
+
+export function formatDateShort(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export function daysUntil(dateString: string | null | undefined): number {
+  if (!dateString) return 0;
+  const d = new Date(dateString);
+  const now = new Date();
+  d.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export function dueLabel(days: number | null | undefined): string {
+  if (days === null || days === undefined) return '';
+  if (days < 0) return `${Math.abs(days)}d ago`;
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Tmrw';
+  return `In ${days} d`;
+}
+
+export function formatCurrencyFull(value: number | null | undefined): string {
+  return formatCurrency(value, 'INR');
+}
+
+export function formatDuration(seconds: number | null | undefined): string {
+  const s = Number(seconds ?? 0);
+  const m = Math.floor(s / 60);
+  const rs = Math.floor(s % 60);
+  return `${m}m ${rs}s`;
+}
+
