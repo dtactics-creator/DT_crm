@@ -21,6 +21,7 @@ import { useMasters, toOptions } from '../hooks/useMasters';
 import { useClients } from '../hooks/useClients';
 import { fetchAllTemplates } from '../lib/templatesRepo';
 import { usePermissions } from '../contexts/PermissionContext';
+import supabase from '../lib/supabase';
 
 const emptyForm: CampaignFormState = {
   type: 'Discount Coupon',
@@ -208,8 +209,12 @@ export default function Campaigns() {
       formData.append('image', selectedFile);
 
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+
         const res = await fetch('/api/upload', {
           method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData,
         });
 

@@ -70,14 +70,22 @@ export function avatarColor(seed: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
+import supabase from './supabase';
+
 export async function deleteStorageImages(urls: string[]) {
-  const validUrls = urls.filter(u => u && u.includes('/storage/v1/object/public/campaigns/'));
+  const validUrls = urls.filter(u => u && (u.includes('/storage/v1/object/public/campaigns/') || u.includes('media.dtacticsit.in') || u.includes('/campaigns/')));
   if (validUrls.length === 0) return;
 
   try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+
     await fetch('/api/upload', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ urls: validUrls })
     });
   } catch (err) {

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebar } from '../components/layout/AppLayout';
 import { useMasters, toOptions } from '../hooks/useMasters';
 import { ColorControl } from '../components/ui/ColorPicker';
+import supabase from '../lib/supabase';
 
 import GenieWishTemplate from '../components/templates/GenieWishTemplate';
 
@@ -239,6 +240,9 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       let finalConfig = { ...form.default_config };
       const oldUrlsToClean: string[] = [];
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
       for (const [propId, file] of Object.entries(pendingFiles)) {
         if (!file) continue;
         const formData = new FormData();
@@ -246,6 +250,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
 
         const res = await fetch('/api/upload', {
           method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData,
         });
 

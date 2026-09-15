@@ -1,53 +1,59 @@
 import multer from 'multer';
 import path from 'path';
-import supabase from './db-client.js';
+import os from 'os';
+import fs from 'fs';
+import storageService from '../services/storage/storage-service.js';
+import { requireAuth, cors, preflight } from './_lib.js';
 
-const storage = multer.memoryStorage();
+// Controlled temporary storage directory for incoming upload streams
+const tempUploadDir = path.join(os.tmpdir(), 'crm-upload-temp');
+if (!fs.existsSync(tempUploadDir)) {
+  fs.mkdirSync(tempUploadDir, { recursive: true });
+}
 
+const diskStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, tempUploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const uniqueName = `stream-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    cb(null, uniqueName);
+  },
+});
+
+// Multer configured with zero artificial application-level file size limit cap
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 1 * 1024 * 1024 }, // 1MB limit
+  storage: diskStorage,
   fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|gif|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-    if (mimetype && extname) return cb(null, true);
-    cb(new Error('Only image files are allowed!'));
-  }
+    if (!file || !file.originalname) {
+      return cb(new Error('Invalid file payload provided.'));
+    }
+    cb(null, true);
+  },
 }).single('image');
 
 export default async function handler(req, res) {
+  if (preflight(req, res)) return;
+
+  // Enforce CRM User Authentication
+  const user = await requireAuth(req, res);
+  if (!user) return; // requireAuth sends 401 response if user is unauthenticated
+
   if (req.method === 'DELETE') {
     try {
-      const { urls } = req.body;
+      const { urls } = req.body || {};
       if (!urls || !Array.isArray(urls)) {
         return res.status(400).json({ error: 'Missing or invalid urls array' });
       }
 
-      const filenames = urls.map(url => {
-        // Handle full Supabase URLs and extract the filename.
-        // e.g. "https://xxxx.supabase.co/storage/v1/object/public/campaigns/12345.jpg"
-        const parts = url.split('/');
-        return parts[parts.length - 1];
-      }).filter(Boolean);
-
-      if (filenames.length === 0) {
+      if (urls.length === 0) {
         return res.status(200).json({ success: true, message: 'No valid filenames to delete' });
       }
 
-      const { data, error } = await supabase.storage
-        .from('campaigns')
-        .remove(filenames);
-
-      if (error) {
-        console.error('Supabase delete error:', error);
-        throw error;
-      }
-
-      return res.status(200).json({ success: true, deleted: filenames });
+      const deleted = await storageService.deleteMany(urls);
+      return res.status(200).json({ success: true, deleted });
     } catch (err) {
       console.error('Delete handler error:', err);
-      return res.status(500).json({ error: 'Failed to delete images from storage' });
+      return res.status(500).json({ error: 'Failed to delete files from storage' });
     }
   }
 
@@ -63,32 +69,36 @@ export default async function handler(req, res) {
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
+      return res.status(400).json({ error: 'No file provided' });
     }
 
+    const tempFilePath = req.file.path;
+
     try {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const filename = uniqueSuffix + path.extname(req.file.originalname);
+      const folder = req.body?.folder || 'campaigns';
+      const result = await storageService.upload({
+        filePath: tempFilePath,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        folder,
+      });
 
-      const { data, error } = await supabase.storage
-        .from('campaigns')
-        .upload(filename, req.file.buffer, {
-          contentType: req.file.mimetype,
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Supabase upload error:', error);
-        throw error;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('campaigns')
-        .getPublicUrl(filename);
-
-      return res.status(200).json({ url: publicUrlData.publicUrl });
+      return res.status(200).json({
+        url: result.url,
+        filename: result.filename,
+        size: result.size,
+        mimeType: result.mimeType,
+      });
     } catch (uploadErr) {
-      return res.status(500).json({ error: 'Failed to upload image to storage' });
+      console.error('Upload handler error:', uploadErr);
+      return res.status(500).json({ error: uploadErr.message || 'Failed to upload file to storage' });
+    } finally {
+      // GUARANTEED CLEANUP: Always remove temporary file from local disk immediately after completion or failure
+      if (tempFilePath && fs.existsSync(tempFilePath)) {
+        fs.promises.unlink(tempFilePath).catch((unlinkErr) => {
+          console.error('Error cleaning up temp file:', tempFilePath, unlinkErr);
+        });
+      }
     }
   });
 }
