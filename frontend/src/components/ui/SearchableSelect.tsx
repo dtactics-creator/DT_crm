@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 
 export interface Option { value: string; label: string; color?: string | null; hint?: string }
 
-export function SearchableSelect({ value, onChange, options, placeholder = 'Select…', invalid, clearable, align = 'left' }: {
+export function SearchableSelect({ value, onChange, options, placeholder = 'Select…', invalid, clearable, align = 'left', creatable = false }: {
   value: string;
   onChange: (v: string) => void;
   options: Option[];
@@ -13,41 +13,71 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
   invalid?: boolean;
   clearable?: boolean;
   align?: 'left' | 'right';
+  creatable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+  
+  const stateRef = useRef({ q, onChange, creatable, options });
+  stateRef.current = { q, onChange, creatable, options };
 
   useEffect(() => {
-    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onClick = (e: MouseEvent) => { 
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(prev => {
+          if (prev) {
+            const { q, onChange, creatable, options } = stateRef.current;
+            if (creatable && q.trim()) {
+              const exact = options.find(o => o.label.toLowerCase() === q.trim().toLowerCase());
+              if (exact) onChange(exact.value);
+              else onChange(q.trim());
+            }
+          }
+          return false;
+        });
+      } 
+    };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const selected = options.find((o) => o.value === value);
+  let selected = options.find((o) => o.value === value);
+  if (!selected && creatable && value) {
+    // If creatable and no option matches, treat the value itself as the selected option
+    selected = { value, label: value };
+  }
   const filtered = useMemo(() => options.filter((o) => o.label.toLowerCase().includes(q.toLowerCase())), [options, q]);
 
   return (
     <div className="relative" ref={ref}>
-      <button type="button" onClick={() => { setOpen((v) => !v); setQ(''); }}
-        className={cn(
-          'w-full h-10 pl-3.5 pr-9 rounded-lg bg-surface-2 text-left text-sm flex items-center gap-2',
-          'border transition-all duration-150 outline-none focus:ring-2 focus:ring-offset-0 ring-brand',
-          invalid ? 'border-red-400' : 'border-app', open && 'ring-2',
-        )}>
-        {selected ? (
-          <span className="flex items-center gap-2 min-w-0 flex-1">
-            {selected.color && <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: selected.color }} />}
-            <span className="truncate text-base-fg font-medium">{selected.label}</span>
-          </span>
-        ) : <span className="text-subtle-fg flex-1">{placeholder}</span>}
+      <div className={cn(
+        'relative flex items-center w-full h-10 px-3.5 rounded-lg bg-surface-2 border transition-all cursor-text',
+        invalid ? 'border-red-400' : 'border-app', open && 'ring-2 ring-brand'
+      )} onClick={() => { if (!open) setOpen(true); }}>
+        {selected?.color && !open && <span className="h-2.5 w-2.5 rounded-full shrink-0 mr-2" style={{ backgroundColor: selected.color }} />}
+        <input 
+          value={open ? q : (selected?.label || '')}
+          onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+          onFocus={() => { setQ(selected?.label || ''); setOpen(true); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const exact = filtered.find(o => o.label.toLowerCase() === q.trim().toLowerCase());
+              if (exact) { onChange(exact.value); setOpen(false); }
+              else if (creatable && q.trim()) { onChange(q.trim()); setOpen(false); }
+            }
+          }}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent outline-none text-sm text-base-fg truncate min-w-0"
+        />
         {clearable && selected && (
-          <span onClick={(e) => { e.stopPropagation(); onChange(''); }} className="text-subtle-fg hover:text-base-fg">
+          <button type="button" onClick={(e) => { e.stopPropagation(); onChange(''); setQ(''); setOpen(false); }} className="text-subtle-fg hover:text-base-fg p-1">
             <X className="h-3.5 w-3.5" />
-          </span>
+          </button>
         )}
-      </button>
-      <ChevronDown className={cn('pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={cn('pointer-events-none h-4 w-4 text-subtle-fg transition-transform shrink-0 ml-1', open && 'rotate-180')} />
+      </div>
 
       <AnimatePresence>
         {open && (
@@ -59,11 +89,6 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
               align === 'right' ? 'right-0' : 'left-0'
             )}
           >
-            <div className="flex items-center gap-2 px-3 h-10 border-b border-app">
-              <Search className="h-4 w-4 text-subtle-fg shrink-0" />
-              <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…"
-                className="flex-1 bg-transparent outline-none text-[13px] text-base-fg placeholder:text-subtle-fg" />
-            </div>
             <div className="max-h-60 overflow-y-auto p-1.5">
               {filtered.length === 0 ? (
                 <p className="text-center text-[13px] text-muted-fg py-6">No matches</p>
@@ -77,6 +102,12 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
                   {o.value === value && <Check className="h-4 w-4 text-brand-600 shrink-0" />}
                 </button>
               ))}
+              {creatable && q.trim() && !options.find(o => o.label.toLowerCase() === q.trim().toLowerCase()) && (
+                <button type="button" onClick={() => { onChange(q.trim()); setOpen(false); }}
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-left transition-colors hover:bg-surface-2 border-t border-app mt-1 pt-1">
+                  <span className="flex-1 text-[13px] font-medium text-brand-600 truncate">Create "{q.trim()}"</span>
+                </button>
+              )}
             </div>
           </motion.div>
         )}

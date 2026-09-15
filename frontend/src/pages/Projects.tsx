@@ -162,6 +162,7 @@ export default function Projects() {
     ...(can('projects.view_cost') ? [{ key: 'budget', header: 'Budget', sortValue: (r) => Number(r.project_cost), className: 'tabular font-semibold', render: (r) => formatCurrency(r.project_cost) } as Column<Project>] : []),
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={lookup.label('project_status', r.status)} color={lookup.color('project_status', r.status)} dot /> },
     { key: 'delivery', header: 'Delivery', sortValue: (r) => r.expected_delivery ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{formatDate(r.expected_delivery)}</span> },
+    { key: 'updated', header: 'Updated', sortValue: (r) => r.updated_at ?? r.created_at ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{formatDate(r.updated_at || r.created_at)}</span> },
     { key: 'followup', header: 'Follow-up', sortValue: (r) => r.next_follow_up ?? '', render: (r) => <span className="text-muted-fg text-[12.5px] tabular">{formatDate(r.next_follow_up)}</span> },
     {
       key: 'actions', header: '', headerClassName: 'w-12', className: 'text-right',

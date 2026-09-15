@@ -18,7 +18,7 @@ import { useMasters, makeLookup } from '../hooks/useMasters';
 import { useEmployees } from '../hooks/useEmployees';
 import { useLeads } from '../hooks/useLeads';
 import { useCrud } from '../hooks/useCrud';
-import { useCreateClient, useUpdateClient } from '../hooks/useClients';
+import { useCreateClient, useUpdateClient, useDeleteClient } from '../hooks/useClients';
 
 // ClientProjectCard removed in favor of DataTable
 
@@ -33,10 +33,13 @@ export default function Clients() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
+  const removeClient = useDeleteClient();
 
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   
   const { data: employees } = useEmployees();
@@ -55,7 +58,14 @@ export default function Clients() {
       remarks: v.remarks || null,
     };
     if (v.id) await updateProj.mutateAsync(payload); else await createProj.mutateAsync(payload);
+    
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['clients'] }),
+      activeClient?.id ? qc.invalidateQueries({ queryKey: ['clients', activeClient.id] }) : Promise.resolve(),
+    ]);
+
     setEditingProject(null);
+    setIsProjectFormOpen(false);
   };
 
   const handleDeleteProject = async () => {
@@ -74,12 +84,27 @@ export default function Clients() {
     setEditingClient(null);
   };
 
+  const handleDeleteClient = async () => {
+    if (!deletingClient) return;
+    await removeClient.mutateAsync(deletingClient.id);
+    setDeletingClient(null);
+    if (activeClient?.id === deletingClient.id) {
+      setActiveClient(null);
+    }
+  };
+
   const columns: Column<Client>[] = [
     { key: 'client_no', header: 'Client No', sortValue: (r) => r.client_no ?? '', render: (r) => r.client_no || '—', className: 'font-semibold text-brand-600' },
     { key: 'company', header: 'Company Name', sortValue: (r) => r.company_name, render: (r) => <span className="font-semibold">{r.company_name}</span> },
     { key: 'contact', header: 'Contact Person', sortValue: (r) => r.contact_person ?? '', render: (r) => r.contact_person || '—' },
     { key: 'projects', header: 'Projects', sortValue: (r) => r.project_count ?? 0, render: (r) => <Badge label={`${r.project_count} Projects`} color="#6366f1" /> },
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={r.status.toUpperCase()} color={r.status === 'active' ? '#10b981' : '#64748b'} dot /> },
+    { key: 'actions', header: '', render: (r) => (
+      <div className="flex gap-1 justify-end">
+        {can('clients.edit') && <button onClick={(e) => { e.stopPropagation(); setEditingClient(r); setIsFormOpen(true); }} className="p-1.5 text-muted-fg hover:text-base-fg hover:bg-surface-3 rounded-md transition-colors" title="Edit"><Pencil className="h-4 w-4" /></button>}
+        {can('clients.delete') && <button onClick={(e) => { e.stopPropagation(); setDeletingClient(r); }} className="p-1.5 text-muted-fg hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete"><Trash2 className="h-4 w-4" /></button>}
+      </div>
+    )}
   ];
 
   const projectColumns: Column<any>[] = [
@@ -108,9 +133,11 @@ export default function Clients() {
       <div className="p-5 sm:p-8 max-w-[1500px] mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <Button variant="secondary" icon={<ChevronLeft className="h-4 w-4" />} onClick={() => setActiveClient(null)}>Back to Clients</Button>
-          {can('clients.edit') && (
-            <Button variant="secondary" onClick={() => { setEditingClient(detail); setIsFormOpen(true); }}>Edit Client</Button>
-          )}
+          <div className="flex items-center gap-2">
+            {can('clients.edit') && (
+              <Button variant="secondary" onClick={() => { setEditingClient(detail); setIsFormOpen(true); }}>Edit Client</Button>
+            )}
+          </div>
         </div>
         <PageHeader title={detail.company_name} subtitle={`Client No: ${detail.client_no || '—'}`} />
         
@@ -164,11 +191,19 @@ export default function Clients() {
             {!detail.projects?.length ? (
                <div className="bg-surface border border-app rounded-2xl card-shadow p-8 text-center">
                  <p className="text-muted-fg">No projects found for this client.</p>
+                 {can('projects.create') && (
+                   <div className="mt-4 flex justify-center">
+                     <Button icon={<Plus className="h-4 w-4" />} onClick={() => setIsProjectFormOpen(true)}>Create Project</Button>
+                   </div>
+                 )}
                </div>
             ) : (
                <div className="bg-surface border border-app rounded-2xl card-shadow overflow-hidden">
-                 <div className="p-4 border-b border-app bg-surface-2/30">
+                 <div className="p-4 border-b border-app bg-surface-2/30 flex items-center justify-between">
                    <h3 className="font-bold text-lg">Projects</h3>
+                   {can('projects.create') && (
+                     <Button size="sm" icon={<Plus className="h-3 w-3" />} onClick={() => setIsProjectFormOpen(true)}>Create Project</Button>
+                   )}
                  </div>
                  <DataTable data={detail.projects} columns={projectColumns} rowKey={(r) => r.id} />
                </div>
@@ -232,9 +267,9 @@ export default function Clients() {
           initial={editingClient}
         />
 
-        <ProjectForm open={!!editingProject} onClose={() => setEditingProject(null)}
+        <ProjectForm open={isProjectFormOpen || !!editingProject} onClose={() => { setEditingProject(null); setIsProjectFormOpen(false); }}
           initial={editingProject} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
-          onSubmit={handleSaveProject} saving={createProj.isPending || updateProj.isPending} />
+          onSubmit={handleSaveProject} saving={createProj.isPending || updateProj.isPending} defaultClientName={detail.company_name} defaultClientId={detail.id} />
 
         <ConfirmDialog open={!!deletingProject} onClose={() => setDeletingProject(null)} onConfirm={handleDeleteProject}
           title="Delete project" message={`Are you sure you want to delete ${deletingProject?.project_name}?`} loading={removeProj.isPending} />
@@ -278,8 +313,11 @@ export default function Clients() {
         onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
         saving={createClient.isPending || updateClient.isPending}
         onSubmit={handleSaveClient}
-        title="New Client"
+        title={editingClient ? "Edit Client" : "New Client"}
+        initial={editingClient}
       />
+      <ConfirmDialog open={!!deletingClient} onClose={() => setDeletingClient(null)} onConfirm={handleDeleteClient}
+        title="Delete client" message={`Are you sure you want to delete ${deletingClient?.company_name}?`} loading={removeClient.isPending} />
     </div>
   );
 }
