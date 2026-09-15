@@ -86,8 +86,29 @@ export default function Dashboard() {
         <SalesPerformance rows={data?.employees ?? []} unassigned={k?.unassignedLeads ?? 0} loading={isLoading} onRetry={() => refetch()} />
       </div>
 
-      {/* Row 5 — Project health */}
+
+      {/* Row 5 — Action center */}
+      <div className="mb-6">
+        <NeedsAttention data={data?.attention ?? null} loading={isLoading} onRetry={() => refetch()} />
+      </div>
+
+      {/* Row 6 — Project health */}
       <ProjectHealth summary={p ?? null} slices={data?.projectHealth?.slices ?? []} rows={data?.projectHealth?.rows ?? []} loading={isLoading} onRetry={() => refetch()} />
+
+      {/* Row 7 — Quotations + clients + AMC */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3 mt-6">
+        <QuotationAnalytics data={data?.quotations ?? null} loading={isLoading} onRetry={() => refetch()} />
+        <ClientHealth data={data?.clients ?? null} loading={isLoading} onRetry={() => refetch()} />
+        <AmcAnalytics data={data?.amc ?? null} loading={isLoading} onRetry={() => refetch()} />
+      </div>
+
+      {/* Row 8 — Website / lead engagement */}
+      {(isLoading || (data?.website && data.website.totalVisits > 0)) && (
+        <div className="mb-6">
+          <WebsiteAnalytics data={data?.website ?? null} loading={isLoading} onRetry={() => refetch()} />
+        </div>
+      )}
+
 
       {/* Row 6 — Recent */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

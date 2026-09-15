@@ -44,13 +44,13 @@ export default function SalesFunnel({ slices, stages, loading, error, onRetry, c
             const width = reached[0] > 0 ? Math.max((r / reached[0]) * 100, 6) : 6;
             return (
               <div key={st.value}>
-                {i > 0 && (
+                {/* {i > 0 && (
                   <div className="flex items-center gap-1.5 py-1 pl-2 text-[11px] text-subtle-fg">
                     <ArrowDown size={12} />
                     <span>{conversion !== null ? `${formatPercent(conversion, 0)} stage conversion` : 'No prior-stage leads'}</span>
                     {dropped > 0 && <span>· {dropped} dropped</span>}
                   </div>
-                )}
+                )} */}
                 <Link to={`/leads?status=${st.value}`} className="block rounded-xl px-2 py-1.5 transition-colors hover:bg-surface-2">
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
@@ -62,8 +62,8 @@ export default function SalesFunnel({ slices, stages, loading, error, onRetry, c
                       <span className="text-[11px] tabular text-subtle-fg">{formatPercent(totalLeads ? (r / totalLeads) * 100 : 0, 0)}</span>
                     </div>
                   </div>
-                  <div className="h-6 overflow-hidden rounded-lg bg-surface-2">
-                    <div className="h-full rounded-lg transition-[width] duration-500" style={{ width: `${width}%`, backgroundColor: st.color }} />
+                  <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                    <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${width}%`, backgroundColor: st.color }} />
                   </div>
                   <p className="mt-1 text-[11px] text-subtle-fg">
                     {st.count} currently at this stage · {formatCurrency(st.amount)}

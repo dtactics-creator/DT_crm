@@ -50,11 +50,11 @@ export function ChartCard({ title, subtitle, action, children, className }: {
   return (
     <div className={`bg-surface border border-app rounded-2xl card-shadow p-5 ${className ?? ''}`}>
       <div className="flex items-start justify-between gap-4 mb-5">
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="text-[15px] font-bold text-base-fg">{title}</h3>
           {subtitle && <p className="text-[12.5px] text-muted-fg mt-0.5">{subtitle}</p>}
         </div>
-        {action}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
       {children}
     </div>

@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Modal from '../../components/ui/Modal';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Gauge, Target } from 'lucide-react';
 import { ChartCard, ChartTooltip, useChartColors } from '../../components/charts/ChartKit';
@@ -91,39 +93,51 @@ interface OpportunitiesProps { rows: OpportunityRow[]; loading: boolean; error?:
 
 /** Largest open leads by budget. */
 export function HighValueOpportunities({ rows, loading, error, onRetry, className }: OpportunitiesProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const visibleRows = rows.slice(0, 5);
+
+  const renderList = (data: OpportunityRow[]) => (
+    <ul className="-mx-2 divide-y divide-line">
+      {data.map((o) => {
+        const days = daysUntil(o.nextFollowUp);
+        return (
+          <li key={o.id}>
+            <Link to={`/leads?id=${o.id}`} onClick={() => setModalOpen(false)} className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-surface-2">
+              <Avatar name={o.customerName} size={34} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold text-base-fg">{o.customerName}</p>
+                <p className="truncate text-[11.5px] text-muted-fg">{o.company || '—'} · {o.leadNo || 'No ref.'}{o.owner ? ` · ${o.owner}` : ''}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-[13.5px] font-extrabold tabular text-base-fg">{formatCurrency(o.budget)}</p>
+                <div className="mt-1 flex items-center justify-end gap-1.5">
+                  <Badge label={o.statusLabel} color={o.statusColor} dot />
+                  <span className={`text-[10.5px] font-semibold ${days !== null && days < 0 ? 'text-red-500' : 'text-subtle-fg'}`}>{dueLabel(days)}</span>
+                </div>
+              </div>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
-    <ChartCard title="High-value opportunities" subtitle="Largest open leads by budget" className={className}
-      action={<Link to="/leads?sort=budget" className="text-[12.5px] font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-300">View all</Link>}>
-      <SectionBody
-        loading={loading} error={error} onRetry={onRetry}
-        empty={rows.length === 0} emptyIcon={Target} emptyMessage="No open opportunities right now." emptyCompact
-        skeleton={<ListSkeleton rows={6} height={58} />}
-      >
-        <ul className="-mx-2 divide-y divide-line">
-          {rows.map((o) => {
-            const days = daysUntil(o.nextFollowUp);
-            return (
-              <li key={o.id}>
-                <Link to={`/leads?id=${o.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-surface-2">
-                  <Avatar name={o.customerName} size={34} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-base-fg">{o.customerName}</p>
-                    <p className="truncate text-[11.5px] text-muted-fg">{o.company || '—'} · {o.leadNo || 'No ref.'}{o.owner ? ` · ${o.owner}` : ''}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[13.5px] font-extrabold tabular text-base-fg">{formatCurrency(o.budget)}</p>
-                    <div className="mt-1 flex items-center justify-end gap-1.5">
-                      <Badge label={o.statusLabel} color={o.statusColor} dot />
-                      <span className={`text-[10.5px] font-semibold ${days !== null && days < 0 ? 'text-red-500' : 'text-subtle-fg'}`}>{dueLabel(days)}</span>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </SectionBody>
-    </ChartCard>
+    <>
+      <ChartCard title="High-value opportunities" subtitle="Largest open leads by budget" className={className}
+        action={rows.length > 5 ? <button onClick={() => setModalOpen(true)} className="text-[12.5px] font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-300">View all</button> : undefined}>
+        <SectionBody
+          loading={loading} error={error} onRetry={onRetry}
+          empty={rows.length === 0} emptyIcon={Target} emptyMessage="No open opportunities right now." emptyCompact
+          skeleton={<ListSkeleton rows={5} height={58} />}
+        >
+          {renderList(visibleRows)}
+        </SectionBody>
+      </ChartCard>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="High-value opportunities" size="max-w-xl">
+        {renderList(rows)}
+      </Modal>
+    </>
   );
 }
 
