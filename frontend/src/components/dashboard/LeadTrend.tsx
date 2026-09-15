@@ -44,7 +44,7 @@ export default function LeadTrend({ trend, loading, error, onRetry, range, onRan
     <ChartCard
       title="Lead acquisition"
       subtitle="New leads vs. won and lost · by lead received date"
-      className={className}
+      className={cn("flex flex-col h-full", className)}
       action={
         <div className="flex flex-wrap items-center justify-end gap-2">
           {change !== null && (
@@ -59,30 +59,32 @@ export default function LeadTrend({ trend, loading, error, onRetry, range, onRan
         empty={!hasData} emptyIcon={TrendingUp} emptyMessage="No leads were received in this period."
         skeleton={<ChartSkeleton height={280} />}
       >
-        <div className={cn('transition-opacity', loading && 'opacity-50')}>
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={points} margin={{ left: -18, right: 8, top: 6 }}>
-              <defs>
-                <linearGradient id="trendLeads" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3366ff" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#3366ff" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="trendWon" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: c.axis }} axisLine={false} tickLine={false} minTickGap={18} />
-              <YAxis tick={{ fontSize: 11, fill: c.axis }} axisLine={false} tickLine={false} width={40} allowDecimals={false} />
-              <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="leads" name="Leads" stroke="#3366ff" strokeWidth={2.5} fill="url(#trendLeads)" />
-              <Area type="monotone" dataKey="won" name="Won" stroke="#10b981" strokeWidth={2.5} fill="url(#trendWon)" />
-              <Area type="monotone" dataKey="lost" name="Lost" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="4 4" fillOpacity={0} />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className={cn('transition-opacity flex flex-col flex-1', loading && 'opacity-50')}>
+          <div className="flex-1 min-h-[250px] -ml-2.5">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={points} margin={{ left: -18, right: 8, top: 6 }}>
+                <defs>
+                  <linearGradient id="trendLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3366ff" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#3366ff" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="trendWon" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: c.axis }} axisLine={false} tickLine={false} minTickGap={18} />
+                <YAxis tick={{ fontSize: 11, fill: c.axis }} axisLine={false} tickLine={false} width={40} allowDecimals={false} />
+                <Tooltip content={<ChartTooltip />} />
+                <Area type="monotone" dataKey="leads" name="Leads" stroke="#3366ff" strokeWidth={2.5} fill="url(#trendLeads)" />
+                <Area type="monotone" dataKey="won" name="Won" stroke="#10b981" strokeWidth={2.5} fill="url(#trendWon)" />
+                <Area type="monotone" dataKey="lost" name="Lost" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="4 4" fillOpacity={0} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-4 grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
             <TotalStat label="Leads" value={formatNumber(trend?.totals.leads)} color="#3366ff" />
             <TotalStat label="Won" value={formatNumber(trend?.totals.won)} color="#10b981" />
             <TotalStat label="Lost" value={formatNumber(trend?.totals.lost)} color="#ef4444" />

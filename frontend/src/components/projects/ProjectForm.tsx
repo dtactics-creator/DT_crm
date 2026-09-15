@@ -28,7 +28,7 @@ const empty: ProjectFormValues = {
 
 const toDateInput = (v: string | null) => (v ? new Date(v).toISOString().slice(0, 10) : '');
 
-export default function ProjectForm({ open, onClose, onSubmit, initial, masters, employees, managers, leads, clients, saving }: {
+export default function ProjectForm({ open, onClose, onSubmit, initial, masters, employees, managers, leads, clients, saving, defaultClientName, defaultClientId }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (values: ProjectFormValues) => void;
@@ -39,6 +39,8 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   leads: Lead[] | undefined;
   clients?: Client[];
   saving: boolean;
+  defaultClientName?: string;
+  defaultClientId?: string;
 }) {
   const [v, setV] = useState<ProjectFormValues>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,7 +56,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   const stackOpts = toOptions(masters, 'technology_stack');
   const managerOpts = (managers || []).map((m) => ({ value: m.id, label: m.employee_name, hint: m.role }));
   const empOpts = (employees || []).filter((e) => e.status === 'active').map((e) => ({ value: e.id, label: e.employee_name, hint: e.role }));
-  const clientOpts = (clients || []).map((c) => ({ value: c.id, label: `${c.client_no ?? ''} · ${c.company_name}`.trim() }));
+  const clientOpts = (clients || []).map((c) => ({ value: c.company_name, label: c.company_name, hint: c.client_no ?? undefined }));
 
   useEffect(() => {
     if (open) {
@@ -72,7 +74,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
           expected_delivery: toDateInput(initial.expected_delivery), remarks: initial.remarks ?? '',
         });
       } else {
-        setV({ ...empty, project_type: typeOpts[0]?.value ?? '', status: statusOpts[0]?.value ?? '' });
+        setV({ ...empty, project_type: typeOpts[0]?.value ?? '', status: statusOpts[0]?.value ?? '', client: defaultClientName ?? '', client_id: defaultClientId ?? '' });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,7 +92,7 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
   const validate = () => {
     const e = collect({
       project_name: required(v.project_name, 'Project name') || minLen(v.project_name, 2, 'Project name') || maxLen(v.project_name, 150, 'Project name'),
-      client_id: required(v.client_id, 'Client'),
+      client: required(v.client, 'Client'),
       project_type: required(v.project_type, 'Project type'),
       status: required(v.status, 'Status'),
       project_cost: nonNegativeNumber(v.project_cost, 'Budget'),
@@ -136,19 +138,8 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
             <Field label="Project name" required error={errors.project_name}>
               <Input value={v.project_name} onChange={(e) => set('project_name', e.target.value)} invalid={!!errors.project_name} placeholder="Acme CRM Platform" />
             </Field>
-            <Field label="Client" required error={errors.client_id}>
-              <SearchableSelect 
-                value={v.client_id} 
-                onChange={(x) => {
-                  set('client_id', x);
-                  const selected = clients?.find(c => c.id === x);
-                  if (selected) set('client', selected.company_name);
-                }} 
-                options={clientOpts} 
-                placeholder="Select a client" 
-                invalid={!!errors.client_id} 
-                clearable 
-              />
+            <Field label="Client" required error={errors.client}>
+              <SearchableSelect value={v.client} onChange={(x) => set('client', x)} options={clientOpts} placeholder="Search or add client…" invalid={!!errors.client} creatable />
             </Field>
             <Field label="Project type" required error={errors.project_type}>
               <SearchableSelect value={v.project_type} onChange={(x) => set('project_type', x)} options={typeOpts} placeholder="Select type" invalid={!!errors.project_type} />
@@ -165,6 +156,9 @@ export default function ProjectForm({ open, onClose, onSubmit, initial, masters,
         <section>
           <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg mb-3">Team &amp; delivery</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Budget" error={errors.project_cost}>
+              <Input type="number" min="0" step="any" value={v.project_cost} onChange={(e) => set('project_cost', e.target.value)} invalid={!!errors.project_cost} placeholder="e.g. 50000" />
+            </Field>
             <Field label="Project manager">
               <SearchableSelect value={v.project_manager_id} onChange={(x) => set('project_manager_id', x)} options={managerOpts} placeholder="Assign manager" clearable />
             </Field>

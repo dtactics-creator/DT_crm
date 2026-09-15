@@ -94,6 +94,24 @@ export default async function handler(req, res) {
     const leadStatus = groupCount(leads, 'status', 'lead_status');
     const projectStatus = groupCount(projects, 'status', 'project_status');
     
+    // Priority Pipeline
+    const priorityPipelineMap = {};
+    leads.filter(l => !['won', 'lost'].includes(l.status)).forEach(l => {
+      const p = l.priority;
+      if (p) {
+        if (!priorityPipelineMap[p]) priorityPipelineMap[p] = { count: 0, value: 0 };
+        priorityPipelineMap[p].count++;
+        priorityPipelineMap[p].value += Number(l.budget || 0);
+      }
+    });
+    const priorityPipeline = Object.entries(priorityPipelineMap).map(([p, data]) => ({
+      priority: p,
+      label: labelFor('priority', p),
+      color: colorFor('priority', p),
+      count: data.count,
+      value: data.value
+    })).sort((a, b) => b.value - a.value);
+    
     // Opportunities
     const opportunities = leads.filter(l => !['won', 'lost'].includes(l.status) && Number(l.budget) > 0)
       .sort((a,b) => Number(b.budget) - Number(a.budget)).slice(0, 8).map(l => ({
@@ -259,7 +277,7 @@ export default async function handler(req, res) {
       projects: projectSummary,
       leadStatus,
       projectStatus,
-      priorityPipeline: [],
+      priorityPipeline,
       opportunities,
       sources,
       employees,

@@ -9,6 +9,7 @@ import { collect, required } from '../../lib/validators';
 import type { Client, ClientContact } from '../../types';
 import { SearchableSelect } from '../ui/SearchableSelect';
 import { useNextNo } from '../../hooks/useNextNo';
+import { getCountries, getStatesOfCountry, getCitiesOfState, type ICountry, type IState, type ICity } from '@countrystatecity/countries-browser';
 
 export interface FormClientContact extends Omit<ClientContact, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'client_id'> {
   id?: string;
@@ -53,6 +54,33 @@ export default function ClientForm({ open, onClose, onSubmit, initial, saving, t
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { data: nextNo } = useNextNo('client', open && !initial);
   const displayClientNo = initial?.client_no ? initial.client_no : (nextNo?.next ?? 'Generating...');
+
+  const [countries, setCountries] = useState<ICountry[]>([]);
+  const [states, setStates] = useState<IState[]>([]);
+  const [cities, setCities] = useState<ICity[]>([]);
+
+  useEffect(() => {
+    getCountries().then(setCountries).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const countryObj = countries.find(c => c.name === v.country);
+    if (countryObj) {
+      getStatesOfCountry(countryObj.iso2).then(setStates).catch(console.error);
+    } else {
+      setStates([]);
+    }
+  }, [v.country, countries]);
+
+  useEffect(() => {
+    const countryObj = countries.find(c => c.name === v.country);
+    const stateObj = states.find(s => s.name === v.state);
+    if (countryObj && stateObj) {
+      getCitiesOfState(countryObj.iso2, stateObj.iso2).then(setCities).catch(console.error);
+    } else {
+      setCities([]);
+    }
+  }, [v.state, v.country, countries, states]);
 
   useEffect(() => {
     if (open) {
@@ -166,13 +194,33 @@ export default function ClientForm({ open, onClose, onSubmit, initial, saving, t
               </Field>
             </div>
             <Field label="Country">
-              <Input value={v.country} onChange={(e) => set('country', e.target.value)} />
+              <SearchableSelect 
+                options={countries.map(c => ({ label: c.name, value: c.name }))} 
+                value={v.country} 
+                onChange={(val) => { set('country', val); set('state', ''); set('city', ''); }} 
+                placeholder="Select Country"
+                clearable
+              />
             </Field>
             <Field label="State/Province">
-              <Input value={v.state} onChange={(e) => set('state', e.target.value)} />
+              <SearchableSelect 
+                options={states.map(s => ({ label: s.name, value: s.name }))} 
+                value={v.state} 
+                onChange={(val) => { set('state', val); set('city', ''); }} 
+                placeholder="Select State"
+                clearable
+                disabled={!v.country}
+              />
             </Field>
             <Field label="City/Town">
-              <Input value={v.city} onChange={(e) => set('city', e.target.value)} />
+              <SearchableSelect 
+                options={cities.map(c => ({ label: c.name, value: c.name }))} 
+                value={v.city} 
+                onChange={(val) => set('city', val)} 
+                placeholder="Select City"
+                clearable
+                disabled={!v.state}
+              />
             </Field>
           </div>
         </section>

@@ -3,6 +3,18 @@ import { requirePermission, methodPermission, getEffectivePermissions } from './
 import { employeeMap, leadMap, nextProjectNo } from './_join.js';
 import { logAudit } from './_audit.js';
 
+async function linkClient(payload) {
+  if (payload.client) {
+    const { data: c } = await supabase.from('dt_clients').select('id, company_name').ilike('company_name', payload.client.trim()).is('deleted_at', null).maybeSingle();
+    if (c) {
+      payload.client_id = c.id;
+      payload.client = c.company_name;
+    } else {
+      payload.client_id = null;
+    }
+  }
+}
+
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
   const user = await requirePermission(req, res, methodPermission('projects', req.method));
@@ -26,6 +38,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const payload = validate(req.body);
+      await linkClient(payload);
       if (!payload.project_no) payload.project_no = await nextProjectNo();
       const { data, error } = await supabase.from('dt_projects').insert(payload).select().single();
       if (error) throw error;
@@ -38,6 +51,7 @@ export default async function handler(req, res) {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Project id is required');
       const payload = validate(req.body);
+      await linkClient(payload);
       payload.updated_at = new Date().toISOString();
       const { data: oldData } = await supabase.from('dt_projects').select('*').eq('id', id).single();
       const { data, error } = await supabase.from('dt_projects').update(payload).eq('id', id).select().single();
