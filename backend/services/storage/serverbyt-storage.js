@@ -17,7 +17,7 @@ class ServerbytStorage {
       privateKey: process.env.SERVERBYT_SSH_KEY_PATH && fs.existsSync(process.env.SERVERBYT_SSH_KEY_PATH)
         ? fs.readFileSync(process.env.SERVERBYT_SSH_KEY_PATH)
         : (process.env.SERVERBYT_SSH_PRIVATE_KEY || undefined),
-      mediaRoot: process.env.SERVERBYT_MEDIA_ROOT || '/home/sites/41b/b/be4736d732/public_html/crm-media',
+      mediaRoot: (process.env.SERVERBYT_MEDIA_ROOT || '/home/sites/41b/b/be4736d732/public_html/crm-media').replace(/\/+$/, ''),
       mediaBaseUrl: (process.env.SERVERBYT_MEDIA_BASE_URL || 'https://media.dtacticsit.in').replace(/\/+$/, ''),
     };
   }
@@ -39,7 +39,7 @@ class ServerbytStorage {
         host: config.host,
         port: config.port,
         username: config.username,
-        readyTimeout: 25000,
+        readyTimeout: 30000,
         retries: 2,
       };
 
@@ -91,6 +91,48 @@ class ServerbytStorage {
     return `${uniqueSuffix}${safeExt}`;
   }
 
+  // Convert full absolute path to SFTP home-relative path safely
+  getRelativeSftpPath(fullPath, mediaRoot) {
+    let clean = fullPath.replace(/\\/g, '/');
+    const homeMatch = clean.match(/^(\/home\/sites\/[^\/]+\/[^\/]+\/[^\/]+)/);
+    if (homeMatch) {
+      const homePath = homeMatch[1];
+      if (clean.startsWith(homePath)) {
+        clean = clean.slice(homePath.length);
+      }
+    } else if (clean.startsWith(mediaRoot)) {
+      clean = clean.slice(mediaRoot.length);
+    }
+    return clean.replace(/^\/+/, '');
+  }
+
+  async ensureRemoteDir(sftp, fullTargetDirPath, mediaRoot) {
+    // 1. Check if directory exists first (both absolute and relative)
+    const existsType = await sftp.exists(fullTargetDirPath);
+    if (existsType === 'd' || existsType === 'l') {
+      return; // Directory already exists, no action needed!
+    }
+
+    const relPath = this.getRelativeSftpPath(fullTargetDirPath, mediaRoot);
+    const relExists = await sftp.exists(relPath);
+    if (relExists === 'd' || relExists === 'l') {
+      return; // Exists via relative path
+    }
+
+    // 2. Safely create missing subdirectories incrementally from relative path ONLY
+    const segments = relPath.split('/').filter(Boolean);
+    let currentPath = '';
+
+    for (const segment of segments) {
+      currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+      const segExists = await sftp.exists(currentPath);
+      if (!segExists) {
+        // Non-recursive single-level mkdir inside user's home/writable directory
+        await sftp.mkdir(currentPath, false);
+      }
+    }
+  }
+
   async upload({ buffer, filePath, originalName, mimeType, folder = 'campaigns' }) {
     if (!filePath && !buffer) {
       throw new Error('Upload payload must provide either a temporary filePath or Buffer.');
@@ -100,25 +142,23 @@ class ServerbytStorage {
     const safeFolder = this.sanitizeFolder(folder);
     const filename = this.validateAndGetFilename(originalName);
 
-    const remoteDirPath = path.posix.join(config.mediaRoot, safeFolder);
-    const remoteFilePath = path.posix.join(remoteDirPath, filename);
-
+    const fullDirPath = path.posix.join(config.mediaRoot, safeFolder);
     const sftp = await this.getClient();
 
-    const exists = await sftp.exists(remoteDirPath);
-    if (!exists) {
-      await sftp.mkdir(remoteDirPath, true);
-    }
+    // Safely check and create directory if missing without permission errors
+    await this.ensureRemoteDir(sftp, fullDirPath, config.mediaRoot);
+
+    const relFilePath = `${this.getRelativeSftpPath(fullDirPath, config.mediaRoot)}/${filename}`;
 
     let fileSize = 0;
     if (filePath && fs.existsSync(filePath)) {
       const stats = fs.statSync(filePath);
       fileSize = stats.size;
-      // Stream directly from local disk to Serverbyt via fastPut (zero RAM consumption)
-      await sftp.fastPut(filePath, remoteFilePath);
+      // Stream directly from local temp file to Serverbyt via fastPut
+      await sftp.fastPut(filePath, relFilePath);
     } else if (buffer && Buffer.isBuffer(buffer)) {
       fileSize = buffer.length;
-      await sftp.put(buffer, remoteFilePath);
+      await sftp.put(buffer, relFilePath);
     } else {
       throw new Error('Invalid file payload for SFTP transfer.');
     }
@@ -150,18 +190,26 @@ class ServerbytStorage {
       throw new Error('Security Error: Path traversal attempt detected.');
     }
 
-    const remoteFilePath = path.posix.join(config.mediaRoot, relativePath);
+    const targetRelPath = `public_html/crm-media/${relativePath}`;
+    const fullRemoteFilePath = path.posix.join(config.mediaRoot, relativePath);
 
-    if (!remoteFilePath.startsWith(config.mediaRoot)) {
+    if (!fullRemoteFilePath.startsWith(config.mediaRoot)) {
       throw new Error('Security Error: Access outside media root denied.');
     }
 
     const sftp = await this.getClient();
-    const exists = await sftp.exists(remoteFilePath);
+    let exists = await sftp.exists(targetRelPath);
     if (exists) {
-      await sftp.delete(remoteFilePath);
+      await sftp.delete(targetRelPath);
       return true;
     }
+
+    exists = await sftp.exists(fullRemoteFilePath);
+    if (exists) {
+      await sftp.delete(fullRemoteFilePath);
+      return true;
+    }
+
     return false;
   }
 
