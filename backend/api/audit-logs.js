@@ -26,9 +26,9 @@ export default async function handler(req, res) {
 
       // Apply filters
       if (user_id) q = q.eq('user_id', user_id);
-      if (action) q = q.eq('action', action);
-      if (module) q = q.eq('module', module);
-      if (status) q = q.eq('status', status);
+      if (action) q = q.in('action', action.split(','));
+      if (module) q = q.in('module', module.split(','));
+      if (status) q = q.in('status', status.split(','));
       if (entity_id) q = q.eq('entity_id', entity_id);
       if (start_date) q = q.gte('created_at', new Date(start_date).toISOString());
       if (end_date) q = q.lte('created_at', new Date(end_date).toISOString());

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Search, Save, Copy, Check, Trash2, MessageSquareText, Variable } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
@@ -10,7 +10,8 @@ import Badge from '../components/ui/Badge';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
+import FilterBar from '../components/ui/FilterBar';
+import { SearchableSelect, MultiSelect } from '../components/ui/SearchableSelect';
 import { useToast } from '../components/ui/Toast';
 import { useTemplates } from '../hooks/useTemplates';
 import { usePermissions } from '../contexts/PermissionContext';
@@ -22,13 +23,45 @@ import { cn } from '../lib/utils';
 import type { Template } from '../types';
 
 // Highlight {{variables}} inside the preview.
-function countVars(body: string) {
+function countVars(body?: string | null) {
+  if (typeof body !== 'string') return 0;
   const set = new Set<string>();
   for (const m of body.matchAll(/\{\{?\s*([^{}]+?)\s*\}?\}/g)) set.add(m[1].trim());
   return set.size;
 }
 
+class TemplateErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-red-500 font-mono whitespace-pre-wrap">
+          <h2>Templates crashed:</h2>
+          {this.state.error?.toString()}
+          <br/>
+          {this.state.error?.stack}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function Templates() {
+  return (
+    <TemplateErrorBoundary>
+      <TemplatesInner />
+    </TemplateErrorBoundary>
+  );
+}
+
+function TemplatesInner() {
   const { can } = usePermissions();
   const { data: templates, isLoading } = useTemplates();
   const { data: masters } = useMasters();
@@ -44,7 +77,7 @@ export default function Templates() {
   });
 
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -67,9 +100,9 @@ export default function Templates() {
   }, [templates]);
 
   const filtered = useMemo(() => (templates || []).filter((t) => {
-    const q = search.toLowerCase();
-    const matchQ = !q || [t.title, t.body].some((x) => x.toLowerCase().includes(q));
-    const matchCat = !categoryFilter || t.category === categoryFilter;
+    const q = (search || '').toLowerCase();
+    const matchQ = !q || [t.title, t.body].some((x) => (x || '').toLowerCase().includes(q));
+    const matchCat = categoryFilter.length === 0 || categoryFilter.includes(t.category);
     return matchQ && matchCat;
   }), [templates, search, categoryFilter]);
 
@@ -153,17 +186,18 @@ export default function Templates() {
         }
       />
 
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search templates…" className="pl-10" />
-        </div>
-        <div className="w-48">
-          <SearchableSelect value={categoryFilter} onChange={setCategoryFilter} placeholder="All categories"
-            options={[{ value: '', label: 'All categories' }, ...categoryOptions]} />
-        </div>
-      </div>
+      <FilterBar 
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search templates…"
+        className="mb-6"
+        filters={
+          <div className="w-48">
+            <MultiSelect values={categoryFilter} onChange={setCategoryFilter} placeholder="All categories"
+              options={categoryOptions} />
+          </div>
+        }
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -213,7 +247,7 @@ export default function Templates() {
                   />
                   <div className="flex items-center justify-between mt-2.5">
                     <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-subtle-fg">
-                      <Variable className="h-3.5 w-3.5" /> {countVars(value)} variable{countVars(value) === 1 ? '' : 's'} · {value.length} chars
+                      <Variable className="h-3.5 w-3.5" /> {countVars(value)} variable{countVars(value) === 1 ? '' : 's'} · {value?.length || 0} chars
                     </span>
                     {dirty && <span className="text-[11.5px] font-semibold text-amber-600">Unsaved</span>}
                   </div>

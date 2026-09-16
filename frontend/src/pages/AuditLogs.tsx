@@ -6,8 +6,9 @@ import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { MultiSelect } from '../components/ui/SearchableSelect';
 import Badge from '../components/ui/Badge';
+import FilterBar from '../components/ui/FilterBar';
 import EmptyState from '../components/ui/EmptyState';
 import Skeleton from '../components/ui/Skeleton';
 import RowActions from '../components/ui/RowActions';
@@ -51,9 +52,9 @@ export default function AuditLogs() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const [module, setModule] = useState('');
-  const [action, setAction] = useState('');
-  const [status, setStatus] = useState('');
+  const [module, setModule] = useState<string[]>([]);
+  const [action, setAction] = useState<string[]>([]);
+  const [status, setStatus] = useState<string[]>([]);
   
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 
@@ -63,9 +64,9 @@ export default function AuditLogs() {
     pageSize: 1000,
     search: debouncedSearch,
     user_id: '',
-    action,
-    module,
-    status,
+    action: action.join(','),
+    module: module.join(','),
+    status: status.join(','),
     start_date: '',
     end_date: ''
   });
@@ -80,9 +81,9 @@ export default function AuditLogs() {
       const params = new URLSearchParams({
         export: 'true',
         search: debouncedSearch,
-        module,
-        action,
-        status
+        module: module.join(','),
+        action: action.join(','),
+        status: status.join(',')
       });
       const csvStr = await api.get<string>(`/api/audit-logs?${params.toString()}`);
       downloadCsv(`audit-logs-${new Date().toISOString().slice(0, 10)}.csv`, csvStr);
@@ -170,66 +171,62 @@ export default function AuditLogs() {
       />
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-app">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-            <Input 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)} 
-              placeholder="Search users, descriptions..." 
-              className="pl-10" 
-            />
-          </div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <Filter className="h-4 w-4 text-subtle-fg hidden sm:block" />
-            <div className="w-40">
-              <SearchableSelect 
-                value={module} 
-                onChange={setModule}
-                options={[
-                  { value: '', label: 'All Modules' },
-                  { value: 'Authentication', label: 'Authentication' },
-                  { value: 'Leads', label: 'Leads' },
-                  { value: 'Projects', label: 'Projects' },
-                  { value: 'Employees', label: 'Employees' },
-                  { value: 'Masters', label: 'Masters' },
-                  { value: 'Roles', label: 'Roles' },
-                  { value: 'Templates', label: 'Templates' }
-                ]}
-              />
-            </div>
-            <div className="w-40">
-              <SearchableSelect 
-                value={action} 
-                onChange={setAction}
-                options={[
-                  { value: '', label: 'All Actions' },
-                  { value: 'CREATE', label: 'CREATE' },
-                  { value: 'UPDATE', label: 'UPDATE' },
-                  { value: 'DELETE', label: 'DELETE' },
-                  { value: 'LOGIN', label: 'LOGIN' },
-                  { value: 'LOGIN_FAILED', label: 'LOGIN FAILED' },
-                  { value: 'IMPORT', label: 'IMPORT' },
-                  { value: 'CONVERT', label: 'CONVERT' },
-                  { value: 'ACCESS_DENIED', label: 'ACCESS DENIED' },
-                  { value: 'EXPORT', label: 'EXPORT' }
-                ]}
-              />
-            </div>
-            <div className="w-36">
-              <SearchableSelect 
-                value={status} 
-                onChange={setStatus}
-                options={[
-                  { value: '', label: 'All Statuses' },
-                  { value: 'SUCCESS', label: 'SUCCESS' },
-                  { value: 'FAILED', label: 'FAILED' }
-                ]}
-                align="right"
-              />
-            </div>
-          </div>
-        </div>
+        <FilterBar 
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search users, descriptions..."
+          className="p-4 border-b border-app"
+          filters={
+            <>
+              <div className="w-40">
+                <MultiSelect 
+                  values={module} 
+                  onChange={setModule}
+                  options={[
+                    { value: 'Authentication', label: 'Authentication' },
+                    { value: 'Leads', label: 'Leads' },
+                    { value: 'Projects', label: 'Projects' },
+                    { value: 'Employees', label: 'Employees' },
+                    { value: 'Masters', label: 'Masters' },
+                    { value: 'Roles', label: 'Roles' },
+                    { value: 'Templates', label: 'Templates' }
+                  ]}
+                  placeholder="All Modules"
+                />
+              </div>
+              <div className="w-40">
+                <MultiSelect 
+                  values={action} 
+                  onChange={setAction}
+                  options={[
+                    { value: 'CREATE', label: 'CREATE' },
+                    { value: 'UPDATE', label: 'UPDATE' },
+                    { value: 'DELETE', label: 'DELETE' },
+                    { value: 'LOGIN', label: 'LOGIN' },
+                    { value: 'LOGIN_FAILED', label: 'LOGIN FAILED' },
+                    { value: 'IMPORT', label: 'IMPORT' },
+                    { value: 'CONVERT', label: 'CONVERT' },
+                    { value: 'ACCESS_DENIED', label: 'ACCESS DENIED' },
+                    { value: 'EXPORT', label: 'EXPORT' }
+                  ]}
+                  placeholder="All Actions"
+                />
+              </div>
+              <div className="w-36">
+                <MultiSelect 
+                  values={status} 
+                  onChange={setStatus}
+                  options={[
+                    { value: 'SUCCESS', label: 'SUCCESS' },
+                    { value: 'FAILED', label: 'FAILED' }
+                  ]}
+                  placeholder="All Statuses"
+                  align="right"
+                />
+              </div>
+            </>
+          }
+        />
 
         {isLoading ? (
           <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>

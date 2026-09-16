@@ -11,6 +11,7 @@ import Drawer from '../components/ui/Drawer';
 import Field from '../components/ui/Field';
 import Textarea from '../components/ui/Textarea';
 import { SearchableSelect, MultiSelect, Option } from '../components/ui/SearchableSelect';
+import FilterBar from '../components/ui/FilterBar';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { usePermissions } from '../contexts/PermissionContext';
 import { useToast } from '../components/ui/Toast';
@@ -36,6 +37,8 @@ export default function CampaignSetup() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [playModeFilter, setPlayModeFilter] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSetup, setEditingSetup] = useState<CampaignSetupRow | null>(null);
   const [toDelete, setToDelete] = useState<CampaignSetupRow | null>(null);
@@ -70,10 +73,17 @@ export default function CampaignSetup() {
     if (!setups) return [];
     return setups.filter((s) => {
       const q = search.toLowerCase();
-      if (!q) return true;
-      return s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q);
+      const matchQ = !q || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q);
+      
+      const isExpired = s.end_datetime && new Date(s.end_datetime) <= new Date();
+      const currentStatus = s.status === 'active' ? 'active' : (isExpired ? 'expired' : 'inactive');
+      const matchStatus = statusFilter.length === 0 || statusFilter.includes(currentStatus);
+      
+      const matchPlayMode = playModeFilter.length === 0 || playModeFilter.includes(s.play_mode || 'loop');
+      
+      return matchQ && matchStatus && matchPlayMode;
     });
-  }, [setups, search]);
+  }, [setups, search, statusFilter, playModeFilter]);
 
   const saveMut = useMutation({
     mutationFn: saveCampaignSetup,
@@ -369,12 +379,33 @@ export default function CampaignSetup() {
       />
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex p-4 border-b border-app">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search campaign setup…" className="pl-10" />
-          </div>
-        </div>
+        <FilterBar 
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search campaign setup…"
+          className="p-4 border-b border-app"
+          filters={
+            <>
+              <div className="w-40">
+                <MultiSelect 
+                  values={statusFilter} 
+                  onChange={setStatusFilter} 
+                  placeholder="All statuses"
+                  options={[{ value: 'active', label: 'Live' }, { value: 'inactive', label: 'Inactive' }, { value: 'expired', label: 'Expired' }]} 
+                />
+              </div>
+              <div className="w-40">
+                <MultiSelect 
+                  values={playModeFilter} 
+                  onChange={setPlayModeFilter} 
+                  placeholder="All play modes"
+                  options={[{ value: 'loop', label: 'Loop' }, { value: 'once', label: 'Play Once' }]} 
+                  align="right"
+                />
+              </div>
+            </>
+          }
+        />
 
         <DataTable
           data={filtered}

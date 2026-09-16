@@ -60,7 +60,7 @@ export interface QuotationFormValues {
 }
 
 const empty: QuotationFormValues = {
-  template: 'aurora',
+  template: 'minimal',
   date: new Date().toISOString().slice(0, 10),
   valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   enquiry_no: '',
@@ -233,7 +233,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
         let currentBudget = k === 'budget' ? Number(val) : Number(p.budget);
         
         let milestone_basis = 0;
-        if (next.template === 'aurora') {
+        if (next.template === 'minimal') {
            next.commercial_items.forEach(c => {
              if (!c.exclude_from_milestone) milestone_basis += Number(c.base_amount) || 0;
            });
@@ -241,7 +241,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
            milestone_basis = currentBudget;
         }
 
-        if (next.template === 'aurora' && milestone_basis >= 0 && next.milestones.length > 0) {
+        if (next.template === 'minimal' && milestone_basis >= 0 && next.milestones.length > 0) {
           next.milestones = next.milestones.map(m => {
             const base_amount = Number(((milestone_basis * m.percent) / 100).toFixed(2));
             const gst_amount = Number(((base_amount * (m.gst_percent || 18)) / 100).toFixed(2));
@@ -259,7 +259,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
   };
 
   const updateAuroraTotals = (next: QuotationFormValues) => {
-    if (next.template === 'aurora') {
+    if (next.template === 'minimal') {
       let subtotal = 0;
       let tax = 0;
       let milestone_basis = 0;
@@ -370,7 +370,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
       });
     }
 
-    if (v.template === 'aurora') {
+    if (v.template !== 'logistics') {
       const totalPct = v.milestones.reduce((acc, m) => acc + Number(m.percent), 0);
       if (v.milestones.length > 0 && totalPct !== 100) e.milestones = `Milestone percentages must equal 100% (currently ${totalPct}%)`;
       v.milestones.forEach((m, i) => { if (!m.label) e[`ms_${i}_label`] = 'Required'; });
@@ -589,7 +589,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
             )}
           </section>
 
-          {v.template === 'aurora' && (
+          {v.template !== 'logistics' && (
             <>
               <section>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg mb-4">Project Scope</p>
@@ -696,7 +696,7 @@ export default function QuotationForm({ open, onClose, onSubmit, initial, saving
             </>
           )}
 
-          {v.template === 'aurora' && (
+          {v.template !== 'logistics' && (
             <section>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Payment Milestones</p>

@@ -12,8 +12,9 @@ import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import RowActions from '../components/ui/RowActions';
+import FilterBar from '../components/ui/FilterBar';
 import ImportDialog from '../components/ImportDialog';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { MultiSelect } from '../components/ui/SearchableSelect';
 import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
 import ProjectDetail from '../components/projects/ProjectDetail';
 import NextFollowUpModal from '../components/ui/NextFollowUpModal';
@@ -48,8 +49,8 @@ export default function Projects() {
   const { create, update, remove } = useCrud('projects', ['projects']);
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [view, setView] = useState<'grid' | 'table'>('table');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
@@ -92,8 +93,8 @@ export default function Projects() {
     return (projects || []).filter((p) => {
       const q = search.toLowerCase();
       const matchQ = !q || [p.project_name, p.client, p.project_no ?? '', p.lead_no ?? ''].some((x) => x.toLowerCase().includes(q));
-      const matchStatus = !statusFilter || p.status === statusFilter;
-      const matchType = !typeFilter || p.project_type === typeFilter;
+      const matchStatus = statusFilter.length === 0 || statusFilter.includes(p.status);
+      const matchType = typeFilter.length === 0 || typeFilter.includes(p.project_type ?? '');
       return matchQ && matchStatus && matchType;
     });
   }, [projects, search, statusFilter, typeFilter]);
@@ -205,21 +206,23 @@ export default function Projects() {
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects…" className="pl-10" />
-        </div>
-        <div className="flex items-center gap-2.5">
-          <Filter className="h-4 w-4 text-subtle-fg hidden sm:block" />
-          <div className="w-40"><SearchableSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: '', label: 'All statuses' }, ...toOptions(masters, 'project_status')]} placeholder="All statuses" /></div>
-          <div className="w-40"><SearchableSelect value={typeFilter} onChange={setTypeFilter} options={[{ value: '', label: 'All types' }, ...toOptions(masters, 'project_type')]} placeholder="All types" align="right" /></div>
+      <FilterBar 
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search projects…"
+        filters={
+          <>
+            <div className="w-40"><MultiSelect values={statusFilter} onChange={setStatusFilter} options={toOptions(masters, 'project_status')} placeholder="All statuses" /></div>
+            <div className="w-40"><MultiSelect values={typeFilter} onChange={setTypeFilter} options={toOptions(masters, 'project_type')} placeholder="All types" align="right" /></div>
+          </>
+        }
+        actions={
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-2 border border-app">
             <button onClick={() => setView('grid')} className={cn('h-8 w-8 rounded-md flex items-center justify-center transition-colors', view === 'grid' ? 'bg-surface text-brand-600 card-shadow' : 'text-muted-fg')}><LayoutGrid className="h-4 w-4" /></button>
             <button onClick={() => setView('table')} className={cn('h-8 w-8 rounded-md flex items-center justify-center transition-colors', view === 'table' ? 'bg-surface text-brand-600 card-shadow' : 'text-muted-fg')}><List className="h-4 w-4" /></button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-56 rounded-2xl" />)}</div>

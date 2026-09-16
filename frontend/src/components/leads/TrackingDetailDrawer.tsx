@@ -6,7 +6,7 @@ import {
   Activity, Eye, Globe, Laptop, Smartphone, Tablet, Clock, MapPin, Copy, Check, ExternalLink, Code2, RefreshCw, AlertCircle
 } from 'lucide-react';
 import type { ProjectUrl, LeadUrlAnalytics, MasterItem } from '../../types';
-import { formatDate } from '../../lib/utils';
+import { formatDate, formatDateTime } from '../../lib/utils';
 import { makeLookup } from '../../hooks/useMasters';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -301,7 +301,7 @@ export default function TrackingDetailDrawer({ open, onClose, leadId, leadName, 
                   <tbody className="divide-y divide-[color:var(--border)]">
                     {filteredVisits.map((v) => (
                       <tr key={v.id} className="hover:bg-surface-2/50 transition-colors">
-                        <td className="px-3.5 py-2.5 font-medium text-base-fg">{formatDate(v.visited_at)}</td>
+                        <td className="px-3.5 py-2.5 font-medium text-base-fg">{formatDateTime(v.visited_at)}</td>
                         <td className="px-3.5 py-2.5 font-mono font-semibold text-brand-600 dark:text-brand-400">{v.path || '/'}</td>
                         <td className="px-3.5 py-2.5 text-muted-fg">
                           <span className="inline-flex items-center gap-1">

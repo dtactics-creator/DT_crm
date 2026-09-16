@@ -1,0 +1,397 @@
+/* Quiet letterhead: wide margins, even rhythm, no stacked boxes. A4 794x1123. */
+
+.lh-measure {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: -10000px;
+  width: 682px;
+  visibility: hidden;
+  color: #222;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.lh-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+.lh-sheet {
+  width: calc(794px * var(--zoom, 1));
+  height: calc(1123px * var(--zoom, 1));
+}
+
+.lh-sheet .lh-page {
+  transform: scale(var(--zoom, 1));
+  transform-origin: top left;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 22px 44px -20px rgba(0, 0, 0, 0.22);
+}
+
+.lh-page {
+  display: flex;
+  width: 794px;
+  height: 1123px;
+  flex-direction: column;
+  overflow: hidden;
+  color: #222;
+  background: #fff;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+/* Header */
+
+.lh-header {
+  display: flex;
+  height: 132px;
+  flex: 0 0 132px;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 36px 56px 22px;
+  border-bottom: 1px solid #ddd;
+}
+
+.lh-header-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.lh-header-side span {
+  color: #888;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.lh-header-side b {
+  color: #222;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Body */
+
+.lh-body {
+  flex: 1;
+  min-height: 0;
+  padding: 28px 56px 8px;
+}
+
+.lh-sec {
+  padding-bottom: 28px;
+  margin-bottom: 0;
+}
+
+.lh-sec h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.lh-sec h2 {
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e6e6e6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lh-kicker {
+  margin: 0 0 8px;
+  color: #888;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lh-muted {
+  margin: 0;
+  color: #666;
+}
+
+.lh-address {
+  max-width: 340px;
+  margin: 10px 0 0;
+  color: #444;
+  line-height: 1.5;
+}
+
+.lh-body p {
+  margin: 0;
+}
+
+.lh-gap-top {
+  margin-top: 10px;
+}
+
+.lh-pair {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 40px;
+}
+
+.lh-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 22px;
+}
+
+.lh-facts p {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lh-facts span {
+  color: #888;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lh-facts b {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Lists */
+
+.lh-ol,
+.lh-ul {
+  margin: 0;
+  padding: 0 0 0 20px;
+}
+
+.lh-ol li,
+.lh-ul li {
+  margin: 0 0 10px;
+  padding-left: 4px;
+  color: #333;
+}
+
+.lh-ol li:last-child,
+.lh-ul li:last-child {
+  margin-bottom: 0;
+}
+
+.lh-ul {
+  list-style-type: disc;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+  row-gap: 4px;
+}
+
+.lh-ul li {
+  margin-bottom: 0;
+  list-style-position: inside;
+  text-indent: -1em;
+  padding-left: 1em;
+}
+
+.lh-ol-tight li {
+  margin-bottom: 8px;
+}
+
+/* Commercial rows */
+
+.lh-cols {
+  display: grid;
+  grid-template-columns: 1fr 88px 56px 96px;
+  gap: 12px;
+  padding: 0 0 8px;
+  color: #888;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lh-cols span:nth-child(2),
+.lh-cols span:nth-child(4) {
+  text-align: right;
+}
+
+.lh-cols span:nth-child(3) {
+  text-align: center;
+}
+
+.lh-item {
+  padding: 12px 0;
+  color: #222;
+  border-top: 1px solid #eee;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.lh-item span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lh-item small {
+  color: #888;
+  font-size: 9px;
+}
+
+.lh-sum {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #222;
+}
+
+.lh-sum p {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  color: #555;
+}
+
+.lh-sum b {
+  color: #222;
+  font-weight: 600;
+}
+
+.lh-sum .is-total {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  color: #222;
+  font-size: 12px;
+}
+
+.lh-sum .is-total b {
+  font-size: 13px;
+}
+
+/* Payment */
+
+.lh-pay {
+  display: grid;
+  grid-template-columns: 28px 1fr 48px 96px;
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.lh-pay:last-child {
+  border-bottom: 0;
+}
+
+.lh-pay-n {
+  color: #999;
+}
+
+.lh-pay-name {
+  color: #222;
+}
+
+.lh-pay-pct {
+  color: #666;
+  text-align: right;
+}
+
+.lh-pay-amt {
+  color: #222;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Sign */
+
+.lh-sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 12px;
+}
+
+.lh-rule {
+  width: 100%;
+  height: 44px;
+  margin: 8px 0 10px;
+  border-bottom: 1px solid #bbb;
+}
+
+/* Footer */
+
+.lh-footer {
+  position: relative;
+  display: flex;
+  height: 108px;
+  flex: 0 0 108px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 16px 56px 18px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+.lh-footer p {
+  margin: 0;
+  color: #666;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.lh-footer-name {
+  color: #333 !important;
+  font-size: 11px !important;
+  font-weight: 700;
+}
+
+.lh-footer strong {
+  color: #444;
+  font-weight: 700;
+}
+
+.lh-page-no {
+  position: absolute;
+  right: 56px;
+  bottom: 16px;
+  color: #aaa;
+  font-size: 9px;
+}
+
+@media print {
+  .lh-stack {
+    display: block;
+    gap: 0;
+  }
+
+  .lh-sheet,
+  .lh-sheet .lh-page {
+    width: 210mm;
+    height: 297mm;
+    transform: none;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .lh-sheet:last-child,
+  .lh-sheet:last-child .lh-page {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}

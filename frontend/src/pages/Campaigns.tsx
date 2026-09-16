@@ -12,7 +12,8 @@ import Badge from '../components/ui/Badge';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
+import FilterBar from '../components/ui/FilterBar';
+import { SearchableSelect, MultiSelect } from '../components/ui/SearchableSelect';
 import { fetchAllCampaigns, saveCampaign, toggleCampaignActive, deleteCampaign, type CampaignRow, type CampaignFormState } from '../lib/campaignsRepo';
 import { useToast } from '../components/ui/Toast';
 import { cn, formatDate, formatDateTime } from '../lib/utils';
@@ -72,6 +73,9 @@ export default function Campaigns() {
   }, [templates]);
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<CampaignFormState>(emptyForm);
   const [editing, setEditing] = useState(false);
@@ -89,9 +93,17 @@ export default function Campaigns() {
 
   const filtered = useMemo(() => (campaigns || []).filter((c) => {
     const q = search.toLowerCase();
-    if (!q) return true;
-    return [c.title, c.description, c.type, c.brand].some((x) => x?.toLowerCase().includes(q));
-  }), [campaigns, search]);
+    const matchQ = !q || [c.title, c.description, c.type, c.brand].some((x) => x?.toLowerCase().includes(q));
+    
+    const isExpired = c.end_datetime && new Date(c.end_datetime) <= new Date();
+    const currentStatus = c.is_active ? 'active' : (isExpired ? 'expired' : 'inactive');
+    const matchStatus = statusFilter.length === 0 || statusFilter.includes(currentStatus);
+    
+    const matchType = typeFilter.length === 0 || typeFilter.includes(c.type);
+    const matchBrand = brandFilter.length === 0 || brandFilter.includes(c.brand || '');
+    
+    return matchQ && matchStatus && matchType && matchBrand;
+  }), [campaigns, search, statusFilter, typeFilter, brandFilter]);
 
   const openNew = () => {
     setForm({ ...emptyForm, sort_order: (campaigns?.length || 0) + 1 });
@@ -354,12 +366,41 @@ export default function Campaigns() {
       />
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex p-4 border-b border-app">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search campaigns…" className="pl-10" />
-          </div>
-        </div>
+        <FilterBar 
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search campaigns…"
+          className="p-4 border-b border-app"
+          filters={
+            <>
+              <div className="w-40">
+                <MultiSelect 
+                  values={statusFilter} 
+                  onChange={setStatusFilter} 
+                  placeholder="All statuses"
+                  options={[{ value: 'active', label: 'Live' }, { value: 'inactive', label: 'Inactive' }, { value: 'expired', label: 'Expired' }]} 
+                />
+              </div>
+              <div className="w-40">
+                <MultiSelect 
+                  values={typeFilter} 
+                  onChange={setTypeFilter} 
+                  placeholder="All types"
+                  options={campaignTypeOpts} 
+                />
+              </div>
+              <div className="w-40">
+                <MultiSelect 
+                  values={brandFilter} 
+                  onChange={setBrandFilter} 
+                  placeholder="All brands"
+                  options={brandOpts} 
+                  align="right"
+                />
+              </div>
+            </>
+          }
+        />
 
         {isLoading ? (
           <div className="p-5 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>

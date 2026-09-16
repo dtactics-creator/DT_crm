@@ -1,0 +1,220 @@
+.min-page, .min-page * {
+  box-sizing: border-box;
+}
+
+.min-page {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: #1e293b;
+  line-height: 1.5;
+  font-size: 13px;
+  background-color: white;
+  width: 794px; /* A4 width */
+  margin: 0 auto;
+}
+
+.min-header {
+  padding: 40px 50px 24px 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.min-header img {
+  height: 48px;
+  object-fit: contain;
+}
+
+.min-body {
+  padding: 0 50px;
+}
+
+.min-title-sec {
+  margin-bottom: 32px;
+}
+
+.min-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.min-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.min-meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.min-meta-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.min-meta-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.min-client-sec {
+  margin-bottom: 40px;
+}
+
+.min-client-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.min-client-address {
+  color: #475569;
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
+
+.min-section {
+  margin-bottom: 40px;
+}
+
+.min-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.min-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.min-list-item {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 12px;
+  color: #334155;
+}
+
+.min-list-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #0f172a;
+  font-weight: bold;
+}
+
+.min-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.min-row:last-child {
+  border-bottom: none;
+}
+
+.min-row-title {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.min-row-desc {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.min-row-amount {
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+  min-width: 100px;
+}
+
+.min-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-top: 1px solid #94a3b8;
+  border-bottom: 1px solid #94a3b8;
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.min-footer {
+  padding: 24px 50px 40px 50px;
+  text-align: center;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.min-footer strong {
+  color: #334155;
+  font-size: 12px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.min-footer a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.min-sign {
+  margin-top: 60px;
+  text-align: left;
+}
+
+.min-sign-line {
+  width: 160px;
+  border-bottom: 1px solid #0f172a;
+  margin-bottom: 8px;
+}
+
+.min-sign-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.min-sign-title {
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* Page breaks */
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
+.page-break-inside-avoid {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+@page {
+  size: A4;
+  margin: 0; /* Let internal padding handle spacing */
+}

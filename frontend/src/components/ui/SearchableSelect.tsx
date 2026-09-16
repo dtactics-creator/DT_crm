@@ -30,7 +30,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
           if (prev) {
             const { q, onChange, creatable, options } = stateRef.current;
             if (creatable && q.trim()) {
-              const exact = options.find(o => o.label.toLowerCase() === q.trim().toLowerCase());
+              const exact = options.find(o => (o.label || '').toLowerCase() === q.trim().toLowerCase());
               if (exact) onChange(exact.value);
               else onChange(q.trim());
             }
@@ -48,7 +48,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
     // If creatable and no option matches, treat the value itself as the selected option
     selected = { value, label: value };
   }
-  const filtered = useMemo(() => options.filter((o) => o.label.toLowerCase().includes(q.toLowerCase())), [options, q]);
+  const filtered = useMemo(() => options.filter((o) => (o.label || '').toLowerCase().includes(q.toLowerCase())), [options, q]);
 
   return (
     <div className="relative" ref={ref}>
@@ -65,7 +65,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              const exact = filtered.find(o => o.label.toLowerCase() === q.trim().toLowerCase());
+              const exact = filtered.find(o => (o.label || '').toLowerCase() === q.trim().toLowerCase());
               if (exact) { onChange(exact.value); setOpen(false); }
               else if (creatable && q.trim()) { onChange(q.trim()); setOpen(false); }
             }
@@ -105,7 +105,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
                   {o.value === value && <Check className="h-4 w-4 text-brand-600 shrink-0" />}
                 </button>
               ))}
-              {creatable && q.trim() && !options.find(o => o.label.toLowerCase() === q.trim().toLowerCase()) && (
+              {creatable && q.trim() && !options.find(o => (o.label || '').toLowerCase() === q.trim().toLowerCase()) && (
                 <button type="button" onClick={() => { onChange(q.trim()); setOpen(false); }}
                   className="flex items-center gap-2.5 w-full rounded-lg px-3 h-9 text-left transition-colors hover:bg-surface-2 border-t border-app mt-1 pt-1">
                   <span className="flex-1 text-[13px] font-medium text-brand-600 truncate">Create "{q.trim()}"</span>
@@ -136,22 +136,31 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const filtered = useMemo(() => options.filter((o) => o.label.toLowerCase().includes(q.toLowerCase())), [options, q]);
+  const filtered = useMemo(() => options.filter((o) => (o.label || '').toLowerCase().includes(q.toLowerCase())), [options, q]);
   const toggle = (v: string) => onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v]);
   const selectedOpts = options.filter((o) => values.includes(o.value));
 
   return (
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => { setOpen((v) => !v); setQ(''); }}
-        className={cn('w-full min-h-10 py-1.5 pl-2 pr-9 rounded-lg bg-surface-2 text-left text-sm flex items-center flex-wrap gap-1.5',
+        className={cn('w-full h-10 py-1.5 pl-2 pr-8 rounded-lg bg-surface-2 text-left text-sm flex items-center flex-nowrap overflow-hidden gap-1.5',
           'border border-app transition-all outline-none focus:ring-2 ring-brand', open && 'ring-2')}>
-        {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5">{placeholder}</span> : selectedOpts.map((o) => (
-          <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface-2 border border-app px-2 py-0.5 text-[12px] font-medium text-base-fg">
-            {o.color && <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: o.color }} />}
-            {o.label}
-            <span onClick={(e) => { e.stopPropagation(); toggle(o.value); }} className="text-subtle-fg hover:text-red-500"><X className="h-3 w-3" /></span>
-          </span>
-        ))}
+        {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5 whitespace-nowrap">{placeholder}</span> : (
+          <>
+            {selectedOpts.slice(0, 2).map((o) => (
+              <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface border border-app px-1.5 py-0.5 text-[12px] font-medium text-base-fg shrink-0 max-w-[85px]">
+                {o.color && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: o.color }} />}
+                <span className="truncate">{o.label}</span>
+                <span onClick={(e) => { e.stopPropagation(); toggle(o.value); }} className="text-subtle-fg hover:text-red-500 shrink-0"><X className="h-3 w-3" /></span>
+              </span>
+            ))}
+            {selectedOpts.length > 2 && (
+              <span className="inline-flex items-center rounded-md bg-surface-2 border border-app px-1.5 py-0.5 text-[11px] font-semibold text-muted-fg shrink-0">
+                +{selectedOpts.length - 2}
+              </span>
+            )}
+          </>
+        )}
       </button>
       <ChevronDown className={cn('pointer-events-none absolute right-3 top-3 h-4 w-4 text-subtle-fg transition-transform', open && 'rotate-180')} />
 

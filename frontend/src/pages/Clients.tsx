@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, ChevronLeft, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Briefcase, ChevronLeft, Pencil, Trash2, Receipt } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Button from '../components/ui/Button';
@@ -11,6 +11,7 @@ import { useClients, useClientDetails } from '../hooks/useClients';
 import { usePermissions } from '../contexts/PermissionContext';
 import ClientForm, { ClientFormValues } from '../components/clients/ClientForm';
 import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
+import QuotationForm from '../components/quotations/QuotationForm';
 import { Link } from 'react-router-dom';
 import type { Client, Project } from '../types';
 import { formatCurrency } from '../lib/utils';
@@ -19,6 +20,7 @@ import { useEmployees } from '../hooks/useEmployees';
 import { useLeads } from '../hooks/useLeads';
 import { useCrud } from '../hooks/useCrud';
 import { useCreateClient, useUpdateClient, useDeleteClient } from '../hooks/useClients';
+import { useCreateQuotation } from '../hooks/useQuotations';
 
 // ClientProjectCard removed in favor of DataTable
 
@@ -42,6 +44,8 @@ export default function Clients() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [quotationProject, setQuotationProject] = useState<Project | null>(null);
+  const createQuotation = useCreateQuotation();
   
   const { data: employees } = useEmployees();
   const { data: leads } = useLeads();
@@ -123,6 +127,7 @@ export default function Clients() {
     }},
     { key: 'actions', header: '', render: (r) => (
       <div className="flex gap-1 justify-end">
+        <button onClick={(e) => { e.stopPropagation(); setQuotationProject(r); }} className="p-1.5 text-muted-fg hover:text-brand-600 hover:bg-brand-50 rounded-md transition-colors" title="Create Quotation"><Receipt className="h-4 w-4" /></button>
         {can('projects.edit') && <button onClick={(e) => { e.stopPropagation(); setEditingProject(r); }} className="p-1.5 text-muted-fg hover:text-base-fg hover:bg-surface-3 rounded-md transition-colors" title="Edit"><Pencil className="h-4 w-4" /></button>}
         {can('projects.delete') && <button onClick={(e) => { e.stopPropagation(); setDeletingProject(r); }} className="p-1.5 text-muted-fg hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete"><Trash2 className="h-4 w-4" /></button>}
       </div>
@@ -274,6 +279,28 @@ export default function Clients() {
 
         <ConfirmDialog open={!!deletingProject} onClose={() => setDeletingProject(null)} onConfirm={handleDeleteProject}
           title="Delete project" message={`Are you sure you want to delete ${deletingProject?.project_name}?`} loading={removeProj.isPending} />
+
+        {!!quotationProject && (
+          <QuotationForm
+            open={!!quotationProject}
+            onClose={() => setQuotationProject(null)}
+            saving={createQuotation.isPending}
+            onSubmit={async (values) => {
+              const client = detail as any;
+              const proj = quotationProject as any;
+              await createQuotation.mutateAsync({
+                ...values as any,
+                client_id: client?.id,
+                lead_id: proj?.lead_id || null,
+                project_id: proj?.id,
+              });
+              setQuotationProject(null);
+            }}
+            title={`New Quotation - ${quotationProject.project_name}`}
+            client={detail}
+            projectId={quotationProject.id}
+          />
+        )}
       </div>
     );
   }

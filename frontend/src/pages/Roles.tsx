@@ -11,7 +11,8 @@ import Badge from '../components/ui/Badge';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
+import FilterBar from '../components/ui/FilterBar';
+import { SearchableSelect, MultiSelect } from '../components/ui/SearchableSelect';
 import PermissionMatrix from '../components/roles/PermissionMatrix';
 import { useRoles } from '../hooks/useRoles';
 import { useMasters, makeLookup } from '../hooks/useMasters';
@@ -32,7 +33,7 @@ export default function Roles() {
   const { create, update, remove } = useCrud('roles', ['roles', 'employees']);
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormState>(empty);
   const [editing, setEditing] = useState(false);
@@ -43,7 +44,7 @@ export default function Roles() {
   const filtered = useMemo(() => (roles || []).filter((r) => {
     const q = search.toLowerCase();
     const matchQ = !q || [r.name, r.description ?? ''].some((x) => x.toLowerCase().includes(q));
-    const matchStatus = !statusFilter || r.status === statusFilter;
+    const matchStatus = statusFilter.length === 0 || statusFilter.includes(r.status);
     return matchQ && matchStatus;
   }), [roles, search, statusFilter]);
 
@@ -129,17 +130,18 @@ export default function Roles() {
       </div>
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex flex-col sm:flex-row gap-3 p-4 border-b border-app">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search roles…" className="pl-10" />
-          </div>
-
-          <div className="w-40">
-            <SearchableSelect value={statusFilter} onChange={setStatusFilter} placeholder="All statuses"
-              options={[{ value: '', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
-          </div>
-        </div>
+        <FilterBar 
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search roles…"
+          className="p-4 border-b border-app"
+          filters={
+            <div className="w-40">
+              <MultiSelect values={statusFilter} onChange={setStatusFilter} placeholder="All statuses"
+                options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
+            </div>
+          }
+        />
 
         {isLoading ? (
           <div className="p-5 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>

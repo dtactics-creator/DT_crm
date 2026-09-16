@@ -14,6 +14,8 @@ import { formatDate, formatDateTime } from '../lib/utils';
 import TemplateEditor from './TemplateEditor';
 import { usePermissions } from '../contexts/PermissionContext';
 import DataTable, { type Column } from '../components/DataTable';
+import FilterBar from '../components/ui/FilterBar';
+import { MultiSelect } from '../components/ui/SearchableSelect';
 
 export default function CampaignTemplates() {
   const qc = useQueryClient();
@@ -26,15 +28,17 @@ export default function CampaignTemplates() {
   });
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CampaignTemplateRow | null>(null);
   const [toDelete, setToDelete] = useState<CampaignTemplateRow | null>(null);
 
   const filtered = useMemo(() => (templates || []).filter((t) => {
     const q = search.toLowerCase();
-    if (!q) return true;
-    return t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q);
-  }), [templates, search]);
+    const matchQ = !q || t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q);
+    const matchStatus = statusFilter.length === 0 || statusFilter.includes(t.status);
+    return matchQ && matchStatus;
+  }), [templates, search, statusFilter]);
 
   const openNew = () => {
     setEditingTemplate(null);
@@ -209,12 +213,22 @@ export default function CampaignTemplates() {
       />
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex p-4 border-b border-app">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search templates…" className="pl-10" />
-          </div>
-        </div>
+        <FilterBar 
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search templates…"
+          className="p-4 border-b border-app"
+          filters={
+            <div className="w-48">
+              <MultiSelect 
+                values={statusFilter} 
+                onChange={setStatusFilter} 
+                placeholder="All statuses"
+                options={[{ value: 'active', label: 'Live' }, { value: 'inactive', label: 'Draft' }]} 
+              />
+            </div>
+          }
+        />
 
         {isLoading ? (
           <div className="p-5 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>

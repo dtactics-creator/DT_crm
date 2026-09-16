@@ -12,8 +12,9 @@ import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import RowActions from '../components/ui/RowActions';
+import FilterBar from '../components/ui/FilterBar';
 import ImportDialog from '../components/ImportDialog';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
+import { SearchableSelect, MultiSelect } from '../components/ui/SearchableSelect';
 import LeadForm, { type LeadFormValues } from '../components/leads/LeadForm';
 import LeadDetail from '../components/leads/LeadDetail';
 import ConvertLeadModal from '../components/leads/ConvertLeadModal';
@@ -49,8 +50,8 @@ export default function Leads() {
 
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [sourceFilter, setSourceFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Lead | null>(null);
   const [detail, setDetail] = useState<Lead | null>(null);
@@ -95,8 +96,8 @@ export default function Leads() {
     return (leads || []).filter((l) => {
       const q = search.toLowerCase();
       const matchQ = !q || [l.customer_name, l.company, l.primary_email, l.secondary_email, l.primary_phone, l.secondary_phone, l.tertiary_phone, l.source_person, l.lead_no].some((x) => (x ?? '').toLowerCase().includes(q));
-      const matchStatus = !statusFilter || l.status === statusFilter;
-      const matchSource = !sourceFilter || l.source === sourceFilter;
+      const matchStatus = statusFilter.length === 0 || statusFilter.includes(l.status);
+      const matchSource = sourceFilter.length === 0 || sourceFilter.includes(l.source);
       return matchQ && matchStatus && matchSource;
     });
   }, [leads, search, statusFilter, sourceFilter]);
@@ -243,6 +244,7 @@ export default function Leads() {
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={lookup.label('lead_status', r.status)} color={lookup.color('lead_status', r.status)} dot /> },
     { key: 'received', header: 'Received', sortValue: (r) => r.lead_received_date ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.lead_received_date)}</span> },
     { key: 'follow', header: 'Follow-up', sortValue: (r) => r.next_follow_up ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.next_follow_up)}</span> },
+    { key: 'updated', header: 'Updated Date', sortValue: (r) => r.updated_at ?? '', render: (r) => <span className="text-muted-fg text-[12.5px]">{formatDate(r.updated_at)}</span> },
     {
       key: 'actions', header: '', headerClassName: 'w-12', className: 'text-right',
       render: (r) => (
@@ -285,17 +287,18 @@ export default function Leads() {
       </div>
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-app">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle-fg z-10" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, company, email, lead no…" className="pl-10" />
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Filter className="h-4 w-4 text-subtle-fg hidden sm:block" />
-            <div className="w-40"><SearchableSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: '', label: 'All statuses' }, ...toOptions(masters, 'lead_status')]} placeholder="All statuses" /></div>
-            <div className="w-40"><SearchableSelect value={sourceFilter} onChange={setSourceFilter} options={[{ value: '', label: 'All sources' }, ...toOptions(masters, 'lead_source')]} placeholder="All sources" align="right" /></div>
-          </div>
-        </div>
+        <FilterBar 
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search by name, company, email, lead no…"
+          className="p-4 border-b border-app"
+          filters={
+            <>
+              <div className="w-52"><MultiSelect values={statusFilter} onChange={setStatusFilter} options={toOptions(masters, 'lead_status')} placeholder="All statuses" /></div>
+              <div className="w-52"><MultiSelect values={sourceFilter} onChange={setSourceFilter} options={toOptions(masters, 'lead_source')} placeholder="All sources" align="right" /></div>
+            </>
+          }
+        />
 
         {isLoading ? (
           <div className="p-5 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
@@ -305,8 +308,8 @@ export default function Leads() {
             stickyHeader maxBodyHeight="560px"
             emptyState={
               <EmptyState icon={<Users className="h-6 w-6" />}
-                title={search || statusFilter || sourceFilter ? 'No matching leads' : 'No leads yet'}
-                description={search || statusFilter || sourceFilter ? 'Try adjusting your search or filters.' : 'Create your first lead to start building your pipeline.'}
+                title={search || statusFilter.length > 0 || sourceFilter.length > 0 ? 'No matching leads' : 'No leads yet'}
+                description={search || statusFilter.length > 0 || sourceFilter.length > 0 ? 'Try adjusting your search or filters.' : 'Create your first lead to start building your pipeline.'}
                 action={<Button icon={<Plus className="h-4 w-4" />} onClick={() => { setEditing(null); setFormOpen(true); }}>New lead</Button>} />
             } />
         )}
