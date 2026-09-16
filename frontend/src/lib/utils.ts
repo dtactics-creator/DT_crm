@@ -73,7 +73,14 @@ export function avatarColor(seed: string): string {
 import supabase from './supabase';
 
 export async function deleteStorageImages(urls: string[]) {
-  const validUrls = urls.filter(u => u && (u.includes('/storage/v1/object/public/campaigns/') || u.includes('media.dtacticsit.in') || u.includes('/campaigns/')));
+  const validUrls = urls.filter(u => {
+    if (!u || typeof u !== 'string') return false;
+    // Accept new Serverbyt CRM media URLs
+    if (u.startsWith('https://media.dtacticsit.in/')) return true;
+    // Accept legacy Supabase campaign Storage URLs (for rollback support)
+    if (u.includes('supabase.co/storage/v1/object/public/campaigns/')) return true;
+    return false;
+  });
   if (validUrls.length === 0) return;
 
   try {

@@ -21,7 +21,7 @@ import { useMasters, toOptions } from '../hooks/useMasters';
 import { useClients } from '../hooks/useClients';
 import { fetchAllTemplates } from '../lib/templatesRepo';
 import { usePermissions } from '../contexts/PermissionContext';
-import supabase from '../lib/supabase';
+import { uploadFile } from '../lib/upload';
 
 const emptyForm: CampaignFormState = {
   type: 'Discount Coupon',
@@ -141,13 +141,8 @@ export default function Campaigns() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 1 * 1024 * 1024) {
-      toast('File is too large. Maximum size is 1MB.', 'error');
-      if (e.target) e.target.value = '';
-      return;
-    }
-
+    // No artificial application-level size limit — actual limits are determined
+    // by infrastructure (Nginx, SFTP, disk space).
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     setF('image', '');
@@ -205,23 +200,9 @@ export default function Campaigns() {
 
     if (selectedFile) {
       setUploading(true);
-      const formData = new FormData();
-      formData.append('image', selectedFile);
-
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token;
-
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Upload failed');
-
-        finalForm.image = data.url;
+        const result = await uploadFile(selectedFile);
+        finalForm.image = result.url;
       } catch (err: any) {
         toast(err.message || 'Error uploading image', 'error');
         setUploading(false);

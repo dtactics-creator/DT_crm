@@ -190,20 +190,27 @@ class ServerbytStorage {
       throw new Error('Security Error: Path traversal attempt detected.');
     }
 
-    const targetRelPath = `public_html/crm-media/${relativePath}`;
     const fullRemoteFilePath = path.posix.join(config.mediaRoot, relativePath);
 
     if (!fullRemoteFilePath.startsWith(config.mediaRoot)) {
       throw new Error('Security Error: Access outside media root denied.');
     }
 
+    // Derive the SFTP-relative path from the full absolute path.
+    // getRelativeSftpPath strips the /home/sites/<id>/ prefix, producing
+    // e.g. "public_html/crm-media/campaigns/file.jpg"
+    const sftpRelPath = this.getRelativeSftpPath(fullRemoteFilePath, config.mediaRoot);
+
     const sftp = await this.getClient();
-    let exists = await sftp.exists(targetRelPath);
+
+    // Attempt 1: SFTP-relative path (home-relative, no leading slash)
+    let exists = await sftp.exists(sftpRelPath);
     if (exists) {
-      await sftp.delete(targetRelPath);
+      await sftp.delete(sftpRelPath);
       return true;
     }
 
+    // Attempt 2: Full absolute path (fallback for some SFTP server configurations)
     exists = await sftp.exists(fullRemoteFilePath);
     if (exists) {
       await sftp.delete(fullRemoteFilePath);

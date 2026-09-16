@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebar } from '../components/layout/AppLayout';
 import { useMasters, toOptions } from '../hooks/useMasters';
 import { ColorControl } from '../components/ui/ColorPicker';
-import supabase from '../lib/supabase';
+import { uploadFile } from '../lib/upload';
 
 import GenieWishTemplate from '../components/templates/GenieWishTemplate';
 
@@ -127,13 +127,8 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, propId: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 1 * 1024 * 1024) {
-      toast('File is too large. Maximum size is 1MB.', 'error');
-      if (e.target) e.target.value = '';
-      return;
-    }
-
+    // No artificial application-level size limit — actual limits are determined
+    // by infrastructure (Nginx, SFTP, disk space).
     const url = URL.createObjectURL(file);
     setPendingFiles(prev => ({ ...prev, [propId]: file }));
     setConfig(propId, url);
@@ -240,28 +235,16 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       let finalConfig = { ...form.default_config };
       const oldUrlsToClean: string[] = [];
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
       for (const [propId, file] of Object.entries(pendingFiles)) {
         if (!file) continue;
-        const formData = new FormData();
-        formData.append('image', file);
 
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        const result = await uploadFile(file as File);
 
         if (template && template.default_config[propId]) {
           oldUrlsToClean.push(template.default_config[propId]);
         }
 
-        finalConfig[propId] = data.url;
+        finalConfig[propId] = result.url;
       }
 
       let finalThumbnail = form.thumbnail;

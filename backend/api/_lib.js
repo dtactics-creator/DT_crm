@@ -31,7 +31,9 @@ const _userCache = new Map();
 
 // Verify the incoming JWT and return the user (or null).
 export async function getUser(req) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const authHeader = req.headers.authorization || '';
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  const token = match?.[1]?.trim();
   if (!token) return null;
   
   const now = Date.now();

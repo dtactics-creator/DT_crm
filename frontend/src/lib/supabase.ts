@@ -1,7 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || 'https://aebihrqtxhhhwgkztztz.supabase.co';
-const supabaseKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || 'sb_publishable_D1tF_CTvC3cLTV01Esj6Dw_A-s3udyx';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    '[supabase.ts] VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set in frontend/.env. ' +
+    'The application cannot start without a valid Supabase project configuration.'
+  );
+}
 
 const supabase = createClient(
   supabaseUrl,

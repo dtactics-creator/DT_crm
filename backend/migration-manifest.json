@@ -1,0 +1,1220 @@
+{
+  "generated_at": "2026-09-15T13:22:41.024Z",
+  "status": "PHASE 2A — INVENTORY COMPLETE",
+  "safety_confirmations": {
+    "files_migrated": 0,
+    "files_deleted": 0,
+    "db_records_updated": 0,
+    "db_schema_changed": false,
+    "wordpress_changed": false,
+    "unrelated_serverbyt_files_changed": false
+  },
+  "buckets": [
+    "campaigns"
+  ],
+  "supabase_storage_files": [
+    {
+      "bucket": "campaigns",
+      "name": "1788529049313-164793136.jpg",
+      "id": "d65ae778-fcac-4d28-9876-d99add11d72c",
+      "size": 158490,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-04T13:37:29.963Z",
+      "supabase_path": "campaigns/1788529049313-164793136.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788529049313-164793136.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1788530772304-732340596.png",
+      "id": "2b93d759-165a-4128-afd7-30a817945890",
+      "size": 85485,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-04T14:06:12.983Z",
+      "supabase_path": "campaigns/1788530772304-732340596.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788530772304-732340596.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1788533109172-882564563.jpeg",
+      "id": "1691f361-fbf2-4ba4-9e87-43ac37666af2",
+      "size": 111586,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-04T14:45:09.764Z",
+      "supabase_path": "campaigns/1788533109172-882564563.jpeg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788533109172-882564563.jpeg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1788534023233-551213397.png",
+      "id": "cebe1334-235d-4a25-b3bc-9f09f7e07c3d",
+      "size": 159065,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-04T15:00:23.923Z",
+      "supabase_path": "campaigns/1788534023233-551213397.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788534023233-551213397.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1788945474836-233650052.jpg",
+      "id": "be4cda05-0016-45ec-9d84-4a37a3a926fc",
+      "size": 514534,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-09T09:17:55.848Z",
+      "supabase_path": "campaigns/1788945474836-233650052.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945474836-233650052.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1788945475866-439213222.png",
+      "id": "233326d5-faad-4695-b1b5-0bf295c28133",
+      "size": 521152,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-09T09:17:56.793Z",
+      "supabase_path": "campaigns/1788945475866-439213222.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945475866-439213222.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789035429567-660791769.png",
+      "id": "f38fbccc-a63c-48fc-917b-5fe5d99578ed",
+      "size": 21483,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T10:17:09.863Z",
+      "supabase_path": "campaigns/1789035429567-660791769.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789035429567-660791769.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789054770852-151764548.png",
+      "id": "cef2831e-e271-4e59-91ee-44f26e816aa0",
+      "size": 91106,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T15:39:31.272Z",
+      "supabase_path": "campaigns/1789054770852-151764548.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054770852-151764548.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789054873900-509947018.png",
+      "id": "4667167e-616e-4350-8927-3766bf4d77a2",
+      "size": 91106,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T15:41:14.581Z",
+      "supabase_path": "campaigns/1789054873900-509947018.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054873900-509947018.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789055960676-187629893.png",
+      "id": "806c6166-72cc-48f1-a789-aea6a4035244",
+      "size": 91106,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T15:59:21.299Z",
+      "supabase_path": "campaigns/1789055960676-187629893.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789055960676-187629893.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789056191685-940974787.png",
+      "id": "10ec764c-eea5-4150-b24a-b4fbdb47b40d",
+      "size": 91106,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T16:03:12.307Z",
+      "supabase_path": "campaigns/1789056191685-940974787.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056191685-940974787.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789056256328-809326803.png",
+      "id": "5f3e2454-b9e0-4c99-aa0e-8e4b264e48ac",
+      "size": 91106,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T16:04:17.008Z",
+      "supabase_path": "campaigns/1789056256328-809326803.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056256328-809326803.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789056311654-318477796.png",
+      "id": "68457f62-b902-46bd-81c8-5d3be36fd370",
+      "size": 91106,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-10T16:05:12.253Z",
+      "supabase_path": "campaigns/1789056311654-318477796.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056311654-318477796.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789110873890-719251135.jpg",
+      "id": "4646f219-59f4-4e4e-84e9-a1cbed3d0daa",
+      "size": 160736,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-11T07:14:34.704Z",
+      "supabase_path": "campaigns/1789110873890-719251135.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789110873890-719251135.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789112540815-183803925.png",
+      "id": "44bc39f1-5214-4b28-b1c4-a3c3395153d2",
+      "size": 54284,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-11T07:42:21.344Z",
+      "supabase_path": "campaigns/1789112540815-183803925.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112540815-183803925.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789112747672-359282130.png",
+      "id": "c943bfc7-631b-47a1-b63f-24d92169b314",
+      "size": 50469,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-11T07:45:48.210Z",
+      "supabase_path": "campaigns/1789112747672-359282130.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112747672-359282130.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789112842975-647597162.jpg",
+      "id": "15bf369c-39e2-49d7-bf96-2528ef7e10e6",
+      "size": 160843,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-11T07:47:23.332Z",
+      "supabase_path": "campaigns/1789112842975-647597162.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112842975-647597162.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789113037088-469145999.jpg",
+      "id": "166dab30-2d4a-4932-83b0-259b2f71c822",
+      "size": 168176,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-11T07:50:37.847Z",
+      "supabase_path": "campaigns/1789113037088-469145999.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113037088-469145999.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789113175263-487435820.jpg",
+      "id": "bed483a4-8ed0-458a-b446-af446477cffe",
+      "size": 176193,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-11T07:52:55.983Z",
+      "supabase_path": "campaigns/1789113175263-487435820.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113175263-487435820.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789113286646-450347053.jpg",
+      "id": "259d2ee1-a4c6-4e22-b2ee-6da9eaae334b",
+      "size": 189843,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-11T07:54:47.434Z",
+      "supabase_path": "campaigns/1789113286646-450347053.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113286646-450347053.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789376017838-236689068.png",
+      "id": "a4b7302d-4a7f-4f06-9da8-0a1e5337d9a9",
+      "size": 68158,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-14T08:53:38.492Z",
+      "supabase_path": "campaigns/1789376017838-236689068.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789376017838-236689068.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789379964976-668451283.png",
+      "id": "a02251a7-81e2-4048-b74d-be518c0e95e6",
+      "size": 338760,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-14T09:59:25.869Z",
+      "supabase_path": "campaigns/1789379964976-668451283.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789379964976-668451283.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453043132-237503848.jpg",
+      "id": "323e5719-0fc7-42eb-9419-742f355a765e",
+      "size": 67029,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:17:23.931Z",
+      "supabase_path": "campaigns/1789453043132-237503848.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453043132-237503848.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453101311-613651940.jpg",
+      "id": "7c136007-6f5a-4377-af57-73b5d1b39dcc",
+      "size": 31939,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:18:21.482Z",
+      "supabase_path": "campaigns/1789453101311-613651940.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453101311-613651940.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453190856-72815615.jpg",
+      "id": "7e2ca688-bb66-42cc-ae11-6989859148e5",
+      "size": 128878,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:19:51.569Z",
+      "supabase_path": "campaigns/1789453190856-72815615.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453190856-72815615.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453364988-280033235.jpg",
+      "id": "2be96021-1be4-4125-a8ca-82f988a74dd8",
+      "size": 103642,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:22:45.637Z",
+      "supabase_path": "campaigns/1789453364988-280033235.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453364988-280033235.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453502634-135204408.png",
+      "id": "9e235b30-9858-45b4-a647-568bdc3d3ccf",
+      "size": 51679,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-15T06:25:05.751Z",
+      "supabase_path": "campaigns/1789453502634-135204408.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453502634-135204408.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453568068-759024832.jpg",
+      "id": "b688c588-50ba-40aa-b60b-67daf27f2203",
+      "size": 31612,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:26:08.272Z",
+      "supabase_path": "campaigns/1789453568068-759024832.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453568068-759024832.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453615672-633924830.jpeg",
+      "id": "88351ef3-a3ae-4875-8ba3-141bc72b6354",
+      "size": 576362,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:26:56.435Z",
+      "supabase_path": "campaigns/1789453615672-633924830.jpeg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453615672-633924830.jpeg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453796811-495860551.jpg",
+      "id": "dad5c9a5-241c-4a1a-99dc-f991e8420f35",
+      "size": 187234,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:30:03.142Z",
+      "supabase_path": "campaigns/1789453796811-495860551.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453796811-495860551.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453799126-732642410.jpg",
+      "id": "afc9d824-f1c3-4629-976b-519ec6e9a0b1",
+      "size": 187234,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:30:03.237Z",
+      "supabase_path": "campaigns/1789453799126-732642410.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453799126-732642410.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453858873-780179027.jpg",
+      "id": "7ae87e1f-ec61-4f56-bdb7-2f8ada14179d",
+      "size": 114089,
+      "mime_type": "image/jpeg",
+      "updated_at": "2026-09-15T06:30:59.202Z",
+      "supabase_path": "campaigns/1789453858873-780179027.jpg",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453858873-780179027.jpg"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789453981872-757470500.png",
+      "id": "e119b5c6-5a35-4127-85d3-890942ec872d",
+      "size": 64662,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-15T06:33:02.518Z",
+      "supabase_path": "campaigns/1789453981872-757470500.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453981872-757470500.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789455004472-629391360.png",
+      "id": "c8f3bd4c-c90f-483e-815f-95f40f51455c",
+      "size": 182898,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-15T06:50:05.228Z",
+      "supabase_path": "campaigns/1789455004472-629391360.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789455004472-629391360.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789456053546-146131175.png",
+      "id": "cced5d7d-1fc9-4897-a8bc-3411c1e9ffb6",
+      "size": 27612,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-15T07:07:33.926Z",
+      "supabase_path": "campaigns/1789456053546-146131175.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456053546-146131175.png"
+    },
+    {
+      "bucket": "campaigns",
+      "name": "1789456636537-694671129.png",
+      "id": "d1ce4318-ce9e-4d62-8f93-d6f0ef2cd3c4",
+      "size": 280393,
+      "mime_type": "image/png",
+      "updated_at": "2026-09-15T07:17:17.338Z",
+      "supabase_path": "campaigns/1789456636537-694671129.png",
+      "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456636537-694671129.png"
+    }
+  ],
+  "db_references": [
+    {
+      "table": "dt_campaigns",
+      "row_id": "dd4146a5-0725-4abd-9e46-ee5a2d7a07e0",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788534023233-551213397.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1788534023233-551213397.png",
+      "filename": "1788534023233-551213397.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "8eb4fcac-2e68-4ad0-8981-f97dbea9762b",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788529049313-164793136.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1788529049313-164793136.jpg",
+      "filename": "1788529049313-164793136.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "79b4647b-51da-4a2b-882a-17752f0d3165",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788533109172-882564563.jpeg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1788533109172-882564563.jpeg",
+      "filename": "1788533109172-882564563.jpeg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "5bb602c9-82da-46b7-b54f-4b737d49efa3",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054770852-151764548.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789054770852-151764548.png",
+      "filename": "1789054770852-151764548.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "270460e4-fba5-4d04-ad3e-64801d01dd75",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056191685-940974787.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789056191685-940974787.png",
+      "filename": "1789056191685-940974787.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "02d5c587-c441-4ff9-8ce1-374701fab2bb",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054873900-509947018.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789054873900-509947018.png",
+      "filename": "1789054873900-509947018.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "9dbc906c-f0ad-4e32-a471-51bc059a972f",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113037088-469145999.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789113037088-469145999.jpg",
+      "filename": "1789113037088-469145999.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "3712092c-d2af-4044-9d88-ae74e4a3299f",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113175263-487435820.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789113175263-487435820.jpg",
+      "filename": "1789113175263-487435820.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "cf068261-daf7-41fb-b5d2-438ac0eccd71",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056256328-809326803.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789056256328-809326803.png",
+      "filename": "1789056256328-809326803.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "2c43ca50-3279-44d5-aa29-87c5aca25738",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113286646-450347053.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789113286646-450347053.jpg",
+      "filename": "1789113286646-450347053.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "d85440e1-f7b4-4cfc-9386-5681b0828887",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112540815-183803925.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789112540815-183803925.png",
+      "filename": "1789112540815-183803925.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "24a1413f-334f-4136-ab1e-160f26b44c9e",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112842975-647597162.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789112842975-647597162.jpg",
+      "filename": "1789112842975-647597162.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "44cb338c-c4a1-4c85-9920-8c9bc9203176",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056311654-318477796.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789056311654-318477796.png",
+      "filename": "1789056311654-318477796.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "8c5b131e-0055-490f-ad13-b1729734d9d7",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789035429567-660791769.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789035429567-660791769.png",
+      "filename": "1789035429567-660791769.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "cf8ff714-83c5-4aac-ac13-6b3e1b99a8cf",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789055960676-187629893.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789055960676-187629893.png",
+      "filename": "1789055960676-187629893.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "5e236c1f-6805-4962-a056-d9fc810d5bfc",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112747672-359282130.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789112747672-359282130.png",
+      "filename": "1789112747672-359282130.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "a8dd2eb8-8d7a-4f8d-a57d-c4141eae5db8",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789110873890-719251135.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789110873890-719251135.jpg",
+      "filename": "1789110873890-719251135.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "c27c645a-8e00-49cc-8c61-bf093b9db7f5",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789379964976-668451283.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789379964976-668451283.png",
+      "filename": "1789379964976-668451283.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "61788808-2998-4c87-aa99-4ad8684c401d",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453981872-757470500.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453981872-757470500.png",
+      "filename": "1789453981872-757470500.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "b5920fb0-6dc8-41d2-871b-bea35d042419",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453796811-495860551.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453796811-495860551.jpg",
+      "filename": "1789453796811-495860551.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "82175939-2af4-4734-bd9b-e01c760a3bc2",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789376017838-236689068.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789376017838-236689068.png",
+      "filename": "1789376017838-236689068.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "56cfa4ff-f039-4e35-b4cb-1ebf540e037e",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789455004472-629391360.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789455004472-629391360.png",
+      "filename": "1789455004472-629391360.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "0de5cbbb-617f-4219-85be-a765bb180715",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453101311-613651940.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453101311-613651940.jpg",
+      "filename": "1789453101311-613651940.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "adab34d8-3782-4fd3-bb28-824b662a73a1",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453190856-72815615.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453190856-72815615.jpg",
+      "filename": "1789453190856-72815615.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "9a1fb56a-b035-45d8-b415-cf44ee416b40",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453364988-280033235.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453364988-280033235.jpg",
+      "filename": "1789453364988-280033235.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "f6bcc95b-716b-4ad6-ae4b-4265330250e4",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453043132-237503848.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453043132-237503848.jpg",
+      "filename": "1789453043132-237503848.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "a1c76454-4e2a-4cf6-a565-b796ecb39630",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453502634-135204408.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453502634-135204408.png",
+      "filename": "1789453502634-135204408.png"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "08e7a53d-25d2-4325-a20b-31c3bbcef997",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453568068-759024832.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453568068-759024832.jpg",
+      "filename": "1789453568068-759024832.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "83eac1fe-b247-4ab1-a537-9bc3e1339353",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453615672-633924830.jpeg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453615672-633924830.jpeg",
+      "filename": "1789453615672-633924830.jpeg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "2ed5f0a4-d64d-4058-bf7a-becf191a5b82",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453799126-732642410.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453799126-732642410.jpg",
+      "filename": "1789453799126-732642410.jpg"
+    },
+    {
+      "table": "dt_campaigns",
+      "row_id": "e9a45ae3-40b8-4e86-901d-65d27868ff74",
+      "column": "image",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453858873-780179027.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789453858873-780179027.jpg",
+      "filename": "1789453858873-780179027.jpg"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "e522b21c-5c41-4f4b-808a-f5b2481f7995",
+      "column": "thumbnail",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054550941-484712048.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789054550941-484712048.png",
+      "filename": "1789054550941-484712048.png"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "e522b21c-5c41-4f4b-808a-f5b2481f7995",
+      "column": "default_config",
+      "json_path": "bgImage",
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054550941-484712048.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789054550941-484712048.png",
+      "filename": "1789054550941-484712048.png"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "e522b21c-5c41-4f4b-808a-f5b2481f7995",
+      "column": "default_config",
+      "json_path": "lampImage",
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789034817448-515949100.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789034817448-515949100.png",
+      "filename": "1789034817448-515949100.png"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "658a271c-b975-471f-9fba-2dc7de7da6a8",
+      "column": "thumbnail",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945474836-233650052.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1788945474836-233650052.jpg",
+      "filename": "1788945474836-233650052.jpg"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "658a271c-b975-471f-9fba-2dc7de7da6a8",
+      "column": "default_config",
+      "json_path": "bgImage",
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945474836-233650052.jpg",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1788945474836-233650052.jpg",
+      "filename": "1788945474836-233650052.jpg"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "658a271c-b975-471f-9fba-2dc7de7da6a8",
+      "column": "default_config",
+      "json_path": "lampImage",
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945475866-439213222.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1788945475866-439213222.png",
+      "filename": "1788945475866-439213222.png"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "c064dc12-08ac-4fac-81d7-3ca17e15e200",
+      "column": "thumbnail",
+      "json_path": null,
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456636537-694671129.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789456636537-694671129.png",
+      "filename": "1789456636537-694671129.png"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "c064dc12-08ac-4fac-81d7-3ca17e15e200",
+      "column": "default_config",
+      "json_path": "bgImage",
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456636537-694671129.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789456636537-694671129.png",
+      "filename": "1789456636537-694671129.png"
+    },
+    {
+      "table": "dt_campaign_templates",
+      "row_id": "c064dc12-08ac-4fac-81d7-3ca17e15e200",
+      "column": "default_config",
+      "json_path": "lampImage",
+      "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456053546-146131175.png",
+      "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789456053546-146131175.png",
+      "filename": "1789456053546-146131175.png"
+    }
+  ],
+  "collisions": [],
+  "special_cases": {
+    "missing_files_in_storage": [
+      {
+        "table": "dt_campaign_templates",
+        "row_id": "e522b21c-5c41-4f4b-808a-f5b2481f7995",
+        "column": "thumbnail",
+        "json_path": null,
+        "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054550941-484712048.png",
+        "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789054550941-484712048.png",
+        "filename": "1789054550941-484712048.png"
+      },
+      {
+        "table": "dt_campaign_templates",
+        "row_id": "e522b21c-5c41-4f4b-808a-f5b2481f7995",
+        "column": "default_config",
+        "json_path": "bgImage",
+        "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054550941-484712048.png",
+        "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789054550941-484712048.png",
+        "filename": "1789054550941-484712048.png"
+      },
+      {
+        "table": "dt_campaign_templates",
+        "row_id": "e522b21c-5c41-4f4b-808a-f5b2481f7995",
+        "column": "default_config",
+        "json_path": "lampImage",
+        "current_supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789034817448-515949100.png",
+        "proposed_serverbyt_url": "https://media.dtacticsit.in/campaigns/1789034817448-515949100.png",
+        "filename": "1789034817448-515949100.png"
+      }
+    ],
+    "unreferenced_storage_files": [
+      {
+        "bucket": "campaigns",
+        "name": "1788530772304-732340596.png",
+        "id": "2b93d759-165a-4128-afd7-30a817945890",
+        "size": 85485,
+        "mime_type": "image/png",
+        "updated_at": "2026-09-04T14:06:12.983Z",
+        "supabase_path": "campaigns/1788530772304-732340596.png",
+        "supabase_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788530772304-732340596.png"
+      }
+    ],
+    "unusual_extensions": [],
+    "dangerous_files": [],
+    "large_files": []
+  },
+  "items": [
+    {
+      "source_supabase_path": "campaigns/1788529049313-164793136.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788529049313-164793136.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1788529049313-164793136.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1788529049313-164793136.jpg",
+      "size": 158490,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1788530772304-732340596.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788530772304-732340596.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1788530772304-732340596.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1788530772304-732340596.png",
+      "size": 85485,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 0,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1788533109172-882564563.jpeg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788533109172-882564563.jpeg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1788533109172-882564563.jpeg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1788533109172-882564563.jpeg",
+      "size": 111586,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1788534023233-551213397.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788534023233-551213397.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1788534023233-551213397.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1788534023233-551213397.png",
+      "size": 159065,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1788945474836-233650052.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945474836-233650052.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1788945474836-233650052.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1788945474836-233650052.jpg",
+      "size": 514534,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 2,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1788945475866-439213222.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1788945475866-439213222.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1788945475866-439213222.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1788945475866-439213222.png",
+      "size": 521152,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789035429567-660791769.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789035429567-660791769.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789035429567-660791769.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789035429567-660791769.png",
+      "size": 21483,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789054770852-151764548.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054770852-151764548.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789054770852-151764548.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789054770852-151764548.png",
+      "size": 91106,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789054873900-509947018.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789054873900-509947018.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789054873900-509947018.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789054873900-509947018.png",
+      "size": 91106,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789055960676-187629893.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789055960676-187629893.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789055960676-187629893.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789055960676-187629893.png",
+      "size": 91106,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789056191685-940974787.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056191685-940974787.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789056191685-940974787.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789056191685-940974787.png",
+      "size": 91106,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789056256328-809326803.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056256328-809326803.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789056256328-809326803.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789056256328-809326803.png",
+      "size": 91106,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789056311654-318477796.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789056311654-318477796.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789056311654-318477796.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789056311654-318477796.png",
+      "size": 91106,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789110873890-719251135.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789110873890-719251135.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789110873890-719251135.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789110873890-719251135.jpg",
+      "size": 160736,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789112540815-183803925.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112540815-183803925.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789112540815-183803925.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789112540815-183803925.png",
+      "size": 54284,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789112747672-359282130.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112747672-359282130.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789112747672-359282130.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789112747672-359282130.png",
+      "size": 50469,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789112842975-647597162.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789112842975-647597162.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789112842975-647597162.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789112842975-647597162.jpg",
+      "size": 160843,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789113037088-469145999.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113037088-469145999.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789113037088-469145999.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789113037088-469145999.jpg",
+      "size": 168176,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789113175263-487435820.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113175263-487435820.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789113175263-487435820.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789113175263-487435820.jpg",
+      "size": 176193,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789113286646-450347053.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789113286646-450347053.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789113286646-450347053.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789113286646-450347053.jpg",
+      "size": 189843,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789376017838-236689068.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789376017838-236689068.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789376017838-236689068.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789376017838-236689068.png",
+      "size": 68158,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789379964976-668451283.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789379964976-668451283.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789379964976-668451283.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789379964976-668451283.png",
+      "size": 338760,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453043132-237503848.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453043132-237503848.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453043132-237503848.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453043132-237503848.jpg",
+      "size": 67029,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453101311-613651940.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453101311-613651940.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453101311-613651940.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453101311-613651940.jpg",
+      "size": 31939,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453190856-72815615.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453190856-72815615.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453190856-72815615.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453190856-72815615.jpg",
+      "size": 128878,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453364988-280033235.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453364988-280033235.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453364988-280033235.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453364988-280033235.jpg",
+      "size": 103642,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453502634-135204408.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453502634-135204408.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453502634-135204408.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453502634-135204408.png",
+      "size": 51679,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453568068-759024832.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453568068-759024832.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453568068-759024832.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453568068-759024832.jpg",
+      "size": 31612,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453615672-633924830.jpeg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453615672-633924830.jpeg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453615672-633924830.jpeg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453615672-633924830.jpeg",
+      "size": 576362,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453796811-495860551.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453796811-495860551.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453796811-495860551.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453796811-495860551.jpg",
+      "size": 187234,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453799126-732642410.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453799126-732642410.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453799126-732642410.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453799126-732642410.jpg",
+      "size": 187234,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453858873-780179027.jpg",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453858873-780179027.jpg",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453858873-780179027.jpg",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453858873-780179027.jpg",
+      "size": 114089,
+      "mime_type": "image/jpeg",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789453981872-757470500.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789453981872-757470500.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789453981872-757470500.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789453981872-757470500.png",
+      "size": 64662,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789455004472-629391360.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789455004472-629391360.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789455004472-629391360.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789455004472-629391360.png",
+      "size": 182898,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789456053546-146131175.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456053546-146131175.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789456053546-146131175.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789456053546-146131175.png",
+      "size": 27612,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 1,
+      "migration_status": "NOT_STARTED"
+    },
+    {
+      "source_supabase_path": "campaigns/1789456636537-694671129.png",
+      "source_url": "https://brbdsyfhffmvvsqtiliz.supabase.co/storage/v1/object/public/campaigns/1789456636537-694671129.png",
+      "destination_serverbyt_path": "public_html/crm-media/campaigns/1789456636537-694671129.png",
+      "destination_url": "https://media.dtacticsit.in/campaigns/1789456636537-694671129.png",
+      "size": 280393,
+      "mime_type": "image/png",
+      "source_hash_if_available": null,
+      "collision_status": "NO_COLLISION",
+      "db_reference_count": 2,
+      "migration_status": "NOT_STARTED"
+    }
+  ]
+}
