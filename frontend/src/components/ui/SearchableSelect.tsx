@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 
 export interface Option { value: string; label: string; color?: string | null; hint?: string }
 
-export function SearchableSelect({ value, onChange, options, placeholder = 'Select…', invalid, clearable, align = 'left', creatable = false }: {
+export function SearchableSelect({ value, onChange, options, placeholder = 'Select…', invalid, clearable, align = 'left', creatable = false, disabled = false }: {
   value: string;
   onChange: (v: string) => void;
   options: Option[];
@@ -14,6 +14,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
   clearable?: boolean;
   align?: 'left' | 'right';
   creatable?: boolean;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
@@ -53,8 +54,9 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
     <div className="relative" ref={ref}>
       <div className={cn(
         'relative flex items-center w-full h-10 px-3.5 rounded-lg bg-surface-2 border transition-all cursor-text',
-        invalid ? 'border-red-400' : 'border-app', open && 'ring-2 ring-brand'
-      )} onClick={() => { if (!open) setOpen(true); }}>
+        invalid ? 'border-red-400' : 'border-app', open && 'ring-2 ring-brand',
+        disabled && 'opacity-60 cursor-not-allowed bg-subtle/30 pointer-events-none'
+      )} onClick={() => { if (!open && !disabled) setOpen(true); }}>
         {selected?.color && !open && <span className="h-2.5 w-2.5 rounded-full shrink-0 mr-2" style={{ backgroundColor: selected.color }} />}
         <input 
           value={open ? q : (selected?.label || '')}
@@ -69,6 +71,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
             }
           }}
           placeholder={placeholder}
+          disabled={disabled}
           className="flex-1 bg-transparent outline-none text-sm text-base-fg truncate min-w-0"
         />
         {clearable && selected && (

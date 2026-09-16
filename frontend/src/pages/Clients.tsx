@@ -24,6 +24,7 @@ import { useCreateClient, useUpdateClient, useDeleteClient } from '../hooks/useC
 
 export default function Clients() {
   const { can } = usePermissions();
+  const qc = useQueryClient();
   const { data: clients, isLoading } = useClients();
   const { data: masters } = useMasters();
   const lookup = makeLookup(masters);
