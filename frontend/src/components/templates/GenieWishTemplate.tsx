@@ -4,6 +4,11 @@ import { MagicLamp } from '../magic/MagicLamp';
 import { RevealCard } from '../magic/RevealCard';
 
 // Extracted from original genie-s-wish project but adjusted for generic config
+const isVideo = (url: string | undefined) => {
+  if (!url) return false;
+  return url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i) || url.endsWith('#video');
+};
+
 export default function GenieWishTemplate({ config, reveal, onReveal, onReset }: {
   config: any;
   reveal: any;
@@ -29,8 +34,17 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
         </style>
       )}
       
-      {/* Background Image */}
-      {config.bgImage && (
+      {/* Background Media */}
+      {config.bgImage && isVideo(config.bgImage) ? (
+        <video
+          src={config.bgImage}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover opacity-55"
+        />
+      ) : config.bgImage ? (
         <img
           src={config.bgImage}
           alt=""
@@ -39,7 +53,7 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover opacity-55"
         />
-      )}
+      ) : null}
       <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
       <StarField />
 

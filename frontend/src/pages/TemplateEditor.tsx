@@ -129,7 +129,10 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
     if (!file) return;
     // No artificial application-level size limit — actual limits are determined
     // by infrastructure (Nginx, SFTP, disk space).
-    const url = URL.createObjectURL(file);
+    let url = URL.createObjectURL(file);
+    if (file.type.startsWith('video/')) {
+      url += '#video';
+    }
     setPendingFiles(prev => ({ ...prev, [propId]: file }));
     setConfig(propId, url);
     if (e.target) e.target.value = '';
@@ -389,7 +392,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
                                       type="file"
                                       id={`img-upload-${prop.id}`}
                                       className="hidden"
-                                      accept="image/*"
+                                      accept="image/*,video/*"
                                       onChange={(e) => handleImageUpload(e, prop.id)}
                                     />
                                   </div>
