@@ -36,17 +36,20 @@ export default function Topbar({ crumbs, onMobileMenu }: { crumbs: Crumb[]; onMo
   }, []);
 
   const { data: allEmployees, isLoading } = useEmployees();
-  const email = user?.email ?? 'user@dtactics.io';
-  const fallbackName = user?.user_metadata?.full_name || user?.user_metadata?.name || email.split('@')[0];
+  const email = user?.email || '';
+  const fallbackName = user?.user_metadata?.full_name || user?.user_metadata?.name || (email ? email.split('@')[0] : 'User');
   const actualEmployee = (allEmployees || []).find((e) => e.email === email);
   
   // Use a local state to prevent flashing old names on refresh
-  const [name, setName] = useState(fallbackName);
+  const [name, setName] = useState(() => {
+    return localStorage.getItem('crm_cached_user_name') || fallbackName;
+  });
   
   useEffect(() => {
     if (!isLoading && actualEmployee?.employee_name) {
       setName(actualEmployee.employee_name);
-    } else if (!isLoading) {
+      localStorage.setItem('crm_cached_user_name', actualEmployee.employee_name);
+    } else if (!isLoading && !actualEmployee?.employee_name) {
       setName(fallbackName);
     }
   }, [isLoading, actualEmployee?.employee_name, fallbackName]);

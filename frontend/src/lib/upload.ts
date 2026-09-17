@@ -36,7 +36,13 @@ export async function uploadFile(file: File, folder?: string): Promise<UploadRes
     body: formData,
   });
 
-  const data = await res.json();
+  let data;
+  const text = await res.text();
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (err) {
+    throw new Error(res.ok ? 'Invalid response format from server.' : `Server error (${res.status}): Please ensure the file size is within limits and the server is running.`);
+  }
 
   if (!res.ok) {
     // Surface the backend error message directly (e.g. "This file type is not allowed.")

@@ -112,6 +112,17 @@ export async function toggleTemplateStatus(id: string, status: string): Promise<
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
+  // First, remove any references in campaign setups to avoid foreign key violation
+  const { error: setupError } = await supabase
+    .from('dt_campaign_setup_templates')
+    .delete()
+    .eq('template_id', id);
+    
+  if (setupError) {
+    console.error('Error removing template from campaign setups:', setupError);
+    // Continue anyway to try and delete the template
+  }
+
   const { error } = await supabase
     .from('dt_campaign_templates')
     .delete()
