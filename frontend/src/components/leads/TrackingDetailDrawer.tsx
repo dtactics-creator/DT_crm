@@ -20,6 +20,7 @@ export default function TrackingDetailDrawer({ open, onClose, leadId, leadName, 
   masters: MasterItem[] | undefined;
 }) {
   const [data, setData] = useState<LeadUrlAnalytics | null>(null);
+  const [ipMappings, setIpMappings] = useState<Array<{ ip: string; name: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -34,17 +35,27 @@ export default function TrackingDetailDrawer({ open, onClose, leadId, leadName, 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/lead-url-tracking?leadId=${leadId}&token=${url.tracking_token}`, {
-        headers: {
-          'Authorization': `Bearer ${session?.access_token || ''}`,
-        },
-      });
+      const [res, settingsRes] = await Promise.all([
+        fetch(`/api/lead-url-tracking?leadId=${leadId}&token=${url.tracking_token}`, {
+          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` },
+        }),
+        fetch('/api/settings', {
+          headers: { 'Authorization': `Bearer ${session?.access_token || ''}` },
+        }).catch(() => null)
+      ]);
+
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
         throw new Error(errJson.error || 'Failed to load tracking details');
       }
+      
       const json = await res.json();
       setData(json);
+
+      if (settingsRes && settingsRes.ok) {
+        const settings = await settingsRes.json();
+        if (settings.ip_name_mapping) setIpMappings(settings.ip_name_mapping);
+      }
     } catch (err: any) {
       setError(err.message || 'Error loading tracking data');
     } finally {
@@ -85,13 +96,21 @@ export default function TrackingDetailDrawer({ open, onClose, leadId, leadName, 
     return <Laptop className="h-3.5 w-3.5 text-emerald-500 shrink-0" />;
   };
 
+  const resolveIpName = (ip?: string | null) => {
+    if (!ip) return '—';
+    const mapping = ipMappings.find((m) => m.ip === ip);
+    return mapping ? mapping.name : ip;
+  };
+
   const filteredVisits = (data?.visits || []).filter((v) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
+    const mappedName = resolveIpName(v.ip_address).toLowerCase();
     return (
       (v.path || '').toLowerCase().includes(term) ||
       (v.city || '').toLowerCase().includes(term) ||
       (v.country || '').toLowerCase().includes(term) ||
+      mappedName.includes(term) ||
       (v.ip_address || '').toLowerCase().includes(term) ||
       (v.device_type || '').toLowerCase().includes(term) ||
       (v.browser || '').toLowerCase().includes(term)
@@ -316,7 +335,20 @@ export default function TrackingDetailDrawer({ open, onClose, leadId, leadName, 
                             <span>· {v.operating_system || 'OS'} / {v.browser || 'Browser'}</span>
                           </span>
                         </td>
-                        <td className="px-3.5 py-2.5 font-mono text-subtle-fg">{v.ip_address || '—'}</td>
+                        <td className="px-3.5 py-2.5">
+                          {(() => {
+                            const mapping = ipMappings.find(m => m.ip === v.ip_address);
+                            if (mapping) {
+                              return (
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-base-fg text-[12.5px]">{mapping.name}</span>
+                                  <span className="font-mono text-[10.5px] text-muted-fg">{v.ip_address}</span>
+                                </div>
+                              );
+                            }
+                            return <span className="font-mono text-subtle-fg">{v.ip_address || '—'}</span>;
+                          })()}
+                        </td>
                         <td className="px-3.5 py-2.5 text-subtle-fg truncate max-w-[150px]">{v.referrer || 'Direct'}</td>
                       </tr>
                     ))}

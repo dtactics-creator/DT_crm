@@ -39,6 +39,7 @@ export type CampaignDashboardPayload = {
   
   setupOverview: { id: string; name: string; description: string; status: string; playMode: string; start: string | null; end: string | null; templateCount: number }[];
   setupTemplateComposition: { setupId: string; setupName: string; templates: { templateId: string; name: string; order: number; start: string | null; end: string | null }[] }[];
+  generatedAt: string;
 };
 
 export function useCampaignDashboard(filters?: CampaignFilters) {
@@ -54,5 +55,7 @@ export function useCampaignDashboard(filters?: CampaignFilters) {
       const qs = params.toString();
       return await api.get<CampaignDashboardPayload>(`/api/campaign-dashboard${qs ? '?' + qs : ''}`);
     },
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }

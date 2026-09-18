@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Bell, Users, Check, Save, Sliders, Shield, Blocks, ChevronLeft } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Users, Check, Save, Sliders, Shield, Blocks, ChevronLeft, Trash2, Plus, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEmployees } from '../hooks/useEmployees';
 import { useToast } from '../components/ui/Toast';
@@ -7,6 +7,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCrumbs, useSidebar } from '../components/layout/AppLayout';
 import { cn } from '../lib/utils';
 import Avatar from '../components/ui/Avatar';
+import Modal from '../components/ui/Modal';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Field from '../components/ui/Field';
 
 const TABS = [
   { id: 'general', label: 'General', icon: Sliders, description: 'Basic application settings' },
@@ -15,16 +19,26 @@ const TABS = [
   { id: 'integrations', label: 'Integrations', icon: Blocks, description: 'Connected services' },
 ];
 
+export interface IpMapping {
+  ip: string;
+  name: string;
+}
+
 export default function Settings() {
   const { data: employees, isLoading: employeesLoading } = useEmployees();
   const { toast } = useToast();
   const { session } = useAuth();
   const setCrumbs = useCrumbs();
   const { setCollapsed: setMainSidebarCollapsed } = useSidebar();
-  
+
   const [activeTab, setActiveTab] = useState('notifications');
   const [collapsed, setCollapsed] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [ipMappings, setIpMappings] = useState<IpMapping[]>([]);
+  const [newIp, setNewIp] = useState('');
+  const [newIpName, setNewIpName] = useState('');
+  const [isIpModalOpen, setIsIpModalOpen] = useState(false);
+  const [editingIp, setEditingIp] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -44,6 +58,9 @@ export default function Settings() {
 
         if (data.quotation_notification_users && Array.isArray(data.quotation_notification_users)) {
           setSelectedUsers(data.quotation_notification_users);
+        }
+        if (data.ip_name_mapping && Array.isArray(data.ip_name_mapping)) {
+          setIpMappings(data.ip_name_mapping);
         }
       } catch (err) {
         console.error(err);
@@ -87,6 +104,60 @@ export default function Settings() {
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const saveIpMappingsToApi = async (updatedList: IpMapping[]) => {
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          key: 'ip_name_mapping',
+          value: updatedList
+        })
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to save (Status ${res.status})`);
+      }
+      toast('IP mappings saved successfully', 'success');
+      return true;
+    } catch (err: any) {
+      console.error('Save API Error:', err);
+      toast(err.message || 'Failed to save IP settings', 'error');
+      return false;
+    }
+  };
+
+  const submitIpModal = async () => {
+    if (!newIp.trim() || !newIpName.trim()) return toast('Please enter both IP and Name', 'error');
+
+    let updated: IpMapping[];
+    if (editingIp) {
+      if (editingIp !== newIp.trim() && ipMappings.some(m => m.ip === newIp.trim())) return toast('IP already mapped', 'error');
+      updated = ipMappings.map(m => m.ip === editingIp ? { ip: newIp.trim(), name: newIpName.trim() } : m);
+    } else {
+      if (ipMappings.some(m => m.ip === newIp.trim())) return toast('IP already mapped', 'error');
+      updated = [...ipMappings, { ip: newIp.trim(), name: newIpName.trim() }];
+    }
+
+    setSaving(true);
+    const success = await saveIpMappingsToApi(updated);
+    setSaving(false);
+
+    if (success) {
+      setIpMappings(updated);
+      setIsIpModalOpen(false);
+    }
+  };
+
+  const removeIpMapping = async (ip: string) => {
+    const updated = ipMappings.filter(m => m.ip !== ip);
+    const success = await saveIpMappingsToApi(updated);
+    if (success) setIpMappings(updated);
   };
 
   if (loading || employeesLoading) {
@@ -178,9 +249,11 @@ export default function Settings() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-8"
+                  className="space-y-10"
                 >
-                  <div className="bg-surface border border-app rounded-2xl card-shadow overflow-hidden">
+                  <section className="space-y-4">
+                    <h3 className="px-1 text-[11px] font-extrabold uppercase tracking-widest text-subtle-fg">Application Alerts</h3>
+                    <div className="bg-surface border border-app rounded-2xl card-shadow overflow-hidden">
                     <div className="p-5 border-b border-app flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-lg bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-600 dark:text-brand-400">
@@ -244,10 +317,100 @@ export default function Settings() {
                       )}
                     </div>
                   </div>
+                  </section>
                 </motion.div>
               )}
 
-              {activeTab !== 'notifications' && (
+              {activeTab === 'general' && (
+                <motion.div
+                  key="general"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-10"
+                >
+                  <section className="space-y-4">
+                    <h3 className="px-1 text-[11px] font-extrabold uppercase tracking-widest text-subtle-fg">Tracking & Analytics</h3>
+                    <div className="bg-surface border border-app rounded-2xl card-shadow overflow-hidden">
+                    <div className="p-5 border-b border-app flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                          <Shield className="h-4.5 w-4.5" />
+                        </div>
+                        <div>
+                          <h2 className="text-[15px] font-bold text-base-fg">IP List</h2>
+                          <p className="text-[13px] text-muted-fg">Map IP addresses to recognizable names in Analytics.</p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setEditingIp(null);
+                          setNewIp('');
+                          setNewIpName('');
+                          setIsIpModalOpen(true);
+                        }}
+                        icon={<Plus className="h-4 w-4" />}
+                      >
+                        Add IP
+                      </Button>
+                    </div>
+
+                    <div className="p-5">
+                      {ipMappings.length > 0 ? (
+                        <div className="rounded-xl border border-app overflow-hidden">
+                          <table className="w-full text-left text-[13px]">
+                            <thead className="bg-surface-2 text-subtle-fg font-bold uppercase tracking-wider text-[11px]">
+                              <tr>
+                                <th className="px-4 py-2.5">IP Address</th>
+                                <th className="px-4 py-2.5">Mapped Name</th>
+                                <th className="px-4 py-2.5 w-24"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[color:var(--border)]">
+                              {ipMappings.map((m, idx) => (
+                                <tr key={idx} className="hover:bg-surface-2/50 transition-colors">
+                                  <td className="px-4 py-2.5 font-mono text-muted-fg">{m.ip}</td>
+                                  <td className="px-4 py-2.5 font-semibold text-base-fg">{m.name}</td>
+                                  <td className="px-4 py-2.5 text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button
+                                        onClick={() => {
+                                          setEditingIp(m.ip);
+                                          setNewIp(m.ip);
+                                          setNewIpName(m.name);
+                                          setIsIpModalOpen(true);
+                                        }}
+                                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors"
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => removeIpMapping(m.ip)}
+                                        className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 hover:text-red-500 transition-colors"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center text-muted-fg flex flex-col items-center">
+                          <Shield className="h-8 w-8 mb-3 opacity-20" />
+                          <p className="text-[14px] font-medium">No IP mappings configured.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  </section>
+                </motion.div>
+              )}
+
+              {activeTab !== 'notifications' && activeTab !== 'general' && (
                 <motion.div
                   key="coming-soon"
                   initial={{ opacity: 0, y: 10 }}
@@ -266,6 +429,36 @@ export default function Settings() {
         </div>
 
       </div>
+
+      <Modal
+        open={isIpModalOpen}
+        onClose={() => setIsIpModalOpen(false)}
+        title={editingIp ? 'Edit IP Mapping' : 'Add IP Mapping'}
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" onClick={() => setIsIpModalOpen(false)}>Cancel</Button>
+            <Button onClick={submitIpModal} loading={saving}>Save</Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <Field label="IP Address" required>
+            <Input
+              value={newIp}
+              onChange={(e) => setNewIp(e.target.value)}
+              placeholder="e.g. 49.204.115.155"
+            />
+          </Field>
+          <Field label="Assign Name" required>
+            <Input
+              value={newIpName}
+              onChange={(e) => setNewIpName(e.target.value)}
+              placeholder="e.g. Pravin (Internal)"
+              onKeyDown={(e) => e.key === 'Enter' && submitIpModal()}
+            />
+          </Field>
+        </div>
+      </Modal>
     </div>
   );
 }

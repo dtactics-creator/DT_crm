@@ -5,6 +5,7 @@ import PageHeader from '../components/layout/PageHeader';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatNumber, formatPercent, formatCurrency, timeAgo, cn } from '../lib/utils';
 import { SectionError } from '../components/dashboard/DashboardSkeleton';
+import { usePermissions } from '../contexts/PermissionContext';
 
 import DashboardKpiCard from '../components/dashboard/DashboardKpiCard';
 import SalesFunnel from '../components/dashboard/SalesFunnel';
@@ -25,6 +26,7 @@ const BTN = 'inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-[13
 
 export default function Dashboard() {
   const { data, isLoading, isError, error, refetch } = useDashboard();
+  const { can } = usePermissions();
   const [range, setRange] = useState<TrendRange>('12m');
 
   const masters = data?.masters ?? {};
@@ -32,14 +34,14 @@ export default function Dashboard() {
   const p = data?.projects;
 
   const kpiCards = [
-    { label: 'Total Leads', value: formatNumber(k?.totalLeads), icon: Users, tone: '#3366ff', href: '/leads', hint: k ? `${k.newThisMonth} received this month` : undefined },
-    { label: 'New Leads', value: formatNumber(k?.newLeads), icon: UserPlus, tone: '#0ea5e9', href: '/leads?status=new', hint: k?.unassignedLeads ? `${k.unassignedLeads} open leads unassigned` : 'All open leads assigned' },
-    { label: 'Won Leads', value: formatNumber(k?.wonLeads), icon: Trophy, tone: '#10b981', href: '/leads?status=won', hint: k ? `${formatPercent(k.winRate, 0)} win rate · won ÷ closed` : undefined },
-    { label: 'Lost Leads', value: formatNumber(k?.lostLeads), icon: XCircle, tone: '#ef4444', href: '/leads?status=lost', hint: k ? `${formatCurrency(k.lostValue)} lost value` : undefined },
-    { label: 'Conversion Rate', value: formatPercent(k?.conversionRate), icon: Target, tone: '#8b5cf6', href: '/leads', hint: 'won ÷ total leads' },
-    { label: 'Open Pipeline', value: formatCurrency(k?.openPipelineValue), icon: Wallet, tone: '#f59e0b', href: '/leads?stage=open', hint: k ? `${k.openLeads} open leads` : undefined },
-    { label: 'Won Value', value: formatCurrency(k?.wonValue), icon: CircleDollarSign, tone: '#10b981', href: '/leads?status=won', hint: k?.wonLeads ? `avg ${formatCurrency(k.avgWonValue)} per win` : undefined },
-    { label: 'Active Projects', value: formatNumber(p?.active), icon: Activity, tone: '#14b8a6', href: '/projects?status=active', hint: p ? `${p.total} total · ${p.completed} completed` : undefined },
+    { label: 'Total Leads', value: formatNumber(k?.totalLeads), icon: Users, tone: '#3366ff', href: can('leads.view') ? '/leads' : undefined, hint: k ? `${k.newThisMonth} received this month` : undefined },
+    { label: 'New Leads', value: formatNumber(k?.newLeads), icon: UserPlus, tone: '#0ea5e9', href: can('leads.view') ? '/leads?status=new' : undefined, hint: k?.unassignedLeads ? `${k.unassignedLeads} open leads unassigned` : 'All open leads assigned' },
+    { label: 'Won Leads', value: formatNumber(k?.wonLeads), icon: Trophy, tone: '#10b981', href: can('leads.view') ? '/leads?status=won' : undefined, hint: k ? `${formatPercent(k.winRate, 0)} win rate · won ÷ closed` : undefined },
+    { label: 'Lost Leads', value: formatNumber(k?.lostLeads), icon: XCircle, tone: '#ef4444', href: can('leads.view') ? '/leads?status=lost' : undefined, hint: k ? `${formatCurrency(k.lostValue)} lost value` : undefined },
+    { label: 'Conversion Rate', value: formatPercent(k?.conversionRate), icon: Target, tone: '#8b5cf6', href: can('leads.view') ? '/leads' : undefined, hint: 'won ÷ total leads' },
+    { label: 'Open Pipeline', value: formatCurrency(k?.openPipelineValue), icon: Wallet, tone: '#f59e0b', href: can('leads.view') ? '/leads?stage=open' : undefined, hint: k ? `${k.openLeads} open leads` : undefined },
+    { label: 'Won Value', value: formatCurrency(k?.wonValue), icon: CircleDollarSign, tone: '#10b981', href: can('leads.view') ? '/leads?status=won' : undefined, hint: k?.wonLeads ? `avg ${formatCurrency(k.avgWonValue)} per win` : undefined },
+    { label: 'Active Projects', value: formatNumber(p?.active), icon: Activity, tone: '#14b8a6', href: can('projects.view') ? '/projects?status=active' : undefined, hint: p ? `${p.total} total · ${p.completed} completed` : undefined },
   ];
 
   return (
@@ -69,37 +71,46 @@ export default function Dashboard() {
       </div>
 
       {/* Row 2 — Funnel + Trend */}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <SalesFunnel slices={data?.leadStatus ?? []} stages={masters.lead_status ?? []} loading={isLoading} onRetry={() => refetch()} />
-        <LeadTrend trend={data?.trend ?? null} loading={isLoading} onRetry={() => refetch()} range={range} onRangeChange={setRange} className="lg:col-span-2" />
-      </div>
+      {can('leads.view') && (
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <SalesFunnel slices={data?.leadStatus ?? []} stages={masters.lead_status ?? []} loading={isLoading} onRetry={() => refetch()} />
+          <LeadTrend trend={data?.trend ?? null} loading={isLoading} onRetry={() => refetch()} range={range} onRangeChange={setRange} className="lg:col-span-2" />
+        </div>
+      )}
 
       {/* Row 3 — Pipeline value + opportunities */}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <PipelineByStage slices={data?.leadStatus ?? []} priorities={data?.priorityPipeline ?? []} loading={isLoading} onRetry={() => refetch()} className="lg:col-span-2" />
-        <HighValueOpportunities rows={data?.opportunities ?? []} loading={isLoading} onRetry={() => refetch()} />
-      </div>
+      {can('leads.view') && (
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <PipelineByStage slices={data?.leadStatus ?? []} priorities={data?.priorityPipeline ?? []} loading={isLoading} onRetry={() => refetch()} className="lg:col-span-2" />
+          <HighValueOpportunities rows={data?.opportunities ?? []} loading={isLoading} onRetry={() => refetch()} />
+        </div>
+      )}
 
       {/* Row 4 — Source + employee performance */}
-      <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <LeadSourcePerformance rows={data?.sources ?? []} loading={isLoading} onRetry={() => refetch()} />
-        <SalesPerformance rows={data?.employees ?? []} unassigned={k?.unassignedLeads ?? 0} loading={isLoading} onRetry={() => refetch()} />
-      </div>
-
+      {can('leads.view') && (
+        <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <LeadSourcePerformance rows={data?.sources ?? []} loading={isLoading} onRetry={() => refetch()} />
+          <SalesPerformance rows={data?.employees ?? []} unassigned={k?.unassignedLeads ?? 0} loading={isLoading} onRetry={() => refetch()} />
+        </div>
+      )}
 
       {/* Row 5 — Action center */}
-      <div className="mb-6">
-        <NeedsAttention data={data?.attention ?? null} loading={isLoading} onRetry={() => refetch()} />
-      </div>
+      {can('leads.view') && (
+        <div className="mb-6">
+          <NeedsAttention data={data?.attention ?? null} loading={isLoading} onRetry={() => refetch()} />
+        </div>
+      )}
 
       {/* Row 6 — Project health */}
-      <ProjectHealth summary={p ?? null} slices={data?.projectHealth?.slices ?? []} rows={data?.projectHealth?.rows ?? []} loading={isLoading} onRetry={() => refetch()} />
+      {can('projects.view') && (
+        <ProjectHealth summary={p ?? null} slices={data?.projectHealth?.slices ?? []} rows={data?.projectHealth?.rows ?? []} loading={isLoading} onRetry={() => refetch()} />
+      )}
 
       {/* Row 7 — Quotations + clients + AMC */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3 mt-6">
-        <QuotationAnalytics data={data?.quotations ?? null} loading={isLoading} onRetry={() => refetch()} />
-        <ClientHealth data={data?.clients ?? null} loading={isLoading} onRetry={() => refetch()} />
-        <AmcAnalytics data={data?.amc ?? null} loading={isLoading} onRetry={() => refetch()} />
+        {can('quotations.view') && <QuotationAnalytics data={data?.quotations ?? null} loading={isLoading} onRetry={() => refetch()} />}
+        {can('clients.view') && <ClientHealth data={data?.clients ?? null} loading={isLoading} onRetry={() => refetch()} />}
+        {can('clients.view') && <AmcAnalytics data={data?.amc ?? null} loading={isLoading} onRetry={() => refetch()} />}
       </div>
 
       {/* Row 8 — Website / lead engagement */}
@@ -109,11 +120,10 @@ export default function Dashboard() {
         </div>
       )}
 
-
       {/* Row 6 — Recent */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <RecentLeads rows={data?.recentLeads ?? []} loading={isLoading} onRetry={() => refetch()} />
-        <RecentProjects rows={data?.recentProjects ?? []} loading={isLoading} onRetry={() => refetch()} />
+        {can('leads.view') && <RecentLeads rows={data?.recentLeads ?? []} loading={isLoading} onRetry={() => refetch()} />}
+        {can('projects.view') && <RecentProjects rows={data?.recentProjects ?? []} loading={isLoading} onRetry={() => refetch()} />}
         <ActivityFeed rows={data?.activity ?? []} loading={isLoading} onRetry={() => refetch()} />
       </div>
     </div>

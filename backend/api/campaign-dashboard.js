@@ -261,7 +261,8 @@ export default async function handler(req, res) {
       upcomingCampaignsList,
       expiringSoonCampaigns,
       setupOverview,
-      setupTemplateComposition
+      setupTemplateComposition,
+      generatedAt: new Date().toISOString()
     });
 
   } catch (err) {

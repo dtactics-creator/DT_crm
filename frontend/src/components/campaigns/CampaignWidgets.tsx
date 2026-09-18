@@ -417,13 +417,13 @@ export function DataList({ title, data, columns }: { title: string, data?: any[]
     <>
       <div className="rounded-2xl border border-app bg-surface shadow-sm overflow-hidden flex flex-col max-h-[400px]">
         <div className="p-5 border-b border-app flex items-center justify-between shrink-0">
-          <h3 className="text-[14px] font-bold text-base-fg">{title} <span className="text-subtle-fg font-normal ml-2">({data.length})</span></h3>
+          <h3 className="text-[14px] font-bold text-base-fg">{title}</h3>
           <button onClick={() => setModalOpen(true)} className="text-[12.5px] font-semibold text-brand-600 hover:text-brand-700">View all</button>
         </div>
         {renderTable(visibleData)}
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={`${title} (${data.length})`} size="max-w-xl">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={title} size="max-w-xl">
         <div className="pt-2">
           {renderTable(data, true)}
         </div>

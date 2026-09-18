@@ -51,6 +51,7 @@ export default function CampaignDashboard() {
         subtitle="Comprehensive analytics, timelines, and distributions for all campaign modules."
         actions={
           <div className="flex items-center gap-3">
+            {data?.generatedAt && <span className="hidden text-[11.5px] text-subtle-fg sm:inline">Updated {timeAgo(data.generatedAt)}</span>}
             <button onClick={() => refetch()} className={cn(BTN, 'border-app bg-surface text-muted-fg hover:text-base-fg')} disabled={isLoading}>
               <RefreshCw size={16} className={cn(isLoading && 'animate-spin')} /> Refresh
             </button>
