@@ -162,7 +162,7 @@ export default function CampaignTemplates() {
       render: (c) => {
         return (
           <Badge
-            label={c.status === 'active' ? 'Live' : 'Draft'}
+            label={c.status === 'active' ? 'Active' : 'Inactive'}
             color={c.status === 'active' ? '#10b981' : '#64748b'}
           />
         );
@@ -224,7 +224,7 @@ export default function CampaignTemplates() {
                 values={statusFilter} 
                 onChange={setStatusFilter} 
                 placeholder="All statuses"
-                options={[{ value: 'active', label: 'Live' }, { value: 'inactive', label: 'Draft' }]} 
+                options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} 
               />
             </div>
           }

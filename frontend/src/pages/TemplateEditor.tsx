@@ -143,7 +143,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
     description: '',
     thumbnail: '',
     is_default: false,
-    status: 'draft',
+    status: 'inactive',
     schema: defaultGenieSchema as any,
     default_config: {
       background: '#1e1b4b', bgImage: 'night-desert.jpg',
@@ -180,7 +180,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
           description: '',
           thumbnail: '',
           is_default: false,
-          status: 'draft',
+          status: 'inactive',
           schema: defaultGenieSchema as any,
           default_config: {
             background: '#1e1b4b', bgImage: 'night-desert.jpg',
@@ -337,7 +337,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
                     <SearchableSelect
                       value={form.status}
                       onChange={v => setForm(f => ({ ...f, status: v }))}
-                      options={[{ value: 'active', label: 'Live (Active)' }, { value: 'draft', label: 'Draft (Inactive)' }]}
+                      options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]}
                     />
                   </Field>
                 </div>

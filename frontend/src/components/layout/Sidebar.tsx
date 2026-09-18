@@ -55,6 +55,7 @@ const NAV = [
 ];
 
 const CAMPAIGN_NAV = [
+  { to: '/campaign-dashboard', label: 'Campaign Dashboard', icon: LayoutDashboard, perm: null, end: false },
   { to: '/campaign-masters', label: 'Campaign Master', icon: Database, perm: 'campaign_masters.view', end: false },
   { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: 'campaigns.view', end: false },
   { to: '/campaign-templates', label: 'Campaign Templates', icon: Sparkles, perm: 'campaign_templates.view', end: false },

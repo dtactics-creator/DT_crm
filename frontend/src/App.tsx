@@ -23,6 +23,7 @@ import AuditLogs from './pages/AuditLogs';
 import Quotations from './pages/Quotations';
 import Settings from './pages/Settings';
 import Campaigns from './pages/Campaigns';
+import CampaignDashboard from './pages/CampaignDashboard';
 import CampaignMasters from './pages/CampaignMasters';
 import CampaignTemplates from './pages/CampaignTemplates';
 import CampaignSetup from './pages/CampaignSetup';
@@ -42,8 +43,8 @@ function LoginRoute() {
 
 import React from 'react';
 
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
-  constructor(props: {children: React.ReactNode}) {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -91,6 +92,7 @@ export default function App() {
                       <Route path="/quotations" element={<RequirePermission perm="quotations.view"><Quotations /></RequirePermission>} />
                       <Route path="/settings" element={<RequirePermission perm="masters.edit"><Settings /></RequirePermission>} />
                       <Route path="/profile" element={<Profile />} />
+                      <Route path="/campaign-dashboard" element={<CampaignDashboard />} />
                       <Route path="/campaigns" element={<Campaigns />} />
                       <Route path="/campaign-masters" element={<CampaignMasters />} />
                       <Route path="/campaign-templates" element={<CampaignTemplates />} />
