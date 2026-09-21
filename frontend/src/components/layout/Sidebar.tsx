@@ -1,8 +1,8 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, FolderKanban, Briefcase, Database, UserCog,
-  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList
+  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList, CheckSquare
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
@@ -42,17 +42,25 @@ function SidebarTooltip({ children, content, disabled }: { children: React.React
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, perm: null },
   { to: '/leads', label: 'Leads', icon: Users, perm: 'leads.view' },
-  { to: '/projects', label: 'Projects', icon: FolderKanban, perm: 'projects.view' },
-  { to: '/clients', label: 'Clients', icon: Briefcase, perm: 'clients.view' },
-  { to: '/masters', label: 'Masters', icon: Database, perm: 'masters.view' },
   { to: '/employees', label: 'Employees', icon: UserCog, perm: 'employees.view' },
   { to: '/roles', label: 'Roles', icon: ShieldCheck, perm: 'roles.view' },
   { to: '/templates', label: 'Templates', icon: MessageSquareText, perm: 'templates.view' },
   { to: '/reports', label: 'Reports', icon: BarChart3, perm: 'reports.view' },
   { to: '/audit-logs', label: 'Audit Logs', icon: FileText, perm: 'audit_logs.view' },
   { to: '/quotations', label: 'Quotations', icon: Receipt, perm: 'quotations.view' },
+  { to: '/masters', label: 'System Masters', icon: Database, perm: 'masters.view' },
   { to: '/settings', label: 'Settings', icon: Settings, perm: 'masters.edit' },
+  { to: '/clients', label: 'Clients', icon: Briefcase, perm: 'clients.view' },
+  { to: '/projects', label: 'Projects', icon: FolderKanban, perm: 'projects.view' },
 ];
+
+const PM_NAV = [
+  { to: '/clients?context=project-management', label: 'Clients', icon: Briefcase, perm: 'clients.view' },
+  { to: '/projects?context=project-management', label: 'Projects', icon: FolderKanban, perm: 'projects.view' },
+  { to: '/tasks', label: 'Tasks', icon: CheckSquare, perm: 'tasks.view' },
+  { to: '/project-management/masters', label: 'Masters', icon: Database, perm: 'masters.view' },
+];
+
 
 const CAMPAIGN_NAV = [
   { to: '/campaign-dashboard', label: 'Campaign Dashboard', icon: LayoutDashboard, perm: null, end: false },
@@ -61,6 +69,7 @@ const CAMPAIGN_NAV = [
   { to: '/campaign-templates', label: 'Campaign Templates', icon: Sparkles, perm: 'campaign_templates.view', end: false },
   { to: '/campaign-setup', label: 'Campaign Setup', icon: LayoutList, perm: 'campaign_setup.view', end: false },
 ];
+
 
 const FUTURE = ['Invoices', 'Documents', 'Support'];
 
@@ -71,7 +80,33 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   onMobileClose: () => void;
 }) {
   const { can } = usePermissions();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isPmContext = searchParams.get('context') === 'project-management';
+
+  const isWorkspaceItemActive = (itemTo: string, end?: boolean) => {
+    if (itemTo === '/') return location.pathname === '/';
+    const isMatchPath = end ? location.pathname === itemTo : location.pathname.startsWith(itemTo);
+    if (!isMatchPath) return false;
+    if (itemTo === '/clients' || itemTo === '/projects') {
+      return !isPmContext;
+    }
+    return true;
+  };
+
+  const isPmItemActive = (itemTo: string) => {
+    if (itemTo.startsWith('/clients')) {
+      return location.pathname.startsWith('/clients') && isPmContext;
+    }
+    if (itemTo.startsWith('/projects')) {
+      return location.pathname.startsWith('/projects') && isPmContext;
+    }
+    const cleanTo = itemTo.split('?')[0];
+    return location.pathname.startsWith(cleanTo);
+  };
+
   const navItems = NAV.filter((item) => !item.perm || can(item.perm));
+  const pmNavItems = PM_NAV.filter((item) => !item.perm || can(item.perm as any));
   const campaignNavItems = CAMPAIGN_NAV.filter((item) => !item.perm || can(item.perm as any));
   return (
     <>
@@ -103,32 +138,59 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Workspace</p>}
-          {navItems.map((item) => (
-            <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
-              <NavLink
-                to={item.to}
-                end={item.end}
-                onClick={onMobileClose}
-                className={({ isActive }) => cn(
-                  'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
-                  collapsed && 'justify-center px-0',
-                  isActive
-                    ? 'text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300'
-                    : 'text-[color:var(--sidebar-text)] hover:bg-surface-2 hover:text-base-fg',
-                )}
-              >
-                {({ isActive }) => (
-                  <>
+          {navItems.map((item) => {
+            const isActive = isWorkspaceItemActive(item.to, item.end);
+            return (
+              <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
+                <NavLink
+                  to={item.to}
+                  onClick={onMobileClose}
+                  className={cn(
+                    'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
+                    collapsed && 'justify-center px-0',
+                    isActive
+                      ? 'text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300'
+                      : 'text-[color:var(--sidebar-text)] hover:bg-surface-2 hover:text-base-fg',
+                  )}
+                >
+                  {isActive && (
+                    <motion.span layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
+                  )}
+                  <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </NavLink>
+              </SidebarTooltip>
+            );
+          })}
+
+          <div className="pt-4 space-y-1">
+            {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Project Management</p>}
+            {pmNavItems.map((item) => {
+              const isActive = isPmItemActive(item.to);
+              return (
+                <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
+                  <NavLink
+                    to={item.to}
+                    onClick={onMobileClose}
+                    className={cn(
+                      'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
+                      collapsed && 'justify-center px-0',
+                      isActive
+                        ? 'text-brand-700 bg-brand-50 dark:bg-brand-600/12 dark:text-brand-300'
+                        : 'text-[color:var(--sidebar-text)] hover:bg-surface-2 hover:text-base-fg',
+                    )}
+                  >
                     {isActive && (
-                      <motion.span layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
+                      <motion.span layoutId="sidebar-active-pm" className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-brand-600" />
                     )}
                     <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
-                  </>
-                )}
-              </NavLink>
-            </SidebarTooltip>
-          ))}
+                  </NavLink>
+                </SidebarTooltip>
+              );
+            })}
+          </div>
+
 
           <div className="pt-4 space-y-1">
             {!collapsed && <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg">Campaign</p>}

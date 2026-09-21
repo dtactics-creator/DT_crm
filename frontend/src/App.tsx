@@ -27,6 +27,8 @@ import CampaignDashboard from './pages/CampaignDashboard';
 import CampaignMasters from './pages/CampaignMasters';
 import CampaignTemplates from './pages/CampaignTemplates';
 import CampaignSetup from './pages/CampaignSetup';
+import Tasks from './pages/Tasks';
+import ProjectManagementMasters from './pages/ProjectManagementMasters';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +85,8 @@ export default function App() {
                       <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
                       <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
                       <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
+                      <Route path="/tasks" element={<RequirePermission perm="tasks.view"><Tasks /></RequirePermission>} />
+                      <Route path="/project-management/masters" element={<RequirePermission perm="masters.view"><ProjectManagementMasters /></RequirePermission>} />
                       <Route path="/masters" element={<RequirePermission perm="masters.view"><Masters /></RequirePermission>} />
                       <Route path="/employees" element={<RequirePermission perm="employees.view"><Employees /></RequirePermission>} />
                       <Route path="/roles" element={<RequirePermission perm="roles.view"><Roles /></RequirePermission>} />
@@ -109,3 +113,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+

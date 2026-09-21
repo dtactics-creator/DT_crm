@@ -176,6 +176,43 @@ export interface Project extends AuditFields {
   lead?: { id: string; lead_no: string | null; customer_name: string; company: string | null } | null;
 }
 
+export interface TaskAttachment {
+  name: string;
+  url: string;
+  size?: number;
+}
+
+export interface TaskUpdate {
+  id: string;
+  task_id: string;
+  employee_id: string | null;
+  update_note: string;
+  status_from: string | null;
+  status_to: string | null;
+  created_at: string;
+  employee?: Employee | null;
+}
+
+export interface Task extends AuditFields {
+  task_no: string | null;
+  project_id: string;
+  title: string;
+  description: string | null;
+  module: string | null;
+  assigned_employee_id: string | null;
+  status: string;
+  priority: string;
+  start_date: string | null;
+  due_date: string | null;
+  estimated_hours: number;
+  completed_at: string | null;
+  attachments: TaskAttachment[];
+  additional_notes: string | null;
+  assigned_employee?: Employee | null;
+  project?: Partial<Project> | null;
+  updates?: TaskUpdate[];
+}
+
 export interface DashboardStats {
   totalLeads: number;
   newLeads: number;

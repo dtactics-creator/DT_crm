@@ -12,7 +12,7 @@ import { usePermissions } from '../contexts/PermissionContext';
 import ClientForm, { ClientFormValues } from '../components/clients/ClientForm';
 import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
 import QuotationForm from '../components/quotations/QuotationForm';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { Client, Project } from '../types';
 import { formatCurrency } from '../lib/utils';
 import { useMasters, makeLookup } from '../hooks/useMasters';
@@ -26,6 +26,8 @@ import { useCreateQuotation } from '../hooks/useQuotations';
 
 export default function Clients() {
   const { can } = usePermissions();
+  const [params] = useSearchParams();
+  const isPmContext = params.get('context') === 'project-management';
   const qc = useQueryClient();
   const { data: clients, isLoading } = useClients();
   const { data: masters } = useMasters();
@@ -114,7 +116,7 @@ export default function Clients() {
 
   const projectColumns: Column<any>[] = [
     { key: 'project_no', header: 'Project No', sortValue: (r) => r.project_no, render: (r) => <span className="text-muted-fg text-xs tabular-nums">{r.project_no}</span> },
-    { key: 'project_name', header: 'Project Name', sortValue: (r) => r.project_name, render: (r) => <Link to="/projects" className="font-semibold text-brand-600 hover:underline">{r.project_name}</Link> },
+    { key: 'project_name', header: 'Project Name', sortValue: (r) => r.project_name, render: (r) => <Link to={isPmContext ? '/projects?context=project-management' : '/projects'} className="font-semibold text-brand-600 hover:underline">{r.project_name}</Link> },
     { key: 'type', header: 'Type', sortValue: (r) => r.project_type, render: (r) => r.project_type ? lookup.label('project_type', r.project_type) : '—' },
     { key: 'cost', header: 'Cost', sortValue: (r) => r.project_cost, render: (r) => formatCurrency(r.project_cost || 0) },
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={r.status} color="#3b82f6" /> },

@@ -272,6 +272,41 @@ CREATE TABLE IF NOT EXISTS dt_projects (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE IF NOT EXISTS dt_tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_no TEXT,
+    project_id UUID NOT NULL REFERENCES dt_projects(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    module TEXT,
+    assigned_employee_id UUID REFERENCES crm_employees(id) ON DELETE SET NULL,
+    status TEXT NOT NULL DEFAULT 'assigned',
+    priority TEXT DEFAULT 'medium',
+    start_date DATE,
+    due_date DATE,
+    estimated_hours NUMERIC DEFAULT 0,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    attachments JSONB DEFAULT '[]'::jsonb,
+    additional_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS dt_task_updates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_id UUID NOT NULL REFERENCES dt_tasks(id) ON DELETE CASCADE,
+    employee_id UUID REFERENCES crm_employees(id) ON DELETE SET NULL,
+    update_note TEXT NOT NULL,
+    status_from TEXT,
+    status_to TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON dt_tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_employee_id ON dt_tasks(assigned_employee_id);
+CREATE INDEX IF NOT EXISTS idx_task_updates_task_id ON dt_task_updates(task_id);
+
 CREATE TABLE IF NOT EXISTS dt_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title TEXT NOT NULL,
@@ -795,6 +830,31 @@ INSERT INTO masters (category, label, value, color, sort_order, is_active) VALUE
   ('role_type','Sales','sales','#3366ff',1,true),
   ('role_type','Developer','developer','#8b5cf6',2,true);
 
+-- Task Modules
+INSERT INTO masters (category, label, value, color, sort_order, is_active) VALUES
+  ('task_module','Frontend','frontend','#0ea5e9',1,true),
+  ('task_module','Backend','backend','#8b5cf6',2,true),
+  ('task_module','UI/UX Design','ui_ux_design','#ec4899',3,true),
+  ('task_module','API Integration','api_integration','#14b8a6',4,true),
+  ('task_module','Database','database','#3366ff',5,true),
+  ('task_module','QA & Testing','qa_testing','#f59e0b',6,true),
+  ('task_module','DevOps & Deployment','devops_deployment','#10b981',7,true),
+  ('task_module','General','general','#64748b',8,true);
+
+-- Task Statuses
+INSERT INTO masters (category, label, value, color, sort_order, is_active) VALUES
+  ('task_status','Assigned','assigned','#3366ff',1,true),
+  ('task_status','In Progress','in_progress','#f59e0b',2,true),
+  ('task_status','Under Review','under_review','#8b5cf6',3,true),
+  ('task_status','Completed','completed','#10b981',4,true);
+
+-- Task Priorities
+INSERT INTO masters (category, label, value, color, sort_order, is_active) VALUES
+  ('task_priority','Low','low','#64748b',1,true),
+  ('task_priority','Medium','medium','#0ea5e9',2,true),
+  ('task_priority','High','high','#f59e0b',3,true),
+  ('task_priority','Urgent','urgent','#ef4444',4,true);
+
 -- ---------------------------------------------------------------------------
 -- 2. ROLES (dt_roles2) — sales + developer, plus an Administrator
 -- ---------------------------------------------------------------------------
@@ -1063,6 +1123,11 @@ SELECT id, 'quotations.create' FROM dt_roles2 WHERE name IN ('Administrator', 'S
 
 INSERT INTO dt_role_permissions (role_id, permission)
 SELECT id, 'quotations.edit' FROM dt_roles2 WHERE name IN ('Administrator', 'Sales Director', 'Sales Manager', 'Account Executive', 'Sales Executive');
+
+-- Tasks Permissions
+INSERT INTO dt_role_permissions (role_id, permission)
+SELECT id, p FROM dt_roles2, (VALUES ('tasks.view'), ('tasks.create'), ('tasks.edit'), ('tasks.delete')) AS perms(p)
+WHERE type = 'developer' OR name IN ('Administrator', 'Sales Director', 'Engineering Manager');
 
 COMMIT;
 
