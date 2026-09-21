@@ -85,9 +85,40 @@ export default function Projects() {
     return set;
   }, [projects]);
 
+  const handleSelectProject = (p: Project) => {
+    setDetail(p);
+    const newParams = new URLSearchParams(params);
+    newParams.set('project_id', p.id);
+    setParams(newParams, { replace: true });
+  };
+
+  const handleCloseDetail = () => {
+    setDetail(null);
+    if (params.has('project_id') || params.has('id') || params.has('preview')) {
+      const newParams = new URLSearchParams(params);
+      newParams.delete('project_id');
+      newParams.delete('id');
+      newParams.delete('preview');
+      setParams(newParams, { replace: true });
+    }
+  };
+
   useEffect(() => {
-    if (params.get('new') === '1') { setEditing(null); setFormOpen(true); setParams({}, { replace: true }); }
-  }, [params, setParams]);
+    if (params.get('new') === '1') {
+      setEditing(null);
+      setFormOpen(true);
+      const newParams = new URLSearchParams(params);
+      newParams.delete('new');
+      setParams(newParams, { replace: true });
+    }
+    const targetId = params.get('project_id') || params.get('id') || params.get('preview');
+    if (targetId && projects && projects.length > 0) {
+      const found = projects.find((p) => p.id === targetId || p.project_no === targetId);
+      if (found) {
+        setDetail(found);
+      }
+    }
+  }, [params, projects, setParams]);
 
   const filtered = useMemo(() => {
     return (projects || []).filter((p) => {
@@ -169,7 +200,7 @@ export default function Projects() {
       key: 'actions', header: '', headerClassName: 'w-12', className: 'text-right',
       render: (r) => (
         <RowActions actions={[
-          { label: 'View details', icon: <Eye className="h-4 w-4" />, onClick: () => setDetail(r) },
+          { label: 'View details', icon: <Eye className="h-4 w-4" />, onClick: () => handleSelectProject(r) },
           ...(can('projects.edit') ? [{ label: 'Edit project', icon: <Pencil className="h-4 w-4" />, onClick: () => { setEditing(r); setFormOpen(true); } }] : []),
           ...(can('projects.edit') && r.status !== 'completed' && r.status !== 'cancelled' ? [{ label: 'Set follow-up', icon: <CalendarClock className="h-4 w-4" />, onClick: () => setToFollowUp(r) }] : []),
           ...(can('projects.delete') ? [{ label: 'Delete', icon: <Trash2 className="h-4 w-4" />, onClick: () => setToDelete(r), danger: true }] : []),
@@ -239,7 +270,7 @@ export default function Projects() {
             const color = lookup.color('project_status', p.status);
             const stack = Array.isArray(p.technology_stack) ? p.technology_stack : [];
             return (
-              <button key={p.id} onClick={() => setDetail(p)} className="text-left bg-surface border border-app rounded-2xl card-shadow p-5 hover:card-shadow-lg hover:border-strong transition-all group">
+              <button key={p.id} onClick={() => handleSelectProject(p)} className="text-left bg-surface border border-app rounded-2xl card-shadow p-5 hover:card-shadow-lg hover:border-strong transition-all group">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[10.5px] font-bold uppercase tracking-wider text-subtle-fg tabular">{p.project_no || 'No code'}{p.lead_no && <span className="ml-1.5 text-brand-500">· {p.lead_no}</span>}</p>
@@ -277,7 +308,7 @@ export default function Projects() {
         </div>
       ) : (
         <div className="bg-surface border border-app rounded-2xl card-shadow">
-          <DataTable data={filtered} columns={columns} rowKey={(r) => r.id} onRowClick={(r) => setDetail(r)} stickyHeader maxBodyHeight="560px" />
+          <DataTable data={filtered} columns={columns} rowKey={(r) => r.id} onRowClick={(r) => handleSelectProject(r)} stickyHeader maxBodyHeight="560px" />
         </div>
       )}
 
@@ -285,7 +316,7 @@ export default function Projects() {
         initial={editing} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
         onSubmit={handleSubmit} saving={create.isPending || update.isPending} />
 
-      <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
+      <ProjectDetail open={!!detail && !formOpen} onClose={handleCloseDetail} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
         isProjectManagementContext={params.get('context') === 'project-management'}
         onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
 
