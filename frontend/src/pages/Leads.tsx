@@ -15,10 +15,12 @@ import RowActions from '../components/ui/RowActions';
 import FilterBar from '../components/ui/FilterBar';
 import ImportDialog from '../components/ImportDialog';
 import { SearchableSelect, MultiSelect } from '../components/ui/SearchableSelect';
-import LeadForm, { type LeadFormValues } from '../components/leads/LeadForm';
-import LeadDetail from '../components/leads/LeadDetail';
-import ConvertLeadModal from '../components/leads/ConvertLeadModal';
-import NextFollowUpModal from '../components/ui/NextFollowUpModal';
+import type { LeadFormValues } from '../components/leads/LeadForm';
+import { lazy, Suspense } from 'react';
+const LeadForm = lazy(() => import('../components/leads/LeadForm'));
+const LeadDetail = lazy(() => import('../components/leads/LeadDetail'));
+const ConvertLeadModal = lazy(() => import('../components/leads/ConvertLeadModal'));
+const NextFollowUpModal = lazy(() => import('../components/ui/NextFollowUpModal'));
 import { useLeads } from '../hooks/useLeads';
 import { useEmployees } from '../hooks/useEmployees';
 
@@ -315,17 +317,25 @@ export default function Leads() {
         )}
       </div>
 
-      <LeadForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }} onSubmit={handleSubmit}
-        initial={editing} masters={masters} employees={employees} saving={create.isPending || update.isPending} />
+      <Suspense fallback={null}>
+        <LeadForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }} onSubmit={handleSubmit}
+          initial={editing} masters={masters} employees={employees} saving={create.isPending || update.isPending} />
+      </Suspense>
 
-      <LeadDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} lead={detail ? leads?.find(l => l.id === detail.id) || detail : null} masters={masters}
-        onEdit={() => { setEditing(detail); setFormOpen(true); }} onDelete={() => setToDelete(detail)}
-        onConvert={() => setToConvert(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
+      <Suspense fallback={null}>
+        <LeadDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} lead={detail ? leads?.find(l => l.id === detail.id) || detail : null} masters={masters}
+          onEdit={() => { setEditing(detail); setFormOpen(true); }} onDelete={() => setToDelete(detail)}
+          onConvert={() => setToConvert(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
+      </Suspense>
 
-      <ConvertLeadModal open={!!toConvert} onClose={() => setToConvert(null)} lead={toConvert} masters={masters} managers={employees}
-        saving={convert.isPending} onConfirm={(data) => handleConvert({ lead_id: toConvert!.id, ...data })} />
+      <Suspense fallback={null}>
+        <ConvertLeadModal open={!!toConvert} onClose={() => setToConvert(null)} lead={toConvert} masters={masters} managers={employees}
+          saving={convert.isPending} onConfirm={(data) => handleConvert({ lead_id: toConvert!.id, ...data })} />
+      </Suspense>
 
-      <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.customer_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
+      <Suspense fallback={null}>
+        <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.customer_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
+      </Suspense>
 
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={handleDelete}
         title="Delete lead" message={`Are you sure you want to delete ${toDelete?.customer_name}? This action can be reverted by an administrator.`}

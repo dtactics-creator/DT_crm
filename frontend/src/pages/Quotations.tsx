@@ -4,8 +4,10 @@ import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Badge from '../components/ui/Badge';
 import { useQuotations, useCreateQuotation, useUpdateQuotationVersion, useCreateQuotationVersion } from '../hooks/useQuotations';
-import QuotationPreview from '../components/quotations/QuotationPreview';
-import QuotationForm, { type QuotationFormValues } from '../components/quotations/QuotationForm';
+import type { QuotationFormValues } from '../components/quotations/QuotationForm';
+import { lazy, Suspense } from 'react';
+const QuotationPreview = lazy(() => import('../components/quotations/QuotationPreview'));
+const QuotationForm = lazy(() => import('../components/quotations/QuotationForm'));
 import type { Quotation, QuotationVersion } from '../types';
 import { formatDate } from '../lib/utils';
 import { Eye, Receipt, FileText, Search } from 'lucide-react';
@@ -286,39 +288,43 @@ export default function Quotations() {
       </div>
 
       {previewData && (
-        <QuotationPreview
-          quotation={previewData.q}
-          version={previewData.v}
-          onClose={() => setPreviewData(null)}
-          onEdit={() => {
-            setEditingData(previewData);
-            setPreviewData(null);
-          }}
-        />
+        <Suspense fallback={null}>
+          <QuotationPreview
+            quotation={previewData.q}
+            version={previewData.v}
+            onClose={() => setPreviewData(null)}
+            onEdit={() => {
+              setEditingData(previewData);
+              setPreviewData(null);
+            }}
+          />
+        </Suspense>
       )}
 
       {!!editingData && (
-        <QuotationForm
-          open={!!editingData}
-          onClose={() => setEditingData(null)}
-          saving={updateVersion.isPending || createVersion.isPending}
-          onSubmit={async (values: any) => {
-             if (values.version_number && editingData.v.version_number && values.version_number !== editingData.v.version_number) {
-                 await createVersion.mutateAsync({
-                   ...values,
-                   quotation_id: editingData.v.quotation_id
-                 });
-             } else {
-                 await updateVersion.mutateAsync({
-                   ...values,
-                   id: editingData.v.id
-                 });
-             }
-             setEditingData(null);
-          }}
-          title="Edit Quotation"
-          initial={{ ...editingData.v, quotation: editingData.q }}
-        />
+        <Suspense fallback={null}>
+          <QuotationForm
+            open={!!editingData}
+            onClose={() => setEditingData(null)}
+            saving={updateVersion.isPending || createVersion.isPending}
+            onSubmit={async (values: any) => {
+               if (values.version_number && editingData.v.version_number && values.version_number !== editingData.v.version_number) {
+                   await createVersion.mutateAsync({
+                     ...values,
+                     quotation_id: editingData.v.quotation_id
+                   });
+               } else {
+                   await updateVersion.mutateAsync({
+                     ...values,
+                     id: editingData.v.id
+                   });
+               }
+               setEditingData(null);
+            }}
+            title="Edit Quotation"
+            initial={{ ...editingData.v, quotation: editingData.q }}
+          />
+        </Suspense>
       )}
 
       {!!versionSelectionData && (
@@ -359,14 +365,16 @@ export default function Quotations() {
       )}
 
       {!!selectedLead && (
-        <QuotationForm
-          open={!!selectedLead}
-          onClose={() => setSelectedLead(null)}
-          saving={createQuotation.isPending}
-          onSubmit={handleSubmit}
-          title="New Quotation"
-          lead={selectedLead}
-        />
+        <Suspense fallback={null}>
+          <QuotationForm
+            open={!!selectedLead}
+            onClose={() => setSelectedLead(null)}
+            saving={createQuotation.isPending}
+            onSubmit={handleSubmit}
+            title="New Quotation"
+            lead={selectedLead}
+          />
+        </Suspense>
       )}
     </div>
   );

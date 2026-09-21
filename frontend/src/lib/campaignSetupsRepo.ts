@@ -20,6 +20,7 @@ export interface CampaignSetupRow {
   updated_at?: string;
   created_by?: string;
   updated_by?: string;
+  campaign_products?: string[];
   templates?: CampaignSetupTemplateRow[];
 }
 
@@ -36,6 +37,7 @@ export type CampaignSetupFormState = {
     start_datetime: string;
     end_datetime: string;
   }[];
+  campaign_products: string[];
 };
 
 export async function fetchAllCampaignSetups(): Promise<CampaignSetupRow[]> {

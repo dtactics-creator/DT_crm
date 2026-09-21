@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X, Save, AlertCircle, Sparkles, PanelRightClose, PanelRightOpen, Loader2, UploadCloud, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Save, AlertCircle, Sparkles, PanelRightClose, PanelRightOpen, Loader2, UploadCloud, ChevronDown, ChevronRight, Monitor, Smartphone, Tablet } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Field from '../components/ui/Field';
@@ -12,6 +12,7 @@ import { useSidebar } from '../components/layout/AppLayout';
 import { useMasters, toOptions } from '../hooks/useMasters';
 import { ColorControl } from '../components/ui/ColorPicker';
 import { uploadFile } from '../lib/upload';
+import IframePreview from '../components/ui/IframePreview';
 
 import GenieWishTemplate from '../components/templates/GenieWishTemplate';
 
@@ -93,6 +94,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
   const [sidebarWidth, setSidebarWidth] = useState(450);
   const [isResizing, setIsResizing] = useState(false);
   const [activeColorProp, setActiveColorProp] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
   const { data: masters } = useMasters();
   const fontOpts = useMemo(() => toOptions(masters, 'campaign_font'), [masters]);
@@ -132,6 +134,8 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
     let url = URL.createObjectURL(file);
     if (file.type.startsWith('video/')) {
       url += '#video';
+    } else if (file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')) {
+      url += '#gif';
     }
     setPendingFiles(prev => ({ ...prev, [propId]: file }));
     setConfig(propId, url);
@@ -159,6 +163,28 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
     },
     component_name: 'GenieWish',
   });
+
+  const hasVideoOrGif = useMemo(() => {
+    const assetProps = form.schema?.sections?.find((s: any) => s.id === 'assets' || s.title === 'Visual Assets')?.properties?.filter((p: any) => p.type === 'image') || [];
+    const imageProps = assetProps.length > 0 ? assetProps : form.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
+    
+    for (const prop of imageProps) {
+      const file = pendingFiles[prop.id];
+      if (file) {
+        if (file.type.startsWith('video/') || file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')) {
+          return true;
+        }
+      } else {
+        const val = form.default_config[prop.id];
+        if (!val) continue;
+        const lower = val.toLowerCase();
+        if (lower.includes('#video') || lower.includes('#gif') || lower.endsWith('.gif') || lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov')) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [form.schema, form.default_config, pendingFiles]);
 
   useEffect(() => {
     if (open) {
@@ -238,23 +264,32 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
       let finalConfig = { ...form.default_config };
       const oldUrlsToClean: string[] = [];
 
+      let finalThumbnail = form.thumbnail;
+
       for (const [propId, file] of Object.entries(pendingFiles)) {
         if (!file) continue;
 
         const result = await uploadFile(file as File);
 
-        if (template && template.default_config[propId]) {
-          oldUrlsToClean.push(template.default_config[propId]);
+        if (propId === 'thumbnail') {
+          if (template && template.thumbnail) {
+            oldUrlsToClean.push(template.thumbnail);
+          }
+          finalThumbnail = result.url;
+        } else {
+          if (template && template.default_config[propId]) {
+            oldUrlsToClean.push(template.default_config[propId]);
+          }
+          finalConfig[propId] = result.url;
         }
-
-        finalConfig[propId] = result.url;
       }
 
-      let finalThumbnail = form.thumbnail;
-      const assetProps = form.schema?.sections?.find((s: any) => s.id === 'assets' || s.title === 'Visual Assets')?.properties?.filter((p: any) => p.type === 'image') || [];
-      const imageProps = assetProps.length > 0 ? assetProps : form.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
-      if (imageProps.length > 0) {
-        finalThumbnail = finalConfig[imageProps[0].id] || form.thumbnail;
+      if (!finalThumbnail) {
+        const assetProps = form.schema?.sections?.find((s: any) => s.id === 'assets' || s.title === 'Visual Assets')?.properties?.filter((p: any) => p.type === 'image') || [];
+        const imageProps = assetProps.length > 0 ? assetProps : form.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
+        if (imageProps.length > 0) {
+          finalThumbnail = finalConfig[imageProps[0].id];
+        }
       }
 
       const formToSave = { ...form, default_config: finalConfig, thumbnail: finalThumbnail };
@@ -362,63 +397,109 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
                       >
                         <div className="space-y-4 p-4 pt-0">
                           {sec.properties.map((prop: any) => (
-                            <Field key={prop.id} label={prop.label}>
-                              {prop.type === 'image' ? (
-                                <div className="flex gap-3 items-start">
-                                  <div className="flex-1">
-                                    <Input
-                                      value={form.default_config[prop.id] ?? prop.default}
-                                      onChange={e => {
-                                        setConfig(prop.id, e.target.value);
-                                        setPendingFiles(prev => {
-                                          const next = { ...prev };
-                                          delete next[prop.id];
-                                          return next;
-                                        });
-                                      }}
-                                      placeholder={`Enter ${prop.label.toLowerCase()} URL or upload...`}
-                                    />
+                            <React.Fragment key={prop.id}>
+                              <Field label={prop.label}>
+                                {prop.type === 'image' ? (
+                                  <div className="flex gap-3 items-start">
+                                    <div className="flex-1">
+                                      <Input
+                                        value={form.default_config[prop.id] ?? prop.default}
+                                        onChange={e => {
+                                          setConfig(prop.id, e.target.value);
+                                          setPendingFiles(prev => {
+                                            const next = { ...prev };
+                                            delete next[prop.id];
+                                            return next;
+                                          });
+                                        }}
+                                        placeholder={`Enter ${prop.label.toLowerCase()} URL or upload...`}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => document.getElementById(`img-upload-${prop.id}`)?.click()}
+                                      >
+                                        <UploadCloud className="h-4 w-4 mr-2" />
+                                        Upload
+                                      </Button>
+                                      <input
+                                        type="file"
+                                        id={`img-upload-${prop.id}`}
+                                        className="hidden"
+                                        accept="image/*,video/*"
+                                        onChange={(e) => handleImageUpload(e, prop.id)}
+                                      />
+                                    </div>
                                   </div>
-                                  <div>
-                                    <Button
-                                      type="button"
-                                      variant="secondary"
-                                      onClick={() => document.getElementById(`img-upload-${prop.id}`)?.click()}
-                                    >
-                                      <UploadCloud className="h-4 w-4 mr-2" />
-                                      Upload
-                                    </Button>
-                                    <input
-                                      type="file"
-                                      id={`img-upload-${prop.id}`}
-                                      className="hidden"
-                                      accept="image/*,video/*"
-                                      onChange={(e) => handleImageUpload(e, prop.id)}
-                                    />
+                                ) : prop.type === 'color' || prop.id.toLowerCase().includes('color') || prop.id === 'background' ? (
+                                  <ColorControl
+                                    value={form.default_config[prop.id] ?? prop.default}
+                                    onChange={(v) => setConfig(prop.id, v)}
+                                    isActive={activeColorProp === prop.id}
+                                    onToggle={() => setActiveColorProp(prev => prev === prop.id ? null : prop.id)}
+                                  />
+                                ) : prop.id.toLowerCase().includes('font') && !prop.id.toLowerCase().includes('url') ? (
+                                  <SearchableSelect
+                                    value={form.default_config[prop.id] ?? prop.default}
+                                    onChange={v => setConfig(prop.id, v)}
+                                    options={fontOpts}
+                                    placeholder={`Select ${prop.label.toLowerCase()}`}
+                                  />
+                                ) : (
+                                  <Input
+                                    value={form.default_config[prop.id] ?? prop.default}
+                                    onChange={e => setConfig(prop.id, e.target.value)}
+                                    placeholder={`Enter ${prop.label.toLowerCase()}`}
+                                  />
+                                )}
+                              </Field>
+                              {prop.id === 'bgImage' && hasVideoOrGif && (
+                                <Field label="Thumbnail Image (For List View)">
+                                  <div className="flex gap-3 items-start">
+                                    <div className="flex-1">
+                                      <Input
+                                        value={form.thumbnail || ''}
+                                        onChange={e => {
+                                          setForm(f => ({ ...f, thumbnail: e.target.value }));
+                                          setPendingFiles(prev => {
+                                            const next = { ...prev };
+                                            delete next['thumbnail'];
+                                            return next;
+                                          });
+                                        }}
+                                        placeholder="Enter static thumbnail URL or upload..."
+                                      />
+                                    </div>
+                                    <div>
+                                      <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => document.getElementById(`img-upload-thumbnail`)?.click()}
+                                      >
+                                        <UploadCloud className="h-4 w-4 mr-2" />
+                                        Upload
+                                      </Button>
+                                      <input
+                                        type="file"
+                                        id={`img-upload-thumbnail`}
+                                        className="hidden"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (!file) return;
+                                          let url = URL.createObjectURL(file);
+                                          setPendingFiles(prev => ({ ...prev, ['thumbnail']: file }));
+                                          setForm(f => ({ ...f, thumbnail: url }));
+                                          if (e.target) e.target.value = '';
+                                        }}
+                                      />
+                                    </div>
                                   </div>
-                                </div>
-                              ) : prop.type === 'color' || prop.id.toLowerCase().includes('color') || prop.id === 'background' ? (
-                                <ColorControl
-                                  value={form.default_config[prop.id] ?? prop.default}
-                                  onChange={(v) => setConfig(prop.id, v)}
-                                  isActive={activeColorProp === prop.id}
-                                  onToggle={() => setActiveColorProp(prev => prev === prop.id ? null : prop.id)}
-                                />
-                              ) : prop.id.toLowerCase().includes('font') && !prop.id.toLowerCase().includes('url') ? (
-                                <SearchableSelect
-                                  value={form.default_config[prop.id] ?? prop.default}
-                                  onChange={v => setConfig(prop.id, v)}
-                                  options={fontOpts}
-                                  placeholder={`Select ${prop.label.toLowerCase()}`}
-                                />
-                              ) : (
-                                <Input
-                                  value={form.default_config[prop.id] ?? prop.default}
-                                  onChange={e => setConfig(prop.id, e.target.value)}
-                                  placeholder={`Enter ${prop.label.toLowerCase()}`}
-                                />
+                                </Field>
                               )}
-                            </Field>
+                            </React.Fragment>
                           ))}
                         </div>
                       </motion.div>
@@ -440,8 +521,47 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
           </motion.div>
 
           {/* Live Preview Panel */}
-          <div className="flex-1 h-full relative z-0 overflow-hidden bg-surface">
-            <TemplatePreview config={form.default_config} componentName={form.component_name} />
+          <div className="flex-1 h-full relative z-0 overflow-hidden bg-surface flex flex-col items-center justify-center">
+            {/* Device Toggles */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex items-center bg-surface border border-app rounded-xl p-1 shadow-md">
+              <button
+                onClick={() => setPreviewMode('mobile')}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${previewMode === 'mobile' ? 'bg-surface-3 text-base-fg shadow-sm' : 'text-muted-fg hover:text-base-fg hover:bg-surface-2'}`}
+                title="Mobile View"
+              >
+                <Smartphone className="h-4.5 w-4.5" />
+              </button>
+              <button
+                onClick={() => setPreviewMode('tablet')}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${previewMode === 'tablet' ? 'bg-surface-3 text-base-fg shadow-sm' : 'text-muted-fg hover:text-base-fg hover:bg-surface-2'}`}
+                title="Tablet View"
+              >
+                <Tablet className="h-4.5 w-4.5" />
+              </button>
+              <button
+                onClick={() => setPreviewMode('desktop')}
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors ${previewMode === 'desktop' ? 'bg-surface-3 text-base-fg shadow-sm' : 'text-muted-fg hover:text-base-fg hover:bg-surface-2'}`}
+                title="Desktop View"
+              >
+                <Monitor className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            <div
+              className={`h-full relative overflow-hidden transition-all duration-300 ease-out flex-shrink-0 ${
+                previewMode === 'mobile'
+                  ? 'w-[375px] max-h-[812px] border-x border-app shadow-2xl my-auto bg-slate-900'
+                  : previewMode === 'tablet'
+                  ? 'w-[768px] max-h-[1024px] border-x border-app shadow-2xl my-auto bg-slate-900'
+                  : 'w-full'
+              }`}
+            >
+              <div className={`w-full h-full relative ${previewMode !== 'desktop' ? 'overflow-hidden ring-1 ring-white/10' : ''}`}>
+                <IframePreview className="w-full h-full border-0 bg-transparent rounded-[inherit]">
+                  <TemplatePreview config={form.default_config} componentName={form.component_name} />
+                </IframePreview>
+              </div>
+            </div>
           </div>
         </motion.div>
       )}

@@ -8,27 +8,29 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RequirePermission from './components/RequirePermission';
 import AppLayout from './components/layout/AppLayout';
 import BrandLoader from './components/BrandLoader';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Leads from './pages/Leads';
-import Projects from './pages/Projects';
-import Clients from './pages/Clients';
-import Masters from './pages/Masters';
-import Employees from './pages/Employees';
-import Roles from './pages/Roles';
-import Templates from './pages/Templates';
-import Reports from './pages/Reports';
-import Profile from './pages/Profile';
-import AuditLogs from './pages/AuditLogs';
-import Quotations from './pages/Quotations';
-import Settings from './pages/Settings';
-import Campaigns from './pages/Campaigns';
-import CampaignDashboard from './pages/CampaignDashboard';
-import CampaignMasters from './pages/CampaignMasters';
-import CampaignTemplates from './pages/CampaignTemplates';
-import CampaignSetup from './pages/CampaignSetup';
-import Tasks from './pages/Tasks';
-import ProjectManagementMasters from './pages/ProjectManagementMasters';
+import { lazy, Suspense } from 'react';
+
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Leads = lazy(() => import('./pages/Leads'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Clients = lazy(() => import('./pages/Clients'));
+const Masters = lazy(() => import('./pages/Masters'));
+const Employees = lazy(() => import('./pages/Employees'));
+const Roles = lazy(() => import('./pages/Roles'));
+const Templates = lazy(() => import('./pages/Templates'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Profile = lazy(() => import('./pages/Profile'));
+const AuditLogs = lazy(() => import('./pages/AuditLogs'));
+const Quotations = lazy(() => import('./pages/Quotations'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Campaigns = lazy(() => import('./pages/Campaigns'));
+const CampaignDashboard = lazy(() => import('./pages/CampaignDashboard'));
+const CampaignMasters = lazy(() => import('./pages/CampaignMasters'));
+const CampaignTemplates = lazy(() => import('./pages/CampaignTemplates'));
+const CampaignSetup = lazy(() => import('./pages/CampaignSetup'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const ProjectManagementMasters = lazy(() => import('./pages/ProjectManagementMasters'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,32 +80,34 @@ export default function App() {
             <AuthProvider>
               <PermissionProvider>
                 <ToastProvider>
-                  <Routes>
-                    <Route path="/login" element={<LoginRoute />} />
-                    <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
-                      <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
-                      <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
-                      <Route path="/tasks" element={<RequirePermission perm="tasks.view"><Tasks /></RequirePermission>} />
-                      <Route path="/project-management/masters" element={<RequirePermission perm="masters.view"><ProjectManagementMasters /></RequirePermission>} />
-                      <Route path="/masters" element={<RequirePermission perm="masters.view"><Masters /></RequirePermission>} />
-                      <Route path="/employees" element={<RequirePermission perm="employees.view"><Employees /></RequirePermission>} />
-                      <Route path="/roles" element={<RequirePermission perm="roles.view"><Roles /></RequirePermission>} />
-                      <Route path="/templates" element={<RequirePermission perm="templates.view"><Templates /></RequirePermission>} />
-                      <Route path="/reports" element={<RequirePermission perm="reports.view"><Reports /></RequirePermission>} />
-                      <Route path="/audit-logs" element={<RequirePermission perm="audit_logs.view"><AuditLogs /></RequirePermission>} />
-                      <Route path="/quotations" element={<RequirePermission perm="quotations.view"><Quotations /></RequirePermission>} />
-                      <Route path="/settings" element={<RequirePermission perm="masters.edit"><Settings /></RequirePermission>} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/campaign-dashboard" element={<CampaignDashboard />} />
-                      <Route path="/campaigns" element={<Campaigns />} />
-                      <Route path="/campaign-masters" element={<CampaignMasters />} />
-                      <Route path="/campaign-templates" element={<CampaignTemplates />} />
-                      <Route path="/campaign-setup" element={<CampaignSetup />} />
-                    </Route>
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
+                  <Suspense fallback={<BrandLoader />}>
+                    <Routes>
+                      <Route path="/login" element={<LoginRoute />} />
+                      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
+                        <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
+                        <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
+                        <Route path="/tasks" element={<RequirePermission perm="tasks.view"><Tasks /></RequirePermission>} />
+                        <Route path="/project-management/masters" element={<RequirePermission perm="masters.view"><ProjectManagementMasters /></RequirePermission>} />
+                        <Route path="/masters" element={<RequirePermission perm="masters.view"><Masters /></RequirePermission>} />
+                        <Route path="/employees" element={<RequirePermission perm="employees.view"><Employees /></RequirePermission>} />
+                        <Route path="/roles" element={<RequirePermission perm="roles.view"><Roles /></RequirePermission>} />
+                        <Route path="/templates" element={<RequirePermission perm="templates.view"><Templates /></RequirePermission>} />
+                        <Route path="/reports" element={<RequirePermission perm="reports.view"><Reports /></RequirePermission>} />
+                        <Route path="/audit-logs" element={<RequirePermission perm="audit_logs.view"><AuditLogs /></RequirePermission>} />
+                        <Route path="/quotations" element={<RequirePermission perm="quotations.view"><Quotations /></RequirePermission>} />
+                        <Route path="/settings" element={<RequirePermission perm="masters.edit"><Settings /></RequirePermission>} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/campaign-dashboard" element={<CampaignDashboard />} />
+                        <Route path="/campaigns" element={<Campaigns />} />
+                        <Route path="/campaign-masters" element={<CampaignMasters />} />
+                        <Route path="/campaign-templates" element={<CampaignTemplates />} />
+                        <Route path="/campaign-setup" element={<CampaignSetup />} />
+                      </Route>
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Suspense>
                 </ToastProvider>
               </PermissionProvider>
             </AuthProvider>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Megaphone, Pencil, Trash2, Link as LinkIcon, Power, PowerOff, UploadCloud, Loader2 } from 'lucide-react';
+import { Plus, Search, Megaphone, Pencil, Trash2, Link as LinkIcon, Power, PowerOff, UploadCloud, Loader2, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable, { type Column } from '../components/DataTable';
 import Button from '../components/ui/Button';
@@ -12,9 +12,11 @@ import Badge from '../components/ui/Badge';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Modal from '../components/ui/Modal';
 import FilterBar from '../components/ui/FilterBar';
 import { SearchableSelect, MultiSelect } from '../components/ui/SearchableSelect';
 import { fetchAllCampaigns, saveCampaign, toggleCampaignActive, deleteCampaign, type CampaignRow, type CampaignFormState } from '../lib/campaignsRepo';
+import { fetchAllCampaignSetups } from '../lib/campaignSetupsRepo';
 import { useToast } from '../components/ui/Toast';
 import { cn, formatDate, formatDateTime } from '../lib/utils';
 import { collect, required, minLen } from '../lib/validators';
@@ -53,6 +55,11 @@ export default function Campaigns() {
     queryFn: fetchAllCampaigns,
   });
 
+  const { data: setups } = useQuery({
+    queryKey: ['campaign-setups'],
+    queryFn: fetchAllCampaignSetups,
+  });
+
   const { data: masters } = useMasters();
   const { data: clients } = useClients();
 
@@ -84,6 +91,7 @@ export default function Campaigns() {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [mappedWarning, setMappedWarning] = useState<{ setups: { id: string, name: string }[] } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -112,6 +120,18 @@ export default function Campaigns() {
     setSelectedFile(null);
     setPreviewUrl(null);
     setModalOpen(true);
+  };
+
+  const handleDeleteAttempt = (c: CampaignRow) => {
+    const mappedSetups = (setups || []).filter(s => 
+      s.campaign_products && s.campaign_products.includes(c.id)
+    );
+
+    if (mappedSetups.length > 0) {
+      setMappedWarning({ setups: mappedSetups });
+    } else {
+      setToDelete(c);
+    }
   };
 
   const openEdit = (campaign: CampaignRow) => {
@@ -351,7 +371,7 @@ export default function Campaigns() {
             {c.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
           </button>}
           {can('campaigns.edit') && <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors"><Pencil className="h-4 w-4" /></button>}
-          {can('campaigns.delete') && <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>}
+          {can('campaigns.delete') && <button onClick={(e) => { e.stopPropagation(); handleDeleteAttempt(c); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>}
         </div>
       ),
     },
@@ -518,6 +538,20 @@ export default function Campaigns() {
         message={`Are you sure you want to delete "${toDelete?.title}"? This cannot be undone.`}
         loading={deleteMut.isPending}
       />
+
+      <Modal open={!!mappedWarning} onClose={() => setMappedWarning(null)} title="Cannot Delete Campaign">
+        <div className="p-5 space-y-4">
+          <div className="flex items-start gap-3 text-amber-600 bg-amber-50 dark:bg-amber-500/10 p-3 rounded-lg border border-amber-200 dark:border-amber-500/20">
+            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+            <p className="text-[14px] leading-relaxed">
+              This campaign cannot be deleted because it is currently mapped to the <strong className="font-semibold text-amber-700 dark:text-amber-500">{mappedWarning?.setups.map(s => s.name).join(', ')}</strong> campaign setup(s). Please remove the campaign from the campaign setup first, then try deleting it again.
+            </p>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setMappedWarning(null)}>Understood</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

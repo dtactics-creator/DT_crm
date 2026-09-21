@@ -15,9 +15,11 @@ import RowActions from '../components/ui/RowActions';
 import FilterBar from '../components/ui/FilterBar';
 import ImportDialog from '../components/ImportDialog';
 import { MultiSelect } from '../components/ui/SearchableSelect';
-import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
-import ProjectDetail from '../components/projects/ProjectDetail';
-import NextFollowUpModal from '../components/ui/NextFollowUpModal';
+import type { ProjectFormValues } from '../components/projects/ProjectForm';
+import { lazy, Suspense } from 'react';
+const ProjectForm = lazy(() => import('../components/projects/ProjectForm'));
+const ProjectDetail = lazy(() => import('../components/projects/ProjectDetail'));
+const NextFollowUpModal = lazy(() => import('../components/ui/NextFollowUpModal'));
 import { useProjects } from '../hooks/useProjects';
 import { usePermissions } from '../contexts/PermissionContext';
 import { useEmployees } from '../hooks/useEmployees';
@@ -210,6 +212,7 @@ export default function Projects() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search projects…"
+        className="mb-6"
         filters={
           <>
             <div className="w-40"><MultiSelect values={statusFilter} onChange={setStatusFilter} options={toOptions(masters, 'project_status')} placeholder="All statuses" /></div>
@@ -281,15 +284,21 @@ export default function Projects() {
         </div>
       )}
 
-      <ProjectForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }}
-        initial={editing} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
-        onSubmit={handleSubmit} saving={create.isPending || update.isPending} />
+      <Suspense fallback={null}>
+        <ProjectForm open={formOpen} onClose={() => { setFormOpen(false); setEditing(null); }}
+          initial={editing} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
+          onSubmit={handleSubmit} saving={create.isPending || update.isPending} />
+      </Suspense>
 
-      <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
-        isProjectManagementContext={params.get('context') === 'project-management'}
-        onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
+      <Suspense fallback={null}>
+        <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
+          isProjectManagementContext={params.get('context') === 'project-management'}
+          onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
+      </Suspense>
 
-      <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.project_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
+      <Suspense fallback={null}>
+        <NextFollowUpModal open={!!toFollowUp} onClose={() => setToFollowUp(null)} entity={toFollowUp ? { id: toFollowUp.id, name: toFollowUp.project_name, next_follow_up: toFollowUp.next_follow_up, remarks: toFollowUp.remarks, created_at: toFollowUp.created_at } : null} saving={update.isPending} onConfirm={handleNextFollowUp} />
+      </Suspense>
 
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={handleDelete}
         title="Delete project" message={`Are you sure you want to delete ${toDelete?.project_name}? This action can be reverted by an administrator.`} loading={remove.isPending} />

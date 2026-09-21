@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Pencil, Trash2, Sparkles, CheckCircle2, Copy, Power, PowerOff } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Sparkles, CheckCircle2, Copy, Power, PowerOff, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -8,10 +8,13 @@ import Badge from '../components/ui/Badge';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Modal from '../components/ui/Modal';
 import { fetchAllTemplates, deleteTemplate, toggleTemplateStatus, saveTemplate, type CampaignTemplateRow } from '../lib/templatesRepo';
+import { fetchAllCampaignSetups, type CampaignSetupRow } from '../lib/campaignSetupsRepo';
 import { useToast } from '../components/ui/Toast';
 import { formatDate, formatDateTime } from '../lib/utils';
-import TemplateEditor from './TemplateEditor';
+import { lazy, Suspense } from 'react';
+const TemplateEditor = lazy(() => import('./TemplateEditor'));
 import { usePermissions } from '../contexts/PermissionContext';
 import DataTable, { type Column } from '../components/DataTable';
 import FilterBar from '../components/ui/FilterBar';
@@ -32,6 +35,12 @@ export default function CampaignTemplates() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CampaignTemplateRow | null>(null);
   const [toDelete, setToDelete] = useState<CampaignTemplateRow | null>(null);
+  const [mappedWarning, setMappedWarning] = useState<{ template: CampaignTemplateRow, setups: CampaignSetupRow[] } | null>(null);
+
+  const { data: setups } = useQuery({
+    queryKey: ['campaign-setups'],
+    queryFn: fetchAllCampaignSetups,
+  });
 
   const filtered = useMemo(() => (templates || []).filter((t) => {
     const q = search.toLowerCase();
@@ -194,7 +203,19 @@ export default function CampaignTemplates() {
               </button>
             )}
             {can('campaign_templates.delete') && (
-              <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} title="Delete" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  const mappedSetups = setups?.filter(s => s.templates?.some(t => t.template_id === c.id));
+                  if (mappedSetups && mappedSetups.length > 0) {
+                    setMappedWarning({ template: c, setups: mappedSetups });
+                  } else {
+                    setToDelete(c); 
+                  }
+                }} 
+                title="Delete" 
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             )}
@@ -250,15 +271,19 @@ export default function CampaignTemplates() {
         )}
       </div>
 
-      <TemplateEditor
-        open={editorOpen}
-        onClose={() => setEditorOpen(false)}
-        template={editingTemplate}
-        onSaved={() => {
-          setEditorOpen(false);
-          qc.invalidateQueries({ queryKey: ['campaign-templates'] });
-        }}
-      />
+      <Suspense fallback={null}>
+        {editorOpen && (
+          <TemplateEditor
+            open={editorOpen}
+            onClose={() => setEditorOpen(false)}
+            template={editingTemplate}
+            onSaved={() => {
+              setEditorOpen(false);
+              qc.invalidateQueries({ queryKey: ['campaign-templates'] });
+            }}
+          />
+        )}
+      </Suspense>
 
       <ConfirmDialog
         open={!!toDelete}
@@ -268,6 +293,20 @@ export default function CampaignTemplates() {
         message={`Are you sure you want to delete "${toDelete?.name}"? This cannot be undone.`}
         loading={deleteMut.isPending}
       />
+
+      <Modal open={!!mappedWarning} onClose={() => setMappedWarning(null)} title="Cannot Delete Template">
+        <div className="p-5 space-y-4">
+          <div className="flex items-start gap-3 text-amber-600 bg-amber-50 dark:bg-amber-500/10 p-3 rounded-lg border border-amber-200 dark:border-amber-500/20">
+            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+            <p className="text-[14px] leading-relaxed">
+              This template cannot be deleted because it is currently mapped to the <strong className="font-semibold text-amber-700 dark:text-amber-500">{mappedWarning?.setups.map(s => s.name).join(', ')}</strong> campaign setup(s). Please remove the template from the campaign setup first, then try deleting it again.
+            </p>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setMappedWarning(null)}>Understood</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -9,9 +9,12 @@ import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { useClients, useClientDetails } from '../hooks/useClients';
 import { usePermissions } from '../contexts/PermissionContext';
-import ClientForm, { ClientFormValues } from '../components/clients/ClientForm';
-import ProjectForm, { type ProjectFormValues } from '../components/projects/ProjectForm';
-import QuotationForm from '../components/quotations/QuotationForm';
+import type { ClientFormValues } from '../components/clients/ClientForm';
+import type { ProjectFormValues } from '../components/projects/ProjectForm';
+import { lazy, Suspense } from 'react';
+const ClientForm = lazy(() => import('../components/clients/ClientForm'));
+const ProjectForm = lazy(() => import('../components/projects/ProjectForm'));
+const QuotationForm = lazy(() => import('../components/quotations/QuotationForm'));
 import { Link, useSearchParams } from 'react-router-dom';
 import type { Client, Project } from '../types';
 import { formatCurrency } from '../lib/utils';
@@ -266,42 +269,48 @@ export default function Clients() {
           </div>
         </div>
 
-        <ClientForm
-          open={isFormOpen}
-          onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
-          saving={createClient.isPending || updateClient.isPending}
-          onSubmit={handleSaveClient}
-          title="Edit Client"
-          initial={editingClient}
-        />
+        <Suspense fallback={null}>
+          <ClientForm
+            open={isFormOpen}
+            onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
+            saving={createClient.isPending || updateClient.isPending}
+            onSubmit={handleSaveClient}
+            title="Edit Client"
+            initial={editingClient}
+          />
+        </Suspense>
 
-        <ProjectForm open={isProjectFormOpen || !!editingProject} onClose={() => { setEditingProject(null); setIsProjectFormOpen(false); }}
-          initial={editingProject} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
-          onSubmit={handleSaveProject} saving={createProj.isPending || updateProj.isPending} defaultClientName={detail.company_name} defaultClientId={detail.id} />
+        <Suspense fallback={null}>
+          <ProjectForm open={isProjectFormOpen || !!editingProject} onClose={() => { setEditingProject(null); setIsProjectFormOpen(false); }}
+            initial={editingProject} masters={masters} employees={employees} managers={employees} leads={leads} clients={clients}
+            onSubmit={handleSaveProject} saving={createProj.isPending || updateProj.isPending} defaultClientName={detail.company_name} defaultClientId={detail.id} />
+        </Suspense>
 
         <ConfirmDialog open={!!deletingProject} onClose={() => setDeletingProject(null)} onConfirm={handleDeleteProject}
           title="Delete project" message={`Are you sure you want to delete ${deletingProject?.project_name}?`} loading={removeProj.isPending} />
 
         {!!quotationProject && (
-          <QuotationForm
-            open={!!quotationProject}
-            onClose={() => setQuotationProject(null)}
-            saving={createQuotation.isPending}
-            onSubmit={async (values) => {
-              const client = detail as any;
-              const proj = quotationProject as any;
-              await createQuotation.mutateAsync({
-                ...values as any,
-                client_id: client?.id,
-                lead_id: proj?.lead_id || null,
-                project_id: proj?.id,
-              });
-              setQuotationProject(null);
-            }}
-            title={`New Quotation - ${quotationProject.project_name}`}
-            client={detail}
-            projectId={quotationProject.id}
-          />
+          <Suspense fallback={null}>
+            <QuotationForm
+              open={!!quotationProject}
+              onClose={() => setQuotationProject(null)}
+              saving={createQuotation.isPending}
+              onSubmit={async (values) => {
+                const client = detail as any;
+                const proj = quotationProject as any;
+                await createQuotation.mutateAsync({
+                  ...values as any,
+                  client_id: client?.id,
+                  lead_id: proj?.lead_id || null,
+                  project_id: proj?.id,
+                });
+                setQuotationProject(null);
+              }}
+              title={`New Quotation - ${quotationProject.project_name}`}
+              client={detail}
+              projectId={quotationProject.id}
+            />
+          </Suspense>
         )}
       </div>
     );
@@ -338,14 +347,16 @@ export default function Clients() {
         </div>
       )}
       
-      <ClientForm
-        open={isFormOpen && !activeClient}
-        onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
-        saving={createClient.isPending || updateClient.isPending}
-        onSubmit={handleSaveClient}
-        title={editingClient ? "Edit Client" : "New Client"}
-        initial={editingClient}
-      />
+      <Suspense fallback={null}>
+        <ClientForm
+          open={isFormOpen && !activeClient}
+          onClose={() => { setIsFormOpen(false); setEditingClient(null); }}
+          saving={createClient.isPending || updateClient.isPending}
+          onSubmit={handleSaveClient}
+          title={editingClient ? "Edit Client" : "New Client"}
+          initial={editingClient}
+        />
+      </Suspense>
       <ConfirmDialog open={!!deletingClient} onClose={() => setDeletingClient(null)} onConfirm={handleDeleteClient}
         title="Delete client" message={`Are you sure you want to delete ${deletingClient?.company_name}?`} loading={removeClient.isPending} />
     </div>

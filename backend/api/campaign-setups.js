@@ -178,6 +178,7 @@ function validate(body) {
     description: V.str(body.description, { field: 'Description', max: 2000 }),
     play_mode: V.str(body.play_mode, { field: 'Play Mode' }) || 'loop',
     status: V.str(body.status, { field: 'Status', required: true }) || 'inactive',
+    campaign_products: Array.isArray(body.campaign_products) ? body.campaign_products : [],
     start_datetime: null,
     end_datetime: null,
   };

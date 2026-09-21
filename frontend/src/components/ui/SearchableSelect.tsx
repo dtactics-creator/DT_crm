@@ -61,7 +61,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
         <input 
           value={open ? q : (selected?.label || '')}
           onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-          onFocus={() => { setQ(selected?.label || ''); setOpen(true); }}
+          onFocus={() => { setQ(''); setOpen(true); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -143,22 +143,17 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
   return (
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => { setOpen((v) => !v); setQ(''); }}
-        className={cn('w-full h-10 py-1.5 pl-2 pr-8 rounded-lg bg-surface-2 text-left text-sm flex items-center flex-nowrap overflow-hidden gap-1.5',
+        className={cn('w-full min-h-[40px] py-1.5 pl-2 pr-8 rounded-lg bg-surface-2 text-left text-sm flex items-center flex-wrap gap-1.5',
           'border border-app transition-all outline-none focus:ring-2 ring-brand', open && 'ring-2')}>
-        {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5 whitespace-nowrap">{placeholder}</span> : (
+        {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5">{placeholder}</span> : (
           <>
-            {selectedOpts.slice(0, 2).map((o) => (
-              <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface border border-app px-1.5 py-0.5 text-[12px] font-medium text-base-fg shrink-0 max-w-[85px]">
+            {selectedOpts.map((o) => (
+              <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface border border-app px-1.5 py-0.5 text-[12px] font-medium text-base-fg shrink-0 max-w-full">
                 {o.color && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: o.color }} />}
                 <span className="truncate">{o.label}</span>
                 <span onClick={(e) => { e.stopPropagation(); toggle(o.value); }} className="text-subtle-fg hover:text-red-500 shrink-0"><X className="h-3 w-3" /></span>
               </span>
             ))}
-            {selectedOpts.length > 2 && (
-              <span className="inline-flex items-center rounded-md bg-surface-2 border border-app px-1.5 py-0.5 text-[11px] font-semibold text-muted-fg shrink-0">
-                +{selectedOpts.length - 2}
-              </span>
-            )}
           </>
         )}
       </button>
@@ -171,10 +166,24 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
               "absolute z-50 mt-1.5 min-w-full w-[max-content] max-w-[320px] bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden",
               align === 'right' ? 'right-0' : 'left-0'
             )}>
-            <div className="flex items-center gap-2 px-3 h-10 border-b border-app">
-              <Search className="h-4 w-4 text-subtle-fg shrink-0" />
-              <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Searchâ€¦"
-                className="flex-1 bg-transparent outline-none text-[13px] text-base-fg placeholder:text-subtle-fg" />
+            <div className="flex items-center justify-between gap-2 px-3 h-10 border-b border-app">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <Search className="h-4 w-4 text-subtle-fg shrink-0" />
+                <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Searchâ€¦"
+                  className="w-full bg-transparent outline-none text-[13px] text-base-fg placeholder:text-subtle-fg min-w-0" />
+              </div>
+              <button 
+                type="button" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const allValues = options.map(o => o.value);
+                  const isAllSelected = allValues.length > 0 && allValues.every(v => values.includes(v));
+                  onChange(isAllSelected ? [] : allValues);
+                }}
+                className="text-[12px] font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 whitespace-nowrap shrink-0 transition-colors"
+              >
+                {options.length > 0 && options.every(o => values.includes(o.value)) ? 'Deselect all' : 'Select all'}
+              </button>
             </div>
             <div className="max-h-56 overflow-y-auto p-1.5">
               {filtered.map((o) => {

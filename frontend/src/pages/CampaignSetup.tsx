@@ -17,6 +17,7 @@ import { usePermissions } from '../contexts/PermissionContext';
 import { useToast } from '../components/ui/Toast';
 import { fetchAllCampaignSetups, saveCampaignSetup, deleteCampaignSetup, CampaignSetupRow, CampaignSetupFormState } from '../lib/campaignSetupsRepo';
 import { fetchAllTemplates, CampaignTemplateRow } from '../lib/templatesRepo';
+import { fetchAllCampaigns } from '../lib/campaignsRepo';
 import { formatDateTime } from '../lib/utils';
 
 const toLocalInputFormat = (utcStr: string | null | undefined) => {
@@ -55,9 +56,11 @@ export default function CampaignSetup() {
     enabled: modalOpen
   });
 
-  const activeTemplates = useMemo(() => {
-    return (allTemplates || []).filter(t => t.status === 'active').map(t => ({ value: t.id, label: t.name }));
-  }, [allTemplates]);
+  const { data: allCampaigns } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: fetchAllCampaigns,
+    enabled: modalOpen
+  });
 
   const [form, setForm] = useState<CampaignSetupFormState>({
     name: '',
@@ -66,8 +69,29 @@ export default function CampaignSetup() {
     play_mode: 'loop',
     start_datetime: '',
     end_datetime: '',
-    templates: []
+    templates: [],
+    campaign_products: []
   });
+
+  const activeTemplates = useMemo(() => {
+    const selectedTemplateIds = new Set(form.templates.map(t => t.template_id));
+    return (allTemplates || [])
+      .filter(t => t.status === 'active' || selectedTemplateIds.has(t.id))
+      .map(t => ({ 
+        value: t.id, 
+        label: t.status === 'active' ? t.name : `${t.name} (Inactive)` 
+      }));
+  }, [allTemplates, form.templates]);
+
+  const activeCampaigns = useMemo(() => {
+    const selectedCampaignIds = new Set(form.campaign_products || []);
+    return (allCampaigns || [])
+      .filter(c => c.is_active || selectedCampaignIds.has(c.id))
+      .map(c => ({ 
+        value: c.id, 
+        label: c.is_active ? c.title : `${c.title} (Inactive)` 
+      }));
+  }, [allCampaigns, form.campaign_products]);
 
   const filtered = useMemo(() => {
     if (!setups) return [];
@@ -76,7 +100,7 @@ export default function CampaignSetup() {
       const matchQ = !q || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q);
       
       const isExpired = s.end_datetime && new Date(s.end_datetime) <= new Date();
-      const currentStatus = s.status === 'active' ? 'active' : (isExpired ? 'expired' : 'inactive');
+      const currentStatus = isExpired ? 'expired' : (s.status === 'active' ? 'active' : 'inactive');
       const matchStatus = statusFilter.length === 0 || statusFilter.includes(currentStatus);
       
       const matchPlayMode = playModeFilter.length === 0 || playModeFilter.includes(s.play_mode || 'loop');
@@ -106,7 +130,7 @@ export default function CampaignSetup() {
   });
 
   const openNew = () => {
-    setForm({ name: '', description: '', status: 'inactive', play_mode: 'loop', start_datetime: '', end_datetime: '', templates: [] });
+    setForm({ name: '', description: '', status: 'inactive', play_mode: 'loop', start_datetime: '', end_datetime: '', templates: [], campaign_products: [] });
     setEditingSetup(null);
     setModalOpen(true);
   };
@@ -128,7 +152,8 @@ export default function CampaignSetup() {
         play_mode: setup.play_mode || 'loop',
         start_datetime: setup.start_datetime ? new Date(setup.start_datetime).toISOString() : null,
         end_datetime: setup.end_datetime ? new Date(setup.end_datetime).toISOString() : null,
-        templates: validTemplates
+        templates: validTemplates,
+        campaign_products: setup.campaign_products || []
       };
       
       return saveCampaignSetup(formPayload);
@@ -172,6 +197,7 @@ export default function CampaignSetup() {
       play_mode: s.play_mode || 'loop',
       start_datetime: toLocalInputFormat(s.start_datetime),
       end_datetime: toLocalInputFormat(s.end_datetime),
+      campaign_products: s.campaign_products || [],
       templates: (s.templates || [])
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
         .map(t => ({
@@ -228,6 +254,10 @@ export default function CampaignSetup() {
 
     const finalStart = form.start_datetime ? new Date(form.start_datetime).toISOString() : null;
     const finalEnd = form.end_datetime ? new Date(form.end_datetime).toISOString() : null;
+
+    if (form.status === 'active' && finalEnd && new Date(finalEnd) <= new Date()) {
+      return toast('Cannot set status to active because the setup is expired. Please extend the template dates.', 'error');
+    }
 
     saveMut.mutate({ 
       ...form, 
@@ -331,8 +361,8 @@ export default function CampaignSetup() {
         const isActive = c.status === 'active';
         return (
           <Badge
-            label={isActive ? 'Live' : (isExpired ? 'Expired' : 'Inactive')}
-            color={isActive ? '#10b981' : (isExpired ? '#ef4444' : '#64748b')}
+            label={isExpired ? 'Expired' : (isActive ? 'Live' : 'Inactive')}
+            color={isExpired ? '#ef4444' : (isActive ? '#10b981' : '#64748b')}
           />
         );
       },
@@ -341,11 +371,18 @@ export default function CampaignSetup() {
       key: 'actions', header: '', headerClassName: 'w-40', className: 'text-right',
       render: (c) => {
         const isActive = c.status === 'active';
+        const isExpired = c.end_datetime && new Date(c.end_datetime) <= new Date();
         return (
           <div className="flex items-center justify-end gap-1">
             {can('campaign_setups.edit' as any) && (
               <button
-                onClick={(e) => { e.stopPropagation(); toggleStatusMut.mutate(c); }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (isExpired && !isActive) {
+                    return toast('Cannot activate an expired setup. Please extend the dates first.', 'error');
+                  }
+                  toggleStatusMut.mutate(c); 
+                }}
                 title={isActive ? 'Deactivate' : 'Activate'}
                 className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
               >
@@ -564,6 +601,15 @@ export default function CampaignSetup() {
               </div>
             )}
           </section>
+
+          <Field label="Campaign Products">
+            <MultiSelect
+              values={form.campaign_products}
+              onChange={(vals) => setForm({ ...form, campaign_products: vals })}
+              options={activeCampaigns}
+              placeholder="Select active campaigns..."
+            />
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Setup Start Date (Auto)">

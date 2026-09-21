@@ -33,7 +33,7 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
           {config.googleFontUrl.split(',').map((url: string) => `@import url('${url.trim()}');`).join('\n')}
         </style>
       )}
-      
+
       {/* Background Media */}
       {config.bgImage && isVideo(config.bgImage) ? (
         <video
@@ -61,10 +61,10 @@ export default function GenieWishTemplate({ config, reveal, onReveal, onReset }:
         <p className={`mb-3 text-sm uppercase tracking-[0.35em] ${config.subtitleColor === '#fcd34d' ? 'text-gold opacity-80' : ''}`} style={{ fontFamily: config.bodyFontFamily || 'var(--font-body)', ...(config.subtitleColor !== '#fcd34d' ? { color: config.subtitleColor } : {}) }}>
           {config.subtitle || 'Arabian Nights'}
         </p>
-        <h1 className={`text-3xl font-bold leading-tight sm:text-5xl ${config.titleColor === '#fbbf24' ? 'text-gold' : ''}`} style={{ fontFamily: config.titleFontFamily || 'var(--font-display)', ...(config.titleColor !== '#fbbf24' ? { color: config.titleColor } : {}) }}>
+        <h1 className={`text-xl font-bold leading-snug tracking-wide sm:text-4xl ${config.titleColor === '#fbbf24' ? 'text-gold' : ''}`} style={{ fontFamily: config.titleFontFamily || 'var(--font-display)', ...(config.titleColor !== '#fbbf24' ? { color: config.titleColor } : {}) }}>
           {config.title || 'Rub the Magic Lamp and Discover Your Surprise!'}
         </h1>
-        <p className="mt-4 max-w-xl text-xl text-slate-200 sm:text-2xl" style={{ fontFamily: config.bodyFontFamily || 'var(--font-body)' }}>
+        <p className="mt-4 max-w-xl text-lg text-slate-200 sm:text-2xl" style={{ fontFamily: config.bodyFontFamily || 'var(--font-body)' }}>
           Every rub unlocks something magical.
         </p>
 

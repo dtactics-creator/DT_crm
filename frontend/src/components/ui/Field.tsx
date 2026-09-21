@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export default function Field({ label, error, required, hint, children }: {
-  label: string;
+  label: ReactNode;
   error?: string;
   required?: boolean;
   hint?: string;

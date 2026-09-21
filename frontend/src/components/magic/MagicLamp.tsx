@@ -176,7 +176,7 @@ export function MagicLamp({
           const t = e.touches[0];
           if (t) start(t.clientX, t.clientY);
         }}
-        className={`relative flex h-[340px] w-[340px] touch-none select-none items-center justify-center sm:h-[440px] sm:w-[440px] ${
+        className={`relative flex h-[260px] w-[260px] touch-none select-none items-center justify-center sm:h-[440px] sm:w-[440px] ${
           disabled ? "cursor-default" : "cursor-grab active:cursor-grabbing"
         }`}
         role="button"
