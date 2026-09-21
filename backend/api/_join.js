@@ -122,3 +122,24 @@ export async function nextClientNo() {
   }
   return `${yymm}CL${String(max + 1).padStart(3, '0')}`;
 }
+
+export async function nextTaskNo() {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yymm = `${yy}${mm}`;
+  const { data, error } = await supabase
+    .from('dt_tasks')
+    .select('task_no')
+    .like('task_no', `${yymm}TK%`)
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  let max = 0;
+  for (const row of data || []) {
+    const m = String(row.task_no || '').match(new RegExp(`^${yymm}TK(\\d+)$`));
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `${yymm}TK${String(max + 1).padStart(3, '0')}`;
+}
+
