@@ -626,6 +626,7 @@ ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS department TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS service_type TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS from_location TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS to_location TEXT;
+ALTER TABLE dt_campaign_setups ADD COLUMN IF NOT EXISTS campaign_products JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS project_type_description TEXT;
 
 ALTER TABLE dt_quotation_milestones ADD COLUMN IF NOT EXISTS description TEXT;
@@ -1153,6 +1154,7 @@ CREATE TABLE IF NOT EXISTS public.dt_campaign_setups (
     start_datetime TIMESTAMPTZ,
     end_datetime TIMESTAMPTZ,
     status TEXT DEFAULT 'draft',
+    campaign_products JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by UUID,
