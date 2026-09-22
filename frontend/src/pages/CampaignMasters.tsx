@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, Type } from 'lucide-react';
+import { Layers, Type, Globe } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import MasterTab from '../components/masters/MasterTab';
+import DomainTab from '../components/masters/DomainTab';
 import { cn } from '../lib/utils';
 
-type TabKind = { key: string; label: string; icon: typeof Layers; kind: 'master'; category: string; singular: string };
+type TabKind = { key: string; label: string; icon: typeof Layers; kind: 'master' | 'custom'; category: string; singular: string };
 
 const TABS: TabKind[] = [
   { key: 'campaign_type', label: 'Campaign Types', icon: Layers, kind: 'master', category: 'campaign_type', singular: 'Campaign Type' },
   { key: 'campaign_font', label: 'Fonts', icon: Type, kind: 'master', category: 'campaign_font', singular: 'Font' },
+  { key: 'campaign_domain', label: 'Domains', icon: Globe, kind: 'custom', category: 'campaign_domain', singular: 'Domain' },
 ];
 
 export default function CampaignMasters() {
@@ -43,6 +45,7 @@ export default function CampaignMasters() {
       <AnimatePresence mode="wait">
         <motion.div key={active} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
           {tab.kind === 'master' && <MasterTab category={tab.category} singular={tab.singular} permPrefix="campaign_masters" />}
+          {active === 'campaign_domain' && <DomainTab />}
         </motion.div>
       </AnimatePresence>
     </div>

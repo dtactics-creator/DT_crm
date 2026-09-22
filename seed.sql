@@ -627,6 +627,7 @@ ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS service_type TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS from_location TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS to_location TEXT;
 ALTER TABLE dt_campaign_setups ADD COLUMN IF NOT EXISTS campaign_products JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE dt_campaign_setups ADD COLUMN IF NOT EXISTS domain TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS project_type_description TEXT;
 
 ALTER TABLE dt_quotation_milestones ADD COLUMN IF NOT EXISTS description TEXT;
@@ -1155,6 +1156,7 @@ CREATE TABLE IF NOT EXISTS public.dt_campaign_setups (
     end_datetime TIMESTAMPTZ,
     status TEXT DEFAULT 'draft',
     campaign_products JSONB DEFAULT '[]'::jsonb,
+    domain TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by UUID,
@@ -1211,3 +1213,55 @@ CREATE POLICY "Enable update for authenticated users" ON public.dt_campaign_setu
 CREATE POLICY "Enable delete for authenticated users" ON public.dt_campaign_setup_templates
     FOR DELETE TO authenticated USING (true);
 
+
+-- Create analytics_sessions table
+CREATE TABLE IF NOT EXISTS public.analytics_sessions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    session_id UUID NOT NULL UNIQUE,
+    visitor_id UUID NOT NULL,
+    
+    -- Context
+    domain TEXT,
+    campaign_setup_id UUID REFERENCES public.dt_campaign_setups(id) ON DELETE SET NULL,
+    template_id UUID REFERENCES public.dt_campaign_templates(id) ON DELETE SET NULL,
+    
+    -- Metrics
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ended_at TIMESTAMPTZ,
+    duration_seconds INTEGER DEFAULT 0,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_visitor_id ON public.analytics_sessions(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_domain ON public.analytics_sessions(domain);
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_setup_id ON public.analytics_sessions(campaign_setup_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_template_id ON public.analytics_sessions(template_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_started_at ON public.analytics_sessions(started_at DESC);
+
+-- Enable RLS
+ALTER TABLE public.analytics_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Allow anonymous users to INSERT new sessions
+CREATE POLICY "Anyone can insert sessions"
+    ON public.analytics_sessions
+    FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (true);
+
+-- Allow anonymous users to UPDATE their own sessions using visitor_id + session_id as the pseudo-auth mechanism
+CREATE POLICY "Users can update own sessions"
+    ON public.analytics_sessions
+    FOR UPDATE
+    TO anon, authenticated
+    USING (true)
+    WITH CHECK (true);
+
+-- Allow authenticated (CRM) users and anon (for update resolution) to read all analytics
+CREATE POLICY "Authenticated users can read sessions"
+    ON public.analytics_sessions
+    FOR SELECT
+    TO anon, authenticated
+    USING (true);

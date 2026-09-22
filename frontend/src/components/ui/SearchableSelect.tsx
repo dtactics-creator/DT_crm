@@ -61,7 +61,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
         <input 
           value={open ? q : (selected?.label || '')}
           onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-          onFocus={() => { setQ(''); setOpen(true); }}
+          onFocus={() => { if (!open) setQ(selected?.label || value || ''); setOpen(true); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -147,13 +147,15 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
           'border border-app transition-all outline-none focus:ring-2 ring-brand', open && 'ring-2')}>
         {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5">{placeholder}</span> : (
           <>
-            {selectedOpts.map((o) => (
+            {selectedOpts.length <= 2 ? selectedOpts.map((o) => (
               <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface border border-app px-1.5 py-0.5 text-[12px] font-medium text-base-fg shrink-0 max-w-full">
                 {o.color && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: o.color }} />}
                 <span className="truncate">{o.label}</span>
                 <span onClick={(e) => { e.stopPropagation(); toggle(o.value); }} className="text-subtle-fg hover:text-red-500 shrink-0"><X className="h-3 w-3" /></span>
               </span>
-            ))}
+            )) : (
+              <span className="text-[13px] font-medium text-base-fg pl-1.5">{selectedOpts.length} selected</span>
+            )}
           </>
         )}
       </button>
@@ -163,7 +165,7 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
         {open && (
           <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }} transition={{ duration: 0.14 }}
             className={cn(
-              "absolute z-50 mt-1.5 min-w-full w-[max-content] max-w-[320px] bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden",
+              "absolute z-50 mt-1.5 top-full min-w-full w-[max-content] max-w-[320px] bg-surface border border-app rounded-xl card-shadow-lg overflow-hidden",
               align === 'right' ? 'right-0' : 'left-0'
             )}>
             <div className="flex items-center justify-between gap-2 px-3 h-10 border-b border-app">

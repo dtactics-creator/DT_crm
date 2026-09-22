@@ -15,6 +15,7 @@ import FilterBar from '../components/ui/FilterBar';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { usePermissions } from '../contexts/PermissionContext';
 import { useToast } from '../components/ui/Toast';
+import { useMasters, groupMasters } from '../hooks/useMasters';
 import { fetchAllCampaignSetups, saveCampaignSetup, deleteCampaignSetup, CampaignSetupRow, CampaignSetupFormState } from '../lib/campaignSetupsRepo';
 import { fetchAllTemplates, CampaignTemplateRow } from '../lib/templatesRepo';
 import { fetchAllCampaigns } from '../lib/campaignsRepo';
@@ -62,11 +63,19 @@ export default function CampaignSetup() {
     enabled: modalOpen
   });
 
+  const extractHostname = (url: string) => {
+    const match = url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im);
+    return match ? match[1] : url;
+  };
+
+  const { data: masters } = useMasters();
+
   const [form, setForm] = useState<CampaignSetupFormState>({
     name: '',
     description: '',
     status: 'inactive',
     play_mode: 'loop',
+    domain: '',
     start_datetime: '',
     end_datetime: '',
     templates: [],
@@ -92,6 +101,13 @@ export default function CampaignSetup() {
         label: c.is_active ? c.title : `${c.title} (Inactive)` 
       }));
   }, [allCampaigns, form.campaign_products]);
+
+  const activeDomains = useMemo(() => {
+    const domainMasters = groupMasters(masters)['campaign_domain'] || [];
+    return domainMasters
+      .filter(m => m.is_active || m.value === form.domain)
+      .map(m => ({ value: m.value || m.label, label: m.label, hint: m.value }));
+  }, [masters, form.domain]);
 
   const filtered = useMemo(() => {
     if (!setups) return [];
@@ -130,7 +146,7 @@ export default function CampaignSetup() {
   });
 
   const openNew = () => {
-    setForm({ name: '', description: '', status: 'inactive', play_mode: 'loop', start_datetime: '', end_datetime: '', templates: [], campaign_products: [] });
+    setForm({ name: '', description: '', domain: '', status: 'inactive', play_mode: 'loop', start_datetime: '', end_datetime: '', templates: [], campaign_products: [] });
     setEditingSetup(null);
     setModalOpen(true);
   };
@@ -148,6 +164,7 @@ export default function CampaignSetup() {
         id: setup.id,
         name: setup.name,
         description: setup.description || '',
+        domain: setup.domain || '',
         status: newStatus,
         play_mode: setup.play_mode || 'loop',
         start_datetime: setup.start_datetime ? new Date(setup.start_datetime).toISOString() : null,
@@ -193,6 +210,7 @@ export default function CampaignSetup() {
       id: s.id,
       name: s.name,
       description: s.description || '',
+      domain: s.domain || '',
       status: s.status,
       play_mode: s.play_mode || 'loop',
       start_datetime: toLocalInputFormat(s.start_datetime),
@@ -234,8 +252,9 @@ export default function CampaignSetup() {
     
     // Filter out rows where no template was selected
     const validTemplates = form.templates.filter(t => t.template_id);
-    if (validTemplates.length === 0) return toast('At least one template is required', 'error');
-    
+    if (validTemplates.length === 0 && form.status === 'active') {
+      return toast('At least one template is required to activate this setup', 'error');
+    }
     if (form.start_datetime && form.end_datetime && new Date(form.start_datetime) > new Date(form.end_datetime)) {
       return toast('Start date must be before end date', 'error');
     }
@@ -472,13 +491,25 @@ export default function CampaignSetup() {
         }
       >
         <div className="space-y-5">
-          <Field label="Setup Name" required>
-            <Input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g., Football Campaign 2026"
-            />
-          </Field>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Setup Name" required>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="e.g., Football Campaign 2026"
+              />
+            </Field>
+
+            <Field label="Domain">
+              <SearchableSelect
+                value={form.domain || ''}
+                onChange={(v) => setForm({ ...form, domain: extractHostname(v) })}
+                options={activeDomains}
+                placeholder="Select or enter a domain..."
+                creatable
+              />
+            </Field>
+          </div>
 
           <Field label="Description">
             <Textarea

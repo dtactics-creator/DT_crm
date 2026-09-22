@@ -47,7 +47,7 @@ export default function MasterTab({ category, singular, permPrefix = 'masters' }
   const filtered = useMemo(() => items.filter((m) => m.label.toLowerCase().includes(search.toLowerCase())), [items, search]);
 
   const openNew = () => { setForm({ label: '', value: '', url: '', color: PRESET_COLORS[0], sort_order: (items[items.length - 1]?.sort_order ?? 0) + 1, description: '', symbol: '', percent: 0, gst_percent: 0 }); setEditing(false); setError(''); setModalOpen(true); };
-  const openEdit = (m: MasterItem) => { 
+  const openEdit = (m: MasterItem) => {
     let url = '';
     let desc = m.description || '';
     if (category === 'campaign_font' && m.description) {
@@ -60,7 +60,7 @@ export default function MasterTab({ category, singular, permPrefix = 'masters' }
         desc = '';
       }
     }
-    setForm({ id: m.id, label: m.label, value: m.value || '', url, color: m.color || PRESET_COLORS[0], sort_order: m.sort_order, description: desc, symbol: m.symbol || '', percent: m.percent || 0, gst_percent: m.gst_percent || 0 }); setEditing(true); setError(''); setModalOpen(true); 
+    setForm({ id: m.id, label: m.label, value: m.value || '', url, color: m.color || PRESET_COLORS[0], sort_order: m.sort_order, description: desc, symbol: m.symbol || '', percent: m.percent || 0, gst_percent: m.gst_percent || 0 }); setEditing(true); setError(''); setModalOpen(true);
   };
 
   const submit = async () => {
@@ -70,12 +70,12 @@ export default function MasterTab({ category, singular, permPrefix = 'masters' }
     const dupe = items.some((m) => m.label.trim().toLowerCase() === form.label.trim().toLowerCase() && m.id !== form.id);
     if (dupe) { setError('A value with this label already exists.'); return; }
     const order = Number.isFinite(form.sort_order) ? Math.max(0, Math.min(9999, form.sort_order)) : 0;
-    
+
     let finalDesc = form.description || null;
     if (category === 'campaign_font') {
       finalDesc = form.url ? `${form.url}|||${form.description || ''}` : form.description || null;
     }
-    
+
     const payload = { ...(form.id ? { id: form.id } : {}), category, label: form.label.trim(), value: form.value || undefined, color: form.color, sort_order: order, is_active: true, description: finalDesc, symbol: form.symbol || null, percent: form.percent || 0, gst_percent: form.gst_percent || 0 };
     try {
       if (form.id) await update.mutateAsync(payload); else await create.mutateAsync(payload);
@@ -86,22 +86,24 @@ export default function MasterTab({ category, singular, permPrefix = 'masters' }
   const handleDelete = async () => { if (!toDelete) return; await remove.mutateAsync(toDelete.id); setToDelete(null); };
 
   const columns: Column<MasterItem>[] = [
-    { key: 'label', header: 'Label', sortValue: (r) => r.label.toLowerCase(), render: (r) => {
-      const fontUrl = category === 'campaign_font' ? getFontUrl(r.description) : null;
-      const descText = category === 'campaign_font' && r.description ? r.description.split('|||')[1] || '' : r.description;
-      return (
-        <div className="flex items-center gap-3">
-          <span className="h-7 w-7 rounded-lg shrink-0 border border-app" style={{ backgroundColor: r.color || '#64748b' }} />
-          <div>
-            {fontUrl && <link href={fontUrl} rel="stylesheet" />}
-            <p className="font-semibold text-base-fg text-base" style={category === 'campaign_font' && r.value ? { fontFamily: r.value } : {}}>{r.label}</p>
-            <p className="text-[11.5px] text-subtle-fg max-w-[250px] truncate" title={descText || ''}>
-              {descText || <span className="text-subtle-fg/50 italic">No description</span>}
-            </p>
+    {
+      key: 'label', header: 'Label', sortValue: (r) => r.label.toLowerCase(), render: (r) => {
+        const fontUrl = category === 'campaign_font' ? getFontUrl(r.description) : null;
+        const descText = category === 'campaign_font' && r.description ? r.description.split('|||')[1] || '' : r.description;
+        return (
+          <div className="flex items-center gap-3">
+            <span className="h-7 w-7 rounded-lg shrink-0 border border-app" style={{ backgroundColor: r.color || '#64748b' }} />
+            <div>
+              {fontUrl && <link href={fontUrl} rel="stylesheet" />}
+              <p className="font-semibold text-base-fg text-base" style={category === 'campaign_font' && r.value ? { fontFamily: r.value } : {}}>{r.label}</p>
+              <p className="text-[11.5px] text-subtle-fg max-w-[250px] truncate" title={descText || ''}>
+                {descText || <span className="text-subtle-fg/50 italic">No description</span>}
+              </p>
+            </div>
           </div>
-        </div>
-      );
-    } },
+        );
+      }
+    },
     ...(category === 'project_service' ? [{
       key: 'gst_percent', header: 'GST %', render: (r) => (
         <Badge label={`${r.gst_percent || 0}%`} color="#8b5cf6" />
@@ -121,12 +123,14 @@ export default function MasterTab({ category, singular, permPrefix = 'masters' }
     } as Column<MasterItem>] : []),
     { key: 'sort_order', header: 'Order', render: (r) => <span className="text-[12.5px] font-mono text-muted-fg">{r.sort_order}</span> },
     { key: 'status', header: 'Status', render: () => <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Active</span> },
-    { key: 'actions', header: '', headerClassName: 'w-24', className: 'text-right', render: (r) => (
-      <div className="flex items-center justify-end gap-1">
-        {can(`${permPrefix}.edit`) && <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors"><Pencil className="h-4 w-4" /></button>}
-        {can(`${permPrefix}.delete`) && <button onClick={(e) => { e.stopPropagation(); setToDelete(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>}
-      </div>
-    ) },
+    {
+      key: 'actions', header: '', headerClassName: 'w-24', className: 'text-right', render: (r) => (
+        <div className="flex items-center justify-end gap-1">
+          {can(`${permPrefix}.edit`) && <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors"><Pencil className="h-4 w-4" /></button>}
+          {can(`${permPrefix}.delete`) && <button onClick={(e) => { e.stopPropagation(); setToDelete(r); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>}
+        </div>
+      )
+    },
   ];
 
   return (

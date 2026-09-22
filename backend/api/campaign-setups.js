@@ -33,8 +33,8 @@ export default async function handler(req, res) {
       const payload = validate(req.body);
       const reqTemplates = req.body.templates || [];
 
-      if (!Array.isArray(reqTemplates) || reqTemplates.length === 0) {
-        return fail(res, 400, 'At least 1 template is required');
+      if ((!Array.isArray(reqTemplates) || reqTemplates.length === 0) && payload.status === 'active') {
+        return fail(res, 400, 'At least one template is required to activate this setup');
       }
 
       const templateIds = reqTemplates.map(t => t.template_id);
@@ -96,8 +96,8 @@ export default async function handler(req, res) {
       payload.updated_at = new Date().toISOString();
       const reqTemplates = req.body.templates || [];
 
-      if (!Array.isArray(reqTemplates) || reqTemplates.length === 0) {
-        return fail(res, 400, 'At least 1 template is required');
+      if ((!Array.isArray(reqTemplates) || reqTemplates.length === 0) && payload.status === 'active') {
+        return fail(res, 400, 'At least one template is required to activate this setup');
       }
 
       const templateIds = reqTemplates.map(t => t.template_id);
@@ -176,6 +176,7 @@ function validate(body) {
   const payload = {
     name: V.str(body.name, { field: 'Name', required: true, min: 2, max: 200 }),
     description: V.str(body.description, { field: 'Description', max: 2000 }),
+    domain: V.str(body.domain, { field: 'Domain', max: 200 }),
     play_mode: V.str(body.play_mode, { field: 'Play Mode' }) || 'loop',
     status: V.str(body.status, { field: 'Status', required: true }) || 'inactive',
     campaign_products: Array.isArray(body.campaign_products) ? body.campaign_products : [],

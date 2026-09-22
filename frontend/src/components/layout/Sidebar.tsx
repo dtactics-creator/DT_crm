@@ -68,6 +68,7 @@ const CAMPAIGN_NAV = [
   { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: 'campaigns.view', end: false },
   { to: '/campaign-templates', label: 'Campaign Templates', icon: Sparkles, perm: 'campaign_templates.view', end: false },
   { to: '/campaign-setup', label: 'Campaign Setup', icon: LayoutList, perm: 'campaign_setup.view', end: false },
+  { to: '/campaign-reports', label: 'Campaign Reports', icon: BarChart3, perm: 'campaign_reports.view', end: false },
 ];
 
 
