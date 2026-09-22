@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, FolderKanban, Briefcase, Database, UserCog,
@@ -82,7 +82,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const { can } = usePermissions();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const isPmContext = searchParams.get('context') === 'project-management';
+  const isPmContext = searchParams.get('context') === 'project-management' || location.pathname.startsWith('/project-management');
 
   const isWorkspaceItemActive = (itemTo: string, end?: boolean) => {
     if (itemTo === '/') return location.pathname === '/';
@@ -99,7 +99,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       return location.pathname.startsWith('/clients') && isPmContext;
     }
     if (itemTo.startsWith('/projects')) {
-      return location.pathname.startsWith('/projects') && isPmContext;
+      return (location.pathname.startsWith('/projects') || location.pathname.startsWith('/project-management/projects')) && isPmContext;
     }
     const cleanTo = itemTo.split('?')[0];
     return location.pathname.startsWith(cleanTo);
@@ -142,9 +142,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             const isActive = isWorkspaceItemActive(item.to, item.end);
             return (
               <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
-                <NavLink
+                <Link
                   to={item.to}
                   onClick={onMobileClose}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
                     collapsed && 'justify-center px-0',
@@ -158,7 +159,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                   )}
                   <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
                   {!collapsed && <span className="truncate">{item.label}</span>}
-                </NavLink>
+                </Link>
               </SidebarTooltip>
             );
           })}
@@ -169,9 +170,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               const isActive = isPmItemActive(item.to);
               return (
                 <SidebarTooltip key={item.to} content={item.label} disabled={!collapsed}>
-                  <NavLink
+                  <Link
                     to={item.to}
                     onClick={onMobileClose}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
                       'group relative flex items-center gap-3 rounded-xl px-3 h-10 text-[13.5px] font-semibold transition-all',
                       collapsed && 'justify-center px-0',
@@ -185,7 +187,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     )}
                     <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.1} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
-                  </NavLink>
+                  </Link>
                 </SidebarTooltip>
               );
             })}

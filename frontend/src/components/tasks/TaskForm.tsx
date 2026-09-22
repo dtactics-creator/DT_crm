@@ -8,7 +8,10 @@ import { SearchableSelect } from '../ui/SearchableSelect';
 import { toOptions } from '../../hooks/useMasters';
 import { useNextNo } from '../../hooks/useNextNo';
 import { collect, required, minLen, maxLen } from '../../lib/validators';
-import type { Task, Project, Employee, MasterItem } from '../../types';
+import { uploadFile } from '../../lib/upload';
+import { useToast } from '../ui/Toast';
+import { Paperclip, UploadCloud, X, Loader2 } from 'lucide-react';
+import type { Task, Project, Employee, MasterItem, TaskAttachment } from '../../types';
 
 export interface TaskFormValues {
   id?: string;
@@ -24,6 +27,7 @@ export interface TaskFormValues {
   due_date: string;
   estimated_hours: string;
   additional_notes: string;
+  attachments: TaskAttachment[];
 }
 
 const empty: TaskFormValues = {
@@ -39,6 +43,7 @@ const empty: TaskFormValues = {
   due_date: '',
   estimated_hours: '',
   additional_notes: '',
+  attachments: [],
 };
 
 const toDateInput = (v: string | null | undefined) => (v ? new Date(v).toISOString().slice(0, 10) : '');
@@ -64,8 +69,10 @@ export default function TaskForm({
   masters?: MasterItem[];
   saving: boolean;
 }) {
+  const { toast } = useToast();
   const [v, setV] = useState<TaskFormValues>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState(false);
 
   const { data: nextNo } = useNextNo('task', open && !initial);
   const displayTaskNo = initial ? (v.task_no || '—') : (nextNo?.next ?? 'Generating…');
@@ -100,6 +107,7 @@ export default function TaskForm({
           due_date: toDateInput(initial.due_date),
           estimated_hours: String(initial.estimated_hours ?? ''),
           additional_notes: initial.additional_notes ?? '',
+          attachments: Array.isArray(initial.attachments) ? initial.attachments : [],
         });
       } else {
         setV({
@@ -108,13 +116,14 @@ export default function TaskForm({
           module: moduleOpts[0]?.value || '',
           status: statusOpts[0]?.value || 'assigned',
           priority: priorityOpts[1]?.value || 'medium',
+          attachments: [],
         });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial, projectContext]);
 
-  const set = (k: keyof TaskFormValues, val: string) => setV((p) => ({ ...p, [k]: val }));
+  const set = (k: keyof TaskFormValues, val: any) => setV((p) => ({ ...p, [k]: val }));
 
   const boundProjectName = projectContext?.project_name || (projects || []).find((p) => p.id === v.project_id)?.project_name;
 
@@ -127,6 +136,38 @@ export default function TaskForm({
     });
     setErrors(e);
     return Object.keys(e).length === 0;
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const newAttachments: TaskAttachment[] = [...(v.attachments || [])];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const res = await uploadFile(file, 'tasks');
+        newAttachments.push({
+          name: res.filename || file.name,
+          url: res.url,
+          size: res.size || file.size,
+        });
+      }
+      setV((prev) => ({ ...prev, attachments: newAttachments }));
+      toast('File uploaded successfully', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Failed to upload file', 'error');
+    } finally {
+      setUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setV((prev) => ({
+      ...prev,
+      attachments: (prev.attachments || []).filter((_, i) => i !== index),
+    }));
   };
 
   const submit = () => {
@@ -269,6 +310,43 @@ export default function TaskForm({
           </div>
         </section>
 
+        <section>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg mb-3">Attachments</p>
+          <div className="space-y-3">
+            {v.attachments && v.attachments.length > 0 && (
+              <div className="space-y-2">
+                {v.attachments.map((att, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-app bg-surface-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Paperclip className="h-4 w-4 text-subtle-fg shrink-0" />
+                      <a href={att.url} target="_blank" rel="noreferrer" className="font-medium text-brand-600 truncate hover:underline">
+                        {att.name}
+                      </a>
+                      {att.size ? <span className="text-subtle-fg shrink-0">({(att.size / 1024).toFixed(1)} KB)</span> : null}
+                    </div>
+                    <button type="button" onClick={() => removeAttachment(idx)} className="text-subtle-fg hover:text-red-600 p-1 rounded-md transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div>
+              <input type="file" id="task-attachment-upload" className="hidden" multiple onChange={handleFileUpload} />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={uploading}
+                onClick={() => document.getElementById('task-attachment-upload')?.click()}
+                icon={uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+              >
+                {uploading ? 'Uploading...' : 'Upload Attachment'}
+              </Button>
+            </div>
+          </div>
+        </section>
+
         <Field label="Additional Notes" error={errors.additional_notes}>
           <Textarea
             value={v.additional_notes}
@@ -281,3 +359,4 @@ export default function TaskForm({
     </Drawer>
   );
 }
+

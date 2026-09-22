@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, useLocation } from 'react-router-dom';
 import { Plus, Search, FolderKanban, Filter, LayoutGrid, List, Pencil, Trash2, Eye, Download, Upload, CalendarClock } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import PageHeader from '../components/layout/PageHeader';
@@ -40,6 +40,9 @@ export default function Projects() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [params, setParams] = useSearchParams();
+  const { projectId } = useParams();
+  const location = useLocation();
+  const isPmContext = params.get('context') === 'project-management' || location.pathname.startsWith('/project-management');
   const { data: projects, isLoading } = useProjects();
   const { data: employees } = useEmployees();
 
@@ -64,6 +67,14 @@ export default function Projects() {
 
   const resolveEmp = useMemo(() => employeeIndex(employees), [employees]);
   const mapProjectRow = useMemo(() => makeProjectRowMapper(resolve, resolveEmp, lookup.label, urlTypes), [masters, resolveEmp, urlTypes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const targetId = projectId || params.get('projectId');
+    if (targetId && projects?.length) {
+      const found = projects.find(p => p.id === targetId);
+      if (found) setDetail(found);
+    }
+  }, [projectId, projects, params]);
 
   const handleExport = () => {
     const rows = filtered.length ? filtered : (projects || []);
@@ -292,7 +303,7 @@ export default function Projects() {
 
       <Suspense fallback={null}>
         <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
-          isProjectManagementContext={params.get('context') === 'project-management'}
+          isProjectManagementContext={isPmContext}
           onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
       </Suspense>
 

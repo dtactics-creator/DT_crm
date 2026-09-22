@@ -160,6 +160,29 @@ export default function TaskDetail({
           </div>
         )}
 
+        {/* Attachments */}
+        {task.attachments && task.attachments.length > 0 && (
+          <div>
+            <p className="text-[11.5px] font-bold uppercase tracking-wider text-subtle-fg mb-2">Attachments</p>
+            <div className="space-y-2">
+              {task.attachments.map((att, i) => (
+                <a
+                  key={i}
+                  href={att.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl border border-app bg-surface-2 hover:bg-surface transition-colors text-xs group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-semibold text-base-fg truncate group-hover:text-brand-600">{att.name}</span>
+                  </div>
+                  {att.size ? <span className="text-subtle-fg shrink-0">{(att.size / 1024).toFixed(1)} KB</span> : null}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Work Updates & Activity Timeline */}
         <div>
           <div className="flex items-center justify-between mb-3">

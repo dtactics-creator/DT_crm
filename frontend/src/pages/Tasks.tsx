@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Plus, CheckSquare, Search, Filter } from 'lucide-react';
+import { Plus, CheckSquare } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
 import Skeleton from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import FilterBar from '../components/ui/FilterBar';
+import Input from '../components/ui/Input';
 import { MultiSelect, SearchableSelect } from '../components/ui/SearchableSelect';
 import TaskList from '../components/tasks/TaskList';
 import TaskForm, { type TaskFormValues } from '../components/tasks/TaskForm';
@@ -14,6 +15,7 @@ import TaskUpdateModal from '../components/tasks/TaskUpdateModal';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useCreateTaskUpdate, type TaskFilters } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
 import { useEmployees } from '../hooks/useEmployees';
+import { useClients } from '../hooks/useClients';
 import { useMasters, toOptions } from '../hooks/useMasters';
 import { usePermissions } from '../contexts/PermissionContext';
 import { cn } from '../lib/utils';
@@ -26,14 +28,17 @@ export default function Tasks() {
   const { data: masters } = useMasters();
   const { data: projects } = useProjects();
   const { data: employees } = useEmployees();
+  const { data: clients } = useClients();
 
   const [scope, setScope] = useState<ScopeTab>('all');
   const [search, setSearch] = useState('');
+  const [clientFilter, setClientFilter] = useState('');
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
   const [moduleFilter, setModuleFilter] = useState<string[]>([]);
   const [employeeFilter, setEmployeeFilter] = useState('');
+  const [dueDateFilter, setDueDateFilter] = useState('');
 
   const queryFilters: TaskFilters = useMemo(
     () => ({
@@ -56,7 +61,7 @@ export default function Tasks() {
   const [workUpdateTask, setWorkUpdateTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
 
-  // Client-side filtering for search, status, priority, and module
+  // Client-side filtering for search, client, status, priority, module, due date
   const filteredTasks = useMemo(() => {
     return (rawTasks || []).filter((t) => {
       const q = search.toLowerCase();
@@ -66,13 +71,19 @@ export default function Tasks() {
           (x) => x.toLowerCase().includes(q)
         );
 
+      const taskClient = (t.project?.client || '').toLowerCase();
+      const selectedClientObj = clients?.find((c) => c.id === clientFilter || c.company_name === clientFilter);
+      const targetClientName = (selectedClientObj?.company_name || clientFilter).toLowerCase();
+
+      const matchClient = !clientFilter || (taskClient && (taskClient === targetClientName || taskClient.includes(targetClientName)));
       const matchStatus = statusFilter.length === 0 || statusFilter.includes(t.status);
       const matchPriority = priorityFilter.length === 0 || priorityFilter.includes(t.priority);
       const matchModule = moduleFilter.length === 0 || moduleFilter.includes(t.module ?? '');
+      const matchDueDate = !dueDateFilter || (t.due_date ? t.due_date.slice(0, 10) === dueDateFilter : false);
 
-      return matchQ && matchStatus && matchPriority && matchModule;
+      return matchQ && matchClient && matchStatus && matchPriority && matchModule && matchDueDate;
     });
-  }, [rawTasks, search, statusFilter, priorityFilter, moduleFilter]);
+  }, [rawTasks, search, clientFilter, statusFilter, priorityFilter, moduleFilter, dueDateFilter, clients]);
 
   const handleSaveTask = async (v: TaskFormValues) => {
     const payload = {
@@ -89,6 +100,7 @@ export default function Tasks() {
       due_date: v.due_date || null,
       estimated_hours: v.estimated_hours ? Number(v.estimated_hours) : 0,
       additional_notes: v.additional_notes || null,
+      attachments: v.attachments || [],
     };
 
     if (v.id) {
@@ -107,6 +119,7 @@ export default function Tasks() {
     if (selectedTask?.id === deletingTask.id) setSelectedTask(null);
   };
 
+  const clientOptions = (clients || []).map((c) => ({ value: c.company_name || c.id, label: c.company_name || c.customer_name || 'Client' }));
   const projectOptions = (projects || []).map((p) => ({ value: p.id, label: p.project_name }));
   const employeeOptions = (employees || [])
     .filter((e) => e.status === 'active')
@@ -159,29 +172,21 @@ export default function Tasks() {
           <>
             <div className="w-44">
               <SearchableSelect
+                value={clientFilter}
+                onChange={setClientFilter}
+                options={clientOptions}
+                placeholder="All Clients"
+                clearable
+              />
+            </div>
+
+            <div className="w-44">
+              <SearchableSelect
                 value={projectFilter}
                 onChange={setProjectFilter}
                 options={projectOptions}
                 placeholder="All Projects"
                 clearable
-              />
-            </div>
-
-            <div className="w-40">
-              <MultiSelect
-                values={statusFilter}
-                onChange={setStatusFilter}
-                options={toOptions(masters, 'task_status')}
-                placeholder="All Statuses"
-              />
-            </div>
-
-            <div className="w-36">
-              <MultiSelect
-                values={priorityFilter}
-                onChange={setPriorityFilter}
-                options={toOptions(masters, 'task_priority')}
-                placeholder="All Priorities"
               />
             </div>
 
@@ -205,6 +210,33 @@ export default function Tasks() {
                 />
               </div>
             )}
+
+            <div className="w-40">
+              <MultiSelect
+                values={statusFilter}
+                onChange={setStatusFilter}
+                options={toOptions(masters, 'task_status')}
+                placeholder="All Statuses"
+              />
+            </div>
+
+            <div className="w-36">
+              <MultiSelect
+                values={priorityFilter}
+                onChange={setPriorityFilter}
+                options={toOptions(masters, 'task_priority')}
+                placeholder="All Priorities"
+              />
+            </div>
+
+            <div className="w-36">
+              <Input
+                type="date"
+                value={dueDateFilter}
+                onChange={(e) => setDueDateFilter(e.target.value)}
+                title="Due Date Filter"
+              />
+            </div>
           </>
         }
       />
@@ -219,9 +251,9 @@ export default function Tasks() {
         ) : filteredTasks.length === 0 ? (
           <EmptyState
             icon={<CheckSquare className="h-6 w-6 text-subtle-fg" />}
-            title={search || statusFilter.length || projectFilter ? 'No matching tasks' : 'No tasks created yet'}
+            title={search || statusFilter.length || projectFilter || clientFilter || dueDateFilter ? 'No matching tasks' : 'No tasks created yet'}
             description={
-              search || statusFilter.length || projectFilter
+              search || statusFilter.length || projectFilter || clientFilter || dueDateFilter
                 ? 'Try adjusting your search or filters.'
                 : 'Create tasks inside a project or click "New Task" above.'
             }
@@ -243,7 +275,6 @@ export default function Tasks() {
             onWorkUpdate={(t) => setWorkUpdateTask(t)}
             stickyHeader
           />
-
         )}
       </div>
 
@@ -295,3 +326,4 @@ export default function Tasks() {
     </div>
   );
 }
+

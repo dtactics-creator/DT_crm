@@ -67,6 +67,7 @@ export default function ProjectDetail({ open, onClose, project, masters, isProje
       due_date: v.due_date || null,
       estimated_hours: v.estimated_hours ? Number(v.estimated_hours) : 0,
       additional_notes: v.additional_notes || null,
+      attachments: v.attachments || [],
     };
 
     if (v.id) {

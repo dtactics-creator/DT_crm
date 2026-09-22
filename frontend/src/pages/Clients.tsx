@@ -119,7 +119,7 @@ export default function Clients() {
 
   const projectColumns: Column<any>[] = [
     { key: 'project_no', header: 'Project No', sortValue: (r) => r.project_no, render: (r) => <span className="text-muted-fg text-xs tabular-nums">{r.project_no}</span> },
-    { key: 'project_name', header: 'Project Name', sortValue: (r) => r.project_name, render: (r) => <Link to={isPmContext ? '/projects?context=project-management' : '/projects'} className="font-semibold text-brand-600 hover:underline">{r.project_name}</Link> },
+    { key: 'project_name', header: 'Project Name', sortValue: (r) => r.project_name, render: (r) => <Link to={isPmContext ? `/project-management/projects/${r.id}` : `/projects?projectId=${r.id}`} className="font-semibold text-brand-600 hover:underline">{r.project_name}</Link> },
     { key: 'type', header: 'Type', sortValue: (r) => r.project_type, render: (r) => r.project_type ? lookup.label('project_type', r.project_type) : '—' },
     { key: 'cost', header: 'Cost', sortValue: (r) => r.project_cost, render: (r) => formatCurrency(r.project_cost || 0) },
     { key: 'status', header: 'Status', sortValue: (r) => r.status, render: (r) => <Badge label={r.status} color="#3b82f6" /> },

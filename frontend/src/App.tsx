@@ -87,6 +87,7 @@ export default function App() {
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
                         <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
+                        <Route path="/project-management/projects/:projectId" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
                         <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
                         <Route path="/tasks" element={<RequirePermission perm="tasks.view"><Tasks /></RequirePermission>} />
                         <Route path="/project-management/masters" element={<RequirePermission perm="masters.view"><ProjectManagementMasters /></RequirePermission>} />
