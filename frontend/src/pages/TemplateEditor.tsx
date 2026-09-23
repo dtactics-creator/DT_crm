@@ -12,8 +12,11 @@ import { useSidebar } from '../components/layout/AppLayout';
 import { useMasters, toOptions } from '../hooks/useMasters';
 import { ColorControl } from '../components/ui/ColorPicker';
 import { uploadFile } from '../lib/upload';
+<<<<<<< HEAD
 import IframePreview from '../components/ui/IframePreview';
 
+=======
+>>>>>>> a7a5c63 (domain config fixed)
 import GenieWishTemplate from '../components/templates/GenieWishTemplate';
 
 const TemplatePreview = ({ config, componentName }: { config: any, componentName: string }) => {
@@ -557,9 +560,15 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
               }`}
             >
               <div className={`w-full h-full relative ${previewMode !== 'desktop' ? 'overflow-hidden ring-1 ring-white/10' : ''}`}>
+<<<<<<< HEAD
                 <IframePreview className="w-full h-full border-0 bg-transparent rounded-[inherit]">
                   <TemplatePreview config={form.default_config} componentName={form.component_name} />
                 </IframePreview>
+=======
+                <div className="w-full h-full border-0 bg-transparent rounded-[inherit]">
+                  <TemplatePreview config={form.default_config} componentName={form.component_name} />
+                </div>
+>>>>>>> a7a5c63 (domain config fixed)
               </div>
             </div>
           </div>

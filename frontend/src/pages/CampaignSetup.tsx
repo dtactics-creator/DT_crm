@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2, LayoutList, Calendar, Power, PowerOff } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, LayoutList, Calendar, Power, PowerOff, Globe } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -62,6 +62,7 @@ export default function CampaignSetup() {
     queryFn: fetchAllCampaigns,
     enabled: modalOpen
   });
+<<<<<<< HEAD
 
   const extractHostname = (url: string) => {
     const match = url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im);
@@ -69,10 +70,13 @@ export default function CampaignSetup() {
   };
 
   const { data: masters } = useMasters();
+=======
+>>>>>>> a7a5c63 (domain config fixed)
 
   const [form, setForm] = useState<CampaignSetupFormState>({
     name: '',
     description: '',
+    domain: '',
     status: 'inactive',
     play_mode: 'loop',
     domain: '',
@@ -102,6 +106,7 @@ export default function CampaignSetup() {
       }));
   }, [allCampaigns, form.campaign_products]);
 
+<<<<<<< HEAD
   const activeDomains = useMemo(() => {
     const domainMasters = groupMasters(masters)['campaign_domain'] || [];
     return domainMasters
@@ -109,11 +114,13 @@ export default function CampaignSetup() {
       .map(m => ({ value: m.value || m.label, label: m.label, hint: m.value }));
   }, [masters, form.domain]);
 
+=======
+>>>>>>> a7a5c63 (domain config fixed)
   const filtered = useMemo(() => {
     if (!setups) return [];
     return setups.filter((s) => {
       const q = search.toLowerCase();
-      const matchQ = !q || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q);
+      const matchQ = !q || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q) || (s.domain || '').toLowerCase().includes(q);
       
       const isExpired = s.end_datetime && new Date(s.end_datetime) <= new Date();
       const currentStatus = isExpired ? 'expired' : (s.status === 'active' ? 'active' : 'inactive');
@@ -324,6 +331,19 @@ export default function CampaignSetup() {
       ),
     },
     {
+      key: 'domain', header: 'Domain', sortValue: (c) => (c.domain || '').toLowerCase(),
+      render: (c) => (
+        c.domain ? (
+          <span className="text-[13px] font-medium text-brand-600 dark:text-brand-300 flex items-center gap-1 bg-brand-50 dark:bg-brand-600/10 px-2 py-0.5 rounded-md border border-brand-200/50 dark:border-brand-500/20 w-fit">
+            <Globe className="h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-400" />
+            {c.domain}
+          </span>
+        ) : (
+          <span className="text-[13px] text-muted-fg">—</span>
+        )
+      ),
+    },
+    {
       key: 'templates', header: 'Templates',
       render: (c) => (
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -510,6 +530,14 @@ export default function CampaignSetup() {
               />
             </Field>
           </div>
+
+          <Field label="Target Domain (Optional)" hint="e.g., mall.dtacticsit.in (Without http:// or paths)">
+            <Input
+              value={form.domain}
+              onChange={(e) => setForm({ ...form, domain: e.target.value })}
+              placeholder="e.g., mall.dtacticsit.in"
+            />
+          </Field>
 
           <Field label="Description">
             <Textarea

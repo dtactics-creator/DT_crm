@@ -1151,6 +1151,7 @@ CREATE TABLE IF NOT EXISTS public.dt_campaign_setups (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
+    domain TEXT UNIQUE,
     play_mode TEXT DEFAULT 'loop',
     start_datetime TIMESTAMPTZ,
     end_datetime TIMESTAMPTZ,
@@ -1162,6 +1163,10 @@ CREATE TABLE IF NOT EXISTS public.dt_campaign_setups (
     created_by UUID,
     updated_by UUID
 );
+
+ALTER TABLE public.dt_campaign_setups ADD COLUMN IF NOT EXISTS domain TEXT UNIQUE;
+CREATE INDEX IF NOT EXISTS idx_dt_campaign_setups_domain ON public.dt_campaign_setups(domain);
+
 
 -- Create dt_campaign_setup_templates table
 CREATE TABLE IF NOT EXISTS public.dt_campaign_setup_templates (

@@ -12,7 +12,11 @@ export interface CampaignSetupRow {
   id: string;
   name: string;
   description: string | null;
+<<<<<<< HEAD
   domain?: string;
+=======
+  domain?: string | null;
+>>>>>>> a7a5c63 (domain config fixed)
   play_mode: string;
   start_datetime: string | null;
   end_datetime: string | null;
@@ -29,7 +33,11 @@ export type CampaignSetupFormState = {
   id?: string;
   name: string;
   description: string;
+<<<<<<< HEAD
   domain?: string;
+=======
+  domain: string;
+>>>>>>> a7a5c63 (domain config fixed)
   play_mode: string;
   start_datetime: string | null;
   end_datetime: string | null;

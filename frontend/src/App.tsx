@@ -29,7 +29,10 @@ const CampaignDashboard = lazy(() => import('./pages/CampaignDashboard'));
 const CampaignMasters = lazy(() => import('./pages/CampaignMasters'));
 const CampaignTemplates = lazy(() => import('./pages/CampaignTemplates'));
 const CampaignSetup = lazy(() => import('./pages/CampaignSetup'));
+<<<<<<< HEAD
 const CampaignReports = lazy(() => import('./pages/CampaignReports'));
+=======
+>>>>>>> a7a5c63 (domain config fixed)
 const Tasks = lazy(() => import('./pages/Tasks'));
 const ProjectManagementMasters = lazy(() => import('./pages/ProjectManagementMasters'));
 
@@ -88,7 +91,10 @@ export default function App() {
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
                         <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
+<<<<<<< HEAD
                         <Route path="/project-management/projects/:projectId" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
+=======
+>>>>>>> a7a5c63 (domain config fixed)
                         <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
                         <Route path="/tasks" element={<RequirePermission perm="tasks.view"><Tasks /></RequirePermission>} />
                         <Route path="/project-management/masters" element={<RequirePermission perm="masters.view"><ProjectManagementMasters /></RequirePermission>} />
@@ -104,9 +110,14 @@ export default function App() {
                         <Route path="/campaign-dashboard" element={<CampaignDashboard />} />
                         <Route path="/campaigns" element={<Campaigns />} />
                         <Route path="/campaign-masters" element={<CampaignMasters />} />
+<<<<<<< HEAD
                         <Route path="/campaign-templates" element={<RequirePermission perm="campaign_templates.view"><CampaignTemplates /></RequirePermission>} />
                         <Route path="/campaign-setup" element={<RequirePermission perm="campaign_setup.view"><CampaignSetup /></RequirePermission>} />
                         <Route path="/campaign-reports" element={<RequirePermission perm="campaign_reports.view"><CampaignReports /></RequirePermission>} />
+=======
+                        <Route path="/campaign-templates" element={<CampaignTemplates />} />
+                        <Route path="/campaign-setup" element={<CampaignSetup />} />
+>>>>>>> a7a5c63 (domain config fixed)
                       </Route>
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

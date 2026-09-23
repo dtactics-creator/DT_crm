@@ -303,7 +303,11 @@ export default function Projects() {
 
       <Suspense fallback={null}>
         <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
+<<<<<<< HEAD
           isProjectManagementContext={isPmContext}
+=======
+          isProjectManagementContext={params.get('context') === 'project-management'}
+>>>>>>> a7a5c63 (domain config fixed)
           onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
       </Suspense>
 

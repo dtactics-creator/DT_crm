@@ -167,22 +167,41 @@ export default async function handler(req, res) {
 
     return fail(res, 405, 'Method not allowed');
   } catch (err) {
+    const isDuplicateDomain = err.code === '23505' || /unique constraint|dt_campaign_setups_domain_key/i.test(err.message || '');
+    if (isDuplicateDomain) {
+      return fail(res, 400, 'Domain is already assigned to another Campaign Setup');
+    }
     const isValidation = /required|valid|must|too long/i.test(err.message || '');
     return fail(res, isValidation ? 400 : 500, err.message);
   }
 }
 
 function validate(body) {
+  let cleanDomain = null;
+  if (body.domain && typeof body.domain === 'string') {
+    let d = body.domain.trim().toLowerCase();
+    d = d.replace(/^[a-z0-9+\-.]+:\/\//i, '');
+    d = d.split('/')[0].split('?')[0].split('#')[0];
+    d = d.replace(/:\d+$/, '');
+    d = d.replace(/\.$/, '');
+    if (d.length > 0) cleanDomain = d;
+  }
+
   const payload = {
     name: V.str(body.name, { field: 'Name', required: true, min: 2, max: 200 }),
     description: V.str(body.description, { field: 'Description', max: 2000 }),
+<<<<<<< HEAD
     domain: V.str(body.domain, { field: 'Domain', max: 200 }),
+=======
+    domain: cleanDomain,
+>>>>>>> a7a5c63 (domain config fixed)
     play_mode: V.str(body.play_mode, { field: 'Play Mode' }) || 'loop',
     status: V.str(body.status, { field: 'Status', required: true }) || 'inactive',
     campaign_products: Array.isArray(body.campaign_products) ? body.campaign_products : [],
     start_datetime: null,
     end_datetime: null,
   };
+
 
   const reqTemplates = body.templates || [];
   if (Array.isArray(reqTemplates) && reqTemplates.length > 0) {
