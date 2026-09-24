@@ -19,12 +19,12 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const ref = useRef<HTMLDivElement>(null);
-  
+
   const stateRef = useRef({ q, onChange, creatable, options });
   stateRef.current = { q, onChange, creatable, options };
 
   useEffect(() => {
-    const onClick = (e: MouseEvent) => { 
+    const onClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(prev => {
           if (prev) {
@@ -37,7 +37,7 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
           }
           return false;
         });
-      } 
+      }
     };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
@@ -58,14 +58,10 @@ export function SearchableSelect({ value, onChange, options, placeholder = 'Sele
         disabled && 'opacity-60 cursor-not-allowed bg-subtle/30 pointer-events-none'
       )} onClick={() => { if (!open && !disabled) setOpen(true); }}>
         {selected?.color && !open && <span className="h-2.5 w-2.5 rounded-full shrink-0 mr-2" style={{ backgroundColor: selected.color }} />}
-        <input 
+        <input
           value={open ? q : (selected?.label || '')}
           onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-<<<<<<< HEAD
-          onFocus={() => { if (!open) setQ(selected?.label || value || ''); setOpen(true); }}
-=======
           onFocus={() => { setQ(''); setOpen(true); }}
->>>>>>> a7a5c63 (domain config fixed)
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -151,23 +147,15 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
           'border border-app transition-all outline-none focus:ring-2 ring-brand', open && 'ring-2')}>
         {selectedOpts.length === 0 ? <span className="text-subtle-fg pl-1.5">{placeholder}</span> : (
           <>
-<<<<<<< HEAD
             {selectedOpts.length <= 2 ? selectedOpts.map((o) => (
-=======
-            {selectedOpts.map((o) => (
->>>>>>> a7a5c63 (domain config fixed)
               <span key={o.value} className="inline-flex items-center gap-1 rounded-md bg-surface border border-app px-1.5 py-0.5 text-[12px] font-medium text-base-fg shrink-0 max-w-full">
                 {o.color && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: o.color }} />}
                 <span className="truncate">{o.label}</span>
                 <span onClick={(e) => { e.stopPropagation(); toggle(o.value); }} className="text-subtle-fg hover:text-red-500 shrink-0"><X className="h-3 w-3" /></span>
               </span>
-<<<<<<< HEAD
             )) : (
               <span className="text-[13px] font-medium text-base-fg pl-1.5">{selectedOpts.length} selected</span>
             )}
-=======
-            ))}
->>>>>>> a7a5c63 (domain config fixed)
           </>
         )}
       </button>
@@ -186,8 +174,8 @@ export function MultiSelect({ values, onChange, options, placeholder = 'Selectâ€
                 <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Searchâ€¦"
                   className="w-full bg-transparent outline-none text-[13px] text-base-fg placeholder:text-subtle-fg min-w-0" />
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   const allValues = options.map(o => o.value);

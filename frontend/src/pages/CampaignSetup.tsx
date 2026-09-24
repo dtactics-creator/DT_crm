@@ -62,16 +62,12 @@ export default function CampaignSetup() {
     queryFn: fetchAllCampaigns,
     enabled: modalOpen
   });
-<<<<<<< HEAD
-
   const extractHostname = (url: string) => {
     const match = url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im);
     return match ? match[1] : url;
   };
 
   const { data: masters } = useMasters();
-=======
->>>>>>> a7a5c63 (domain config fixed)
 
   const [form, setForm] = useState<CampaignSetupFormState>({
     name: '',
@@ -79,7 +75,6 @@ export default function CampaignSetup() {
     domain: '',
     status: 'inactive',
     play_mode: 'loop',
-    domain: '',
     start_datetime: '',
     end_datetime: '',
     templates: [],
@@ -90,9 +85,9 @@ export default function CampaignSetup() {
     const selectedTemplateIds = new Set(form.templates.map(t => t.template_id));
     return (allTemplates || [])
       .filter(t => t.status === 'active' || selectedTemplateIds.has(t.id))
-      .map(t => ({ 
-        value: t.id, 
-        label: t.status === 'active' ? t.name : `${t.name} (Inactive)` 
+      .map(t => ({
+        value: t.id,
+        label: t.status === 'active' ? t.name : `${t.name} (Inactive)`
       }));
   }, [allTemplates, form.templates]);
 
@@ -100,34 +95,30 @@ export default function CampaignSetup() {
     const selectedCampaignIds = new Set(form.campaign_products || []);
     return (allCampaigns || [])
       .filter(c => c.is_active || selectedCampaignIds.has(c.id))
-      .map(c => ({ 
-        value: c.id, 
-        label: c.is_active ? c.title : `${c.title} (Inactive)` 
+      .map(c => ({
+        value: c.id,
+        label: c.is_active ? c.title : `${c.title} (Inactive)`
       }));
   }, [allCampaigns, form.campaign_products]);
 
-<<<<<<< HEAD
   const activeDomains = useMemo(() => {
     const domainMasters = groupMasters(masters)['campaign_domain'] || [];
     return domainMasters
       .filter(m => m.is_active || m.value === form.domain)
       .map(m => ({ value: m.value || m.label, label: m.label, hint: m.value }));
   }, [masters, form.domain]);
-
-=======
->>>>>>> a7a5c63 (domain config fixed)
   const filtered = useMemo(() => {
     if (!setups) return [];
     return setups.filter((s) => {
       const q = search.toLowerCase();
       const matchQ = !q || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q) || (s.domain || '').toLowerCase().includes(q);
-      
+
       const isExpired = s.end_datetime && new Date(s.end_datetime) <= new Date();
       const currentStatus = isExpired ? 'expired' : (s.status === 'active' ? 'active' : 'inactive');
       const matchStatus = statusFilter.length === 0 || statusFilter.includes(currentStatus);
-      
+
       const matchPlayMode = playModeFilter.length === 0 || playModeFilter.includes(s.play_mode || 'loop');
-      
+
       return matchQ && matchStatus && matchPlayMode;
     });
   }, [setups, search, statusFilter, playModeFilter]);
@@ -166,7 +157,7 @@ export default function CampaignSetup() {
         start_datetime: t.start_datetime ? new Date(t.start_datetime).toISOString() : '',
         end_datetime: t.end_datetime ? new Date(t.end_datetime).toISOString() : ''
       }));
-      
+
       const formPayload: CampaignSetupFormState = {
         id: setup.id,
         name: setup.name,
@@ -179,13 +170,13 @@ export default function CampaignSetup() {
         templates: validTemplates,
         campaign_products: setup.campaign_products || []
       };
-      
+
       return saveCampaignSetup(formPayload);
     },
     onMutate: async (c) => {
       await queryClient.cancelQueries({ queryKey: ['campaign-setups'] });
       const previousSetups = queryClient.getQueryData(['campaign-setups']);
-      
+
       queryClient.setQueryData(['campaign-setups'], (old: CampaignSetupRow[] | undefined) => {
         if (!old) return old;
         return old.map(row => {
@@ -195,7 +186,7 @@ export default function CampaignSetup() {
           return row;
         });
       });
-      
+
       return { previousSetups };
     },
     onSuccess: () => {
@@ -229,7 +220,7 @@ export default function CampaignSetup() {
           template_id: t.template_id,
           start_datetime: toLocalInputFormat(t.start_datetime),
           end_datetime: toLocalInputFormat(t.end_datetime)
-      }))
+        }))
     });
     setEditingSetup(s);
     setModalOpen(true);
@@ -245,7 +236,7 @@ export default function CampaignSetup() {
         }
       }
     }
-    
+
     setForm(prev => ({
       ...prev,
       templates: recalculated,
@@ -256,7 +247,7 @@ export default function CampaignSetup() {
 
   const submit = () => {
     if (!form.name.trim()) return toast('Name is required', 'error');
-    
+
     // Filter out rows where no template was selected
     const validTemplates = form.templates.filter(t => t.template_id);
     if (validTemplates.length === 0 && form.status === 'active') {
@@ -265,7 +256,7 @@ export default function CampaignSetup() {
     if (form.start_datetime && form.end_datetime && new Date(form.start_datetime) > new Date(form.end_datetime)) {
       return toast('Start date must be before end date', 'error');
     }
-    
+
     for (const t of validTemplates) {
       if (t.start_datetime && t.end_datetime && new Date(t.start_datetime) > new Date(t.end_datetime)) {
         return toast('Template start date must be before end date', 'error');
@@ -285,11 +276,11 @@ export default function CampaignSetup() {
       return toast('Cannot set status to active because the setup is expired. Please extend the template dates.', 'error');
     }
 
-    saveMut.mutate({ 
-      ...form, 
+    saveMut.mutate({
+      ...form,
       start_datetime: finalStart,
       end_datetime: finalEnd,
-      templates: payloadTemplates 
+      templates: payloadTemplates
     });
   };
 
@@ -415,12 +406,12 @@ export default function CampaignSetup() {
           <div className="flex items-center justify-end gap-1">
             {can('campaign_setups.edit' as any) && (
               <button
-                onClick={(e) => { 
-                  e.stopPropagation(); 
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (isExpired && !isActive) {
                     return toast('Cannot activate an expired setup. Please extend the dates first.', 'error');
                   }
-                  toggleStatusMut.mutate(c); 
+                  toggleStatusMut.mutate(c);
                 }}
                 title={isActive ? 'Deactivate' : 'Activate'}
                 className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
@@ -433,13 +424,13 @@ export default function CampaignSetup() {
                 <Pencil className="h-4 w-4" />
               </button>
             )}
-          {can('campaign_setups.delete' as any) && (
-            <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} title="Delete" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      );
+            {can('campaign_setups.delete' as any) && (
+              <button onClick={(e) => { e.stopPropagation(); setToDelete(c); }} title="Delete" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 transition-colors">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        );
       },
     },
   ];
@@ -455,7 +446,7 @@ export default function CampaignSetup() {
       />
 
       <div className="bg-surface border border-app rounded-2xl card-shadow">
-        <FilterBar 
+        <FilterBar
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search campaign setup…"
@@ -463,19 +454,19 @@ export default function CampaignSetup() {
           filters={
             <>
               <div className="w-40">
-                <MultiSelect 
-                  values={statusFilter} 
-                  onChange={setStatusFilter} 
+                <MultiSelect
+                  values={statusFilter}
+                  onChange={setStatusFilter}
                   placeholder="All statuses"
-                  options={[{ value: 'active', label: 'Live' }, { value: 'inactive', label: 'Inactive' }, { value: 'expired', label: 'Expired' }]} 
+                  options={[{ value: 'active', label: 'Live' }, { value: 'inactive', label: 'Inactive' }, { value: 'expired', label: 'Expired' }]}
                 />
               </div>
               <div className="w-40">
-                <MultiSelect 
-                  values={playModeFilter} 
-                  onChange={setPlayModeFilter} 
+                <MultiSelect
+                  values={playModeFilter}
+                  onChange={setPlayModeFilter}
                   placeholder="All play modes"
-                  options={[{ value: 'loop', label: 'Loop' }, { value: 'once', label: 'Play Once' }]} 
+                  options={[{ value: 'loop', label: 'Loop' }, { value: 'once', label: 'Play Once' }]}
                   align="right"
                 />
               </div>
@@ -552,11 +543,11 @@ export default function CampaignSetup() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-subtle-fg">Campaign Templates</p>
-              <Button 
-                type="button" 
-                variant="secondary" 
-                size="sm" 
-                icon={<Plus className="h-3.5 w-3.5" />} 
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                icon={<Plus className="h-3.5 w-3.5" />}
                 onClick={() => {
                   let start = '';
                   let end = '';
@@ -581,8 +572,8 @@ export default function CampaignSetup() {
             </div>
 
             {form.templates.length === 0 ? (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => {
                   let start = '';
                   let end = '';
@@ -623,31 +614,31 @@ export default function CampaignSetup() {
                         />
                       </div>
                       <div>
-                        <Input 
-                          type="datetime-local" 
-                          value={t.start_datetime} 
+                        <Input
+                          type="datetime-local"
+                          value={t.start_datetime}
                           readOnly={idx > 0}
                           className={idx > 0 ? "bg-surface-2 text-muted-fg cursor-not-allowed opacity-60" : ""}
                           onChange={(e) => {
                             if (idx > 0) return;
                             const newT = form.templates.map((temp, i) => i === idx ? { ...temp, start_datetime: e.target.value } : { ...temp });
                             handleTemplatesChange(newT);
-                          }} 
+                          }}
                         />
                       </div>
                       <div>
-                        <Input 
-                          type="datetime-local" 
-                          value={t.end_datetime} 
+                        <Input
+                          type="datetime-local"
+                          value={t.end_datetime}
                           onChange={(e) => {
                             const newT = form.templates.map((temp, i) => i === idx ? { ...temp, end_datetime: e.target.value } : { ...temp });
                             handleTemplatesChange(newT);
-                          }} 
+                          }}
                         />
                       </div>
                     </div>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => {
                         handleTemplatesChange(form.templates.filter((_, i) => i !== idx));
                       }}

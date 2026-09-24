@@ -12,11 +12,7 @@ import { useSidebar } from '../components/layout/AppLayout';
 import { useMasters, toOptions } from '../hooks/useMasters';
 import { ColorControl } from '../components/ui/ColorPicker';
 import { uploadFile } from '../lib/upload';
-<<<<<<< HEAD
 import IframePreview from '../components/ui/IframePreview';
-
-=======
->>>>>>> a7a5c63 (domain config fixed)
 import GenieWishTemplate from '../components/templates/GenieWishTemplate';
 
 const TemplatePreview = ({ config, componentName }: { config: any, componentName: string }) => {
@@ -170,7 +166,7 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
   const hasVideoOrGif = useMemo(() => {
     const assetProps = form.schema?.sections?.find((s: any) => s.id === 'assets' || s.title === 'Visual Assets')?.properties?.filter((p: any) => p.type === 'image') || [];
     const imageProps = assetProps.length > 0 ? assetProps : form.schema?.sections?.flatMap((s: any) => s.properties)?.filter((p: any) => p.type === 'image') || [];
-    
+
     for (const prop of imageProps) {
       const file = pendingFiles[prop.id];
       if (file) {
@@ -551,24 +547,17 @@ export default function TemplateEditor({ open, onClose, template, onSaved }: {
             </div>
 
             <div
-              className={`h-full relative overflow-hidden transition-all duration-300 ease-out flex-shrink-0 ${
-                previewMode === 'mobile'
+              className={`h-full relative overflow-hidden transition-all duration-300 ease-out flex-shrink-0 ${previewMode === 'mobile'
                   ? 'w-[375px] max-h-[812px] border-x border-app shadow-2xl my-auto bg-slate-900'
                   : previewMode === 'tablet'
-                  ? 'w-[768px] max-h-[1024px] border-x border-app shadow-2xl my-auto bg-slate-900'
-                  : 'w-full'
-              }`}
+                    ? 'w-[768px] max-h-[1024px] border-x border-app shadow-2xl my-auto bg-slate-900'
+                    : 'w-full'
+                }`}
             >
               <div className={`w-full h-full relative ${previewMode !== 'desktop' ? 'overflow-hidden ring-1 ring-white/10' : ''}`}>
-<<<<<<< HEAD
                 <IframePreview className="w-full h-full border-0 bg-transparent rounded-[inherit]">
                   <TemplatePreview config={form.default_config} componentName={form.component_name} />
                 </IframePreview>
-=======
-                <div className="w-full h-full border-0 bg-transparent rounded-[inherit]">
-                  <TemplatePreview config={form.default_config} componentName={form.component_name} />
-                </div>
->>>>>>> a7a5c63 (domain config fixed)
               </div>
             </div>
           </div>

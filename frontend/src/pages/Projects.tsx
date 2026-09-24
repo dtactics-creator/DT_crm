@@ -114,10 +114,10 @@ export default function Projects() {
 
   const totalBudget = filtered.reduce((s, p) => s + Number(p.project_cost || 0), 0);
 
-    const toPayload = (v: ProjectFormValues) => ({
-      ...(v.id ? { id: v.id } : {}),
-      project_no: v.project_no || null, project_name: v.project_name, client: v.client, client_id: v.client_id || null,
-      lead_id: v.lead_id || null, lead_no: (leads || []).find((l) => l.id === v.lead_id)?.lead_no || null,
+  const toPayload = (v: ProjectFormValues) => ({
+    ...(v.id ? { id: v.id } : {}),
+    project_no: v.project_no || null, project_name: v.project_name, client: v.client, client_id: v.client_id || null,
+    lead_id: v.lead_id || null, lead_no: (leads || []).find((l) => l.id === v.lead_id)?.lead_no || null,
     project_type: v.project_type || null, industry: v.industry || null, project_manager_id: v.project_manager_id || null,
     assigned_employee_id: v.assigned_employee_id || null, technology_stack: v.technology_stack, urls: v.urls,
     project_cost: v.project_cost ? Number(v.project_cost) : 0, status: v.status, priority: v.priority,
@@ -219,7 +219,7 @@ export default function Projects() {
         ))}
       </div>
 
-      <FilterBar 
+      <FilterBar
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search projects…"
@@ -303,11 +303,7 @@ export default function Projects() {
 
       <Suspense fallback={null}>
         <ProjectDetail open={!!detail && !formOpen} onClose={() => setDetail(null)} project={detail ? projects?.find(p => p.id === detail.id) || detail : null} masters={masters}
-<<<<<<< HEAD
           isProjectManagementContext={isPmContext}
-=======
-          isProjectManagementContext={params.get('context') === 'project-management'}
->>>>>>> a7a5c63 (domain config fixed)
           onEdit={() => { setEditing(detail ? projects?.find(p => p.id === detail.id) || detail : null); setFormOpen(true); }} onDelete={() => setToDelete(detail)} onNextFollowUp={() => setToFollowUp(detail)} />
       </Suspense>
 

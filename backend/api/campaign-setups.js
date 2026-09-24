@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       }
     }
 
-      if (req.method === 'POST') {
+    if (req.method === 'POST') {
       const payload = validate(req.body);
       const reqTemplates = req.body.templates || [];
 
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
         .insert(payload)
         .select()
         .single();
-      
+
       if (sErr) throw sErr;
 
       // 2. Create template relationships
@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Setup id is required');
-      
+
       const payload = validate(req.body);
       payload.updated_by = user.id;
       payload.updated_at = new Date().toISOString();
@@ -125,7 +125,7 @@ export default async function handler(req, res) {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (updateErr) throw updateErr;
 
       // Replace relationships
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
       const { error: relErr } = await supabase
         .from('dt_campaign_setup_templates')
         .insert(relationships);
-      
+
       if (relErr) throw relErr;
 
       if (oldData) await logAudit({ req, user, action: 'UPDATE', module: 'Campaign Setups', entity: 'Campaign Setup', entityId: id, description: `Updated setup: ${setupData.name}`, oldValues: oldData, newValues: setupData });
@@ -152,15 +152,15 @@ export default async function handler(req, res) {
     if (req.method === 'DELETE') {
       const { id } = req.body;
       if (!id) return fail(res, 400, 'Setup id is required');
-      
+
       const { data: oldData } = await supabase.from('dt_campaign_setups').select('*').eq('id', id).single();
-      
+
       // Delete relationships first (or rely on ON DELETE CASCADE)
       await supabase.from('dt_campaign_setup_templates').delete().eq('campaign_setup_id', id);
-      
+
       const { error } = await supabase.from('dt_campaign_setups').delete().eq('id', id);
       if (error) throw error;
-      
+
       if (oldData) await logAudit({ req, user, action: 'DELETE', module: 'Campaign Setups', entity: 'Campaign Setup', entityId: id, description: `Deleted setup: ${oldData.name}`, oldValues: oldData });
       return res.status(200).json({ ok: true });
     }
@@ -190,11 +190,7 @@ function validate(body) {
   const payload = {
     name: V.str(body.name, { field: 'Name', required: true, min: 2, max: 200 }),
     description: V.str(body.description, { field: 'Description', max: 2000 }),
-<<<<<<< HEAD
-    domain: V.str(body.domain, { field: 'Domain', max: 200 }),
-=======
     domain: cleanDomain,
->>>>>>> a7a5c63 (domain config fixed)
     play_mode: V.str(body.play_mode, { field: 'Play Mode' }) || 'loop',
     status: V.str(body.status, { field: 'Status', required: true }) || 'inactive',
     campaign_products: Array.isArray(body.campaign_products) ? body.campaign_products : [],
@@ -211,7 +207,7 @@ function validate(body) {
       const currStart = reqTemplates[i].start_datetime;
       if (prevEnd && currStart) {
         if (new Date(prevEnd).getTime() > new Date(currStart).getTime()) {
-          throw new Error(`Template sequence invalid: Template ${i+1} starts before Template ${i} ends.`);
+          throw new Error(`Template sequence invalid: Template ${i + 1} starts before Template ${i} ends.`);
         }
       }
     }
@@ -219,7 +215,7 @@ function validate(body) {
     // 2. Derive Setup Start/End Dates
     const firstStart = reqTemplates[0].start_datetime;
     const lastEnd = reqTemplates[reqTemplates.length - 1].end_datetime;
-    
+
     if (firstStart) payload.start_datetime = V.date(firstStart, { field: 'Start Date' });
     if (lastEnd) payload.end_datetime = V.date(lastEnd, { field: 'End Date' });
   }
