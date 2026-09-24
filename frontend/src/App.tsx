@@ -29,6 +29,7 @@ const CampaignDashboard = lazy(() => import('./pages/CampaignDashboard'));
 const CampaignMasters = lazy(() => import('./pages/CampaignMasters'));
 const CampaignTemplates = lazy(() => import('./pages/CampaignTemplates'));
 const CampaignSetup = lazy(() => import('./pages/CampaignSetup'));
+const CampaignSessions = lazy(() => import('./pages/CampaignSessions'));
 const CampaignReports = lazy(() => import('./pages/CampaignReports'));
 const Tasks = lazy(() => import('./pages/Tasks'));
 const ProjectManagementMasters = lazy(() => import('./pages/ProjectManagementMasters'));
@@ -106,7 +107,8 @@ export default function App() {
                         <Route path="/campaign-masters" element={<CampaignMasters />} />
                         <Route path="/campaign-templates" element={<RequirePermission perm="campaign_templates.view"><CampaignTemplates /></RequirePermission>} />
                         <Route path="/campaign-setup" element={<RequirePermission perm="campaign_setup.view"><CampaignSetup /></RequirePermission>} />
-                        <Route path="/campaign-reports" element={<RequirePermission perm="campaign_reports.view"><CampaignReports /></RequirePermission>} />
+                        <Route path="/campaign-sessions" element={<RequirePermission perm="campaign_sessions.view"><CampaignSessions /></RequirePermission>} />
+                        <Route path="/campaign-reports" element={<RequirePermission perm="campaign_events.view"><CampaignReports /></RequirePermission>} />
                       </Route>
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

@@ -2,7 +2,7 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, FolderKanban, Briefcase, Database, UserCog,
-  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList, CheckSquare
+  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList, CheckSquare, Activity
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
@@ -14,7 +14,7 @@ function SidebarTooltip({ children, content, disabled }: { children: React.React
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
   return (
-    <div 
+    <div
       onMouseEnter={(e) => {
         if (disabled) return;
         const rect = e.currentTarget.getBoundingClientRect();
@@ -26,7 +26,7 @@ function SidebarTooltip({ children, content, disabled }: { children: React.React
     >
       {children}
       {open && !disabled && createPortal(
-        <div 
+        <div
           className="fixed z-[100] px-2.5 py-1.5 rounded-md bg-slate-800 dark:bg-slate-700 text-white text-xs font-medium tracking-wide whitespace-nowrap shadow-xl flex items-center -translate-y-1/2 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
           style={{ top: coords.top, left: coords.left }}
         >
@@ -68,7 +68,8 @@ const CAMPAIGN_NAV = [
   { to: '/campaigns', label: 'Campaign List', icon: Megaphone, perm: 'campaigns.view', end: false },
   { to: '/campaign-templates', label: 'Campaign Templates', icon: Sparkles, perm: 'campaign_templates.view', end: false },
   { to: '/campaign-setup', label: 'Campaign Setup', icon: LayoutList, perm: 'campaign_setup.view', end: false },
-  { to: '/campaign-reports', label: 'Campaign Reports', icon: BarChart3, perm: 'campaign_reports.view', end: false },
+  { to: '/campaign-sessions', label: 'Campaign Session', icon: BarChart3, perm: 'campaign_sessions.view', end: false },
+  { to: '/campaign-reports', label: 'Campaign Reports', icon: Activity, perm: 'campaign_events.view', end: false },
 ];
 
 

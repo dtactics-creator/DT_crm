@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return fail(res, 401, 'Unauthorized — please sign in.');
-  
+
   const user = await getUser(req);
   if (!user) {
     console.error('[me.js] getUser returned null for token');

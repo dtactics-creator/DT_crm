@@ -622,6 +622,8 @@ ALTER TABLE masters ADD COLUMN IF NOT EXISTS percent NUMERIC(5,2);
 ALTER TABLE masters ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2);
 ALTER TABLE crm_employees ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE dt_projects ADD COLUMN IF NOT EXISTS next_follow_up DATE;
+ALTER TABLE analytics_sessions ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE analytics_sessions ADD COLUMN IF NOT EXISTS location JSONB;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS department TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS service_type TEXT;
 ALTER TABLE dt_quotation_versions ADD COLUMN IF NOT EXISTS from_location TEXT;
@@ -1270,3 +1272,36 @@ CREATE POLICY "Authenticated users can read sessions"
     FOR SELECT
     TO anon, authenticated
     USING (true);
+
+-- Create campaign_reports table to capture button clicks and route changes separately from core analytics
+DROP TABLE IF EXISTS campaign_reports;
+CREATE TABLE campaign_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id TEXT NOT NULL UNIQUE,
+    actions JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE campaign_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anonymous inserts" ON campaign_reports FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow authenticated reads" ON campaign_reports FOR SELECT TO authenticated USING (true);
+
+
+CREATE OR REPLACE FUNCTION append_campaign_actions(
+  p_session_id TEXT,
+  p_new_actions JSONB
+) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO campaign_reports (session_id, actions)
+  VALUES (p_session_id, p_new_actions)
+  ON CONFLICT (session_id)
+  DO UPDATE SET 
+    actions = campaign_reports.actions || p_new_actions,
+    updated_at = now();
+END;
+$$;
+

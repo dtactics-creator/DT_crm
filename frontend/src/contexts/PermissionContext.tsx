@@ -22,17 +22,19 @@ interface PermissionState {
 
 const PermissionContext = createContext<PermissionState>({
   loading: true, isAdmin: false, permissions: [], roleName: null,
-  can: () => false, refetch: () => {},
+  can: () => false, refetch: () => { },
 });
 
 export function PermissionProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [roleName, setRoleName] = useState<string | null>(null);
 
   const userId = user?.id;
+  const token = session?.access_token;
+
   const load = useCallback(async () => {
     if (!userId) { setPermissions([]); setIsAdmin(false); setRoleName(null); setLoading(false); return; }
     setLoading(true);
@@ -48,7 +50,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, token]);
 
   useEffect(() => {
     if (authLoading) return;

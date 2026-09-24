@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2, LayoutList, Calendar, Power, PowerOff, Globe } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, LayoutList, Calendar, Power, PowerOff, Globe, PackagePlus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/ui/Button';
@@ -13,6 +13,7 @@ import Textarea from '../components/ui/Textarea';
 import { SearchableSelect, MultiSelect, Option } from '../components/ui/SearchableSelect';
 import FilterBar from '../components/ui/FilterBar';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Modal from '../components/ui/Modal';
 import { usePermissions } from '../contexts/PermissionContext';
 import { useToast } from '../components/ui/Toast';
 import { useMasters, groupMasters } from '../hooks/useMasters';
@@ -44,6 +45,9 @@ export default function CampaignSetup() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSetup, setEditingSetup] = useState<CampaignSetupRow | null>(null);
   const [toDelete, setToDelete] = useState<CampaignSetupRow | null>(null);
+
+  const [productModalSetup, setProductModalSetup] = useState<CampaignSetupRow | null>(null);
+  const [productSelection, setProductSelection] = useState<string[]>([]);
 
   const { data: setups, isLoading } = useQuery({
     queryKey: ['campaign-setups'],
@@ -100,6 +104,16 @@ export default function CampaignSetup() {
         label: c.is_active ? c.title : `${c.title} (Inactive)`
       }));
   }, [allCampaigns, form.campaign_products]);
+
+  const activeCampaignsForModal = useMemo(() => {
+    const selectedCampaignIds = new Set(productSelection || []);
+    return (allCampaigns || [])
+      .filter(c => c.is_active || selectedCampaignIds.has(c.id))
+      .map(c => ({
+        value: c.id,
+        label: c.is_active ? c.title : `${c.title} (Inactive)`
+      }));
+  }, [allCampaigns, productSelection]);
 
   const activeDomains = useMemo(() => {
     const domainMasters = groupMasters(masters)['campaign_domain'] || [];
@@ -284,6 +298,35 @@ export default function CampaignSetup() {
     });
   };
 
+  const submitProducts = () => {
+    if (!productModalSetup) return;
+    
+    const validTemplates = (productModalSetup.templates || []).filter(t => t.template_id).map(t => ({
+      template_id: t.template_id,
+      start_datetime: t.start_datetime ? new Date(t.start_datetime).toISOString() : '',
+      end_datetime: t.end_datetime ? new Date(t.end_datetime).toISOString() : ''
+    }));
+
+    const formPayload: CampaignSetupFormState = {
+      id: productModalSetup.id,
+      name: productModalSetup.name,
+      description: productModalSetup.description || '',
+      domain: productModalSetup.domain || '',
+      status: productModalSetup.status,
+      play_mode: productModalSetup.play_mode || 'loop',
+      start_datetime: productModalSetup.start_datetime ? new Date(productModalSetup.start_datetime).toISOString() : null,
+      end_datetime: productModalSetup.end_datetime ? new Date(productModalSetup.end_datetime).toISOString() : null,
+      templates: validTemplates,
+      campaign_products: productSelection
+    };
+
+    saveMut.mutate(formPayload, {
+      onSuccess: () => {
+        setProductModalSetup(null);
+      }
+    });
+  };
+
   const formatDiff = (diff: number) => {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -417,6 +460,15 @@ export default function CampaignSetup() {
                 className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'}`}
               >
                 {isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+              </button>
+            )}
+            {can('campaign_setups.edit' as any) && (
+              <button onClick={(e) => { 
+                e.stopPropagation(); 
+                setProductSelection(c.campaign_products || []);
+                setProductModalSetup(c); 
+              }} title="Manage Products" className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-fg hover:bg-surface-2 hover:text-base-fg transition-colors">
+                <PackagePlus className="h-4 w-4" />
               </button>
             )}
             {can('campaign_setups.edit' as any) && (
@@ -709,6 +761,53 @@ export default function CampaignSetup() {
           loading={delMut.isPending}
         />
       )}
+
+      <Modal
+        open={!!productModalSetup}
+        onClose={() => setProductModalSetup(null)}
+        title={`Manage Products for ${productModalSetup?.name}`}
+        size="max-w-6xl"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" onClick={() => setProductModalSetup(null)}>Cancel</Button>
+            <Button onClick={submitProducts} disabled={saveMut.isPending}>{saveMut.isPending ? 'Saving...' : 'Save Products'}</Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 pt-2 min-h-[60vh]">
+          <p className="text-[13px] text-muted-fg">Select which active products (campaigns) should be displayed in this setup.</p>
+          <Field label="Active Products">
+            <MultiSelect
+              values={productSelection}
+              onChange={setProductSelection}
+              options={activeCampaignsForModal}
+              placeholder="Select active products..."
+            />
+          </Field>
+          
+          {productSelection.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-[13px] font-semibold text-base-fg mb-3">Selected Products ({productSelection.length})</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {activeCampaignsForModal
+                  .filter(c => productSelection.includes(c.value))
+                  .map(product => (
+                    <div key={product.value} className="flex items-center justify-between bg-surface-2 border border-app rounded-lg p-3">
+                      <span className="text-[13px] font-medium text-base-fg truncate pr-2">{product.label}</span>
+                      <button
+                        onClick={() => setProductSelection(prev => prev.filter(v => v !== product.value))}
+                        className="h-6 w-6 shrink-0 rounded flex items-center justify-center text-muted-fg hover:bg-red-50 hover:text-red-500 transition-colors"
+                        title="Remove"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

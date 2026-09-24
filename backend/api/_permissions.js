@@ -24,7 +24,8 @@ export const PERMISSION_CATALOG = [
   { module: 'campaigns', label: 'Campaign List', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'campaign_templates', label: 'Campaign Templates', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'campaign_setups', label: 'Campaign Setup', actions: ['view', 'create', 'edit', 'delete'] },
-  { module: 'campaign_reports', label: 'Campaign Reports', actions: ['view'] },
+  { module: 'campaign_sessions', label: 'Campaign Session', actions: ['view'] },
+  { module: 'campaign_events', label: 'Campaign Reports', actions: ['view'] },
   { module: 'reports', label: 'Reports', actions: ['view'] },
   { module: 'audit_logs', label: 'Audit Logs', actions: ['view', 'export'] },
   { module: 'quotations', label: 'Quotations', actions: ['view', 'create', 'edit', 'delete'] },
@@ -114,7 +115,7 @@ export async function requirePermission(req, res, permission) {
   if (!user) { res.status(401).json({ error: 'Unauthorized — please sign in.' }); return null; }
 
   const { isAdmin, permissions, employee } = await getEffectivePermissions(user);
-  
+
   // Attach employee data to the user object for auditing
   if (employee) {
     user.employee_name = employee.employee_name;
@@ -125,12 +126,12 @@ export async function requirePermission(req, res, permission) {
   if (!permission || isAdmin || permissions.includes(permission) || permissions.includes('*')) {
     return user;
   }
-  
+
   // Need to dynamically import logAudit to avoid circular dependencies if it imports this file later
   import('./_audit.js').then(({ logAudit }) => {
     const [mod, action] = permission.split('.');
     logAudit({ req, user: user, action: action?.toUpperCase() || 'ACCESS_DENIED', module: mod, description: `Permission denied: required ${permission}`, status: 'FAILED', errorMessage: 'Forbidden' });
-  }).catch(() => {});
+  }).catch(() => { });
 
   res.status(403).json({ error: `Forbidden — you do not have permission to ${permission.replace('.', ' ')}.` });
   return null;
