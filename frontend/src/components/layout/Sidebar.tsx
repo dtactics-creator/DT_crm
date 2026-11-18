@@ -2,7 +2,7 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Users, FolderKanban, Briefcase, Database, UserCog,
-  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList, CheckSquare, Activity
+  BarChart3, ChevronLeft, Sparkles, PanelLeftClose, ShieldCheck, MessageSquareText, FileText, Receipt, Settings, Megaphone, LayoutList, CheckSquare, Activity, Trophy
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { usePermissions } from '../../contexts/PermissionContext';
@@ -42,6 +42,7 @@ function SidebarTooltip({ children, content, disabled }: { children: React.React
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true, perm: null },
   { to: '/leads', label: 'Leads', icon: Users, perm: 'leads.view' },
+  { to: '/competitions', label: 'Competitions', icon: Trophy, perm: 'competitions.view' },
   { to: '/employees', label: 'Employees', icon: UserCog, perm: 'employees.view' },
   { to: '/roles', label: 'Roles', icon: ShieldCheck, perm: 'roles.view' },
   { to: '/templates', label: 'Templates', icon: MessageSquareText, perm: 'templates.view' },

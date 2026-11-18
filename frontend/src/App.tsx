@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PermissionProvider } from './contexts/PermissionContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { ToastProvider } from './components/ui/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import RequirePermission from './components/RequirePermission';
@@ -33,6 +34,9 @@ const CampaignSessions = lazy(() => import('./pages/CampaignSessions'));
 const CampaignReports = lazy(() => import('./pages/CampaignReports'));
 const Tasks = lazy(() => import('./pages/Tasks'));
 const ProjectManagementMasters = lazy(() => import('./pages/ProjectManagementMasters'));
+const Competitions = lazy(() => import('./pages/Competitions'));
+const CompetitionDetail = lazy(() => import('./pages/CompetitionDetail'));
+const PublicCompetitionPortal = lazy(() => import('./pages/PublicCompetitionPortal'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,14 +85,22 @@ export default function App() {
           <BrowserRouter>
             <AuthProvider>
               <PermissionProvider>
-                <ToastProvider>
-                  <Suspense fallback={<BrandLoader />}>
-                    <Routes>
-                      <Route path="/login" element={<LoginRoute />} />
-                      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
-                        <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
+                <LanguageProvider>
+                  <ToastProvider>
+                    <Suspense fallback={<BrandLoader />}>
+                      <Routes>
+                        {/* Public Competition Portals */}
+                        <Route path="/c/:slug" element={<PublicCompetitionPortal />} />
+                        <Route path="/competition/:slug" element={<PublicCompetitionPortal />} />
+                        <Route path="/portal" element={<PublicCompetitionPortal />} />
+
+                        <Route path="/login" element={<LoginRoute />} />
+                        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/leads" element={<RequirePermission perm="leads.view"><Leads /></RequirePermission>} />
+                          <Route path="/competitions" element={<RequirePermission perm="competitions.view"><Competitions /></RequirePermission>} />
+                          <Route path="/competitions/:id" element={<RequirePermission perm="competitions.view"><CompetitionDetail /></RequirePermission>} />
+                          <Route path="/projects" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
                         <Route path="/project-management/projects/:projectId" element={<RequirePermission perm="projects.view"><Projects /></RequirePermission>} />
                         <Route path="/clients" element={<RequirePermission perm="clients.view"><Clients /></RequirePermission>} />
                         <Route path="/tasks" element={<RequirePermission perm="tasks.view"><Tasks /></RequirePermission>} />
@@ -114,6 +126,7 @@ export default function App() {
                     </Routes>
                   </Suspense>
                 </ToastProvider>
+              </LanguageProvider>
               </PermissionProvider>
             </AuthProvider>
           </BrowserRouter>

@@ -12,10 +12,16 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const { Client } = pg;
 
 export async function applyMigration() {
-  const sqlPath = path.join(__dirname, 'migrations', '001_create_tasks.sql');
-  const sql = fs.readFileSync(sqlPath, 'utf8');
+  const migrationsDir = path.join(__dirname, 'migrations');
+  if (!fs.existsSync(migrationsDir)) {
+    console.warn('No migrations directory found');
+    return false;
+  }
 
-  // Try local postgres connection if DATABASE_URL or PG_HOST configured, or default local
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+
   const pgConfig = process.env.DATABASE_URL ? {
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
@@ -30,9 +36,16 @@ export async function applyMigration() {
   try {
     const client = new Client(pgConfig);
     await client.connect();
-    await client.query(sql);
-    console.log('Migration 001_create_tasks.sql applied successfully!');
-    const res = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public';");
+
+    for (const file of files) {
+      const sqlPath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(sqlPath, 'utf8');
+      console.log(`Applying migration: ${file}...`);
+      await client.query(sql);
+      console.log(`Migration ${file} applied successfully!`);
+    }
+
+    const res = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name;");
     console.log('Current DB tables:', res.rows.map(r => r.table_name));
     await client.end();
     return true;

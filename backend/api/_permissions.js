@@ -30,11 +30,13 @@ export const PERMISSION_CATALOG = [
   { module: 'audit_logs', label: 'Audit Logs', actions: ['view', 'export'] },
   { module: 'quotations', label: 'Quotations', actions: ['view', 'create', 'edit', 'delete'] },
   { module: 'tasks', label: 'Tasks', actions: ['view', 'create', 'edit', 'delete'] },
+  { module: 'competitions', label: 'Competitions', actions: ['view', 'create', 'edit', 'delete', 'moderate'] },
 ];
 
 const ACTION_LABELS = {
   view: 'View', create: 'Create', edit: 'Edit', delete: 'Delete', convert: 'Convert',
   import: 'Import', export: 'Export', view_budget: 'View Budget', view_cost: 'View Budget',
+  moderate: 'Moderate',
 };
 
 export function actionLabel(a) { return ACTION_LABELS[a] || a; }

@@ -418,3 +418,166 @@ export interface Client extends AuditFields {
   quotations?: any[];
   audit_logs?: any[];
 }
+
+export interface CompetitionReward {
+  place: number;
+  title: string;
+  amount?: string;
+  description?: string;
+}
+
+export interface Competition extends AuditFields {
+  competition_no?: string | null;
+  name: string;
+  slug: string;
+  subdomain?: string | null;
+  custom_domain?: string | null;
+  category: string;
+  type: string;
+  description?: string | null;
+  description_ta?: string | null;
+  rules?: string | null;
+  rules_ta?: string | null;
+  eligibility?: string | null;
+  eligibility_ta?: string | null;
+  banner_url?: string | null;
+  logo_url?: string | null;
+  primary_color?: string | null;
+  project_id?: string | null;
+  campaign_id?: string | null;
+  registration_start_date?: string | null;
+  registration_end_date?: string | null;
+  submission_start_date?: string | null;
+  submission_end_date?: string | null;
+  voting_start_date?: string | null;
+  voting_end_date?: string | null;
+  max_entries_per_participant: number;
+  allowed_formats: string[];
+  max_file_size_mb: number;
+  winner_selection_method: string;
+  tie_breaker_rule: string;
+  status: 'draft' | 'scheduled' | 'active' | 'voting_closed' | 'completed' | 'archived';
+  rewards?: CompetitionReward[];
+  metadata?: Record<string, any>;
+  created_by?: string | null;
+  project?: { id: string; project_no?: string; project_name: string; client?: string };
+  campaign?: { id: string; title: string; type?: string };
+  total_participants?: number;
+  total_submissions?: number;
+  total_likes?: number;
+}
+
+export interface CompetitionRegistration extends AuditFields {
+  competition_id: string;
+  user_id?: string | null;
+  participant_name: string;
+  email: string;
+  phone?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+  status: 'active' | 'suspended' | 'withdrawn';
+  suspension_reason?: string | null;
+  social_profiles?: Record<string, string>;
+  registered_at: string;
+  submission_count?: number;
+  report_count?: number;
+}
+
+export interface CompetitionSubmission extends AuditFields {
+  submission_no?: string;
+  competition_id: string;
+  registration_id: string;
+  participant_id?: string | null;
+  title: string;
+  description?: string | null;
+  media_type: 'image' | 'video';
+  media_url: string;
+  thumbnail_url?: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'removed';
+  moderated_by?: string | null;
+  moderator_name?: string | null;
+  moderated_at?: string | null;
+  rejection_reason?: string | null;
+  likes_count: number;
+  comments_count: number;
+  views_count: number;
+  jury_score?: number;
+  rank?: number;
+  is_winner?: boolean;
+  participant_name?: string;
+  participant_email?: string;
+  participant_avatar?: string;
+  participant_status?: string;
+}
+
+export interface CompetitionComment {
+  id: string;
+  competition_id: string;
+  submission_id: string;
+  user_id?: string | null;
+  author_name: string;
+  author_email: string;
+  author_avatar?: string | null;
+  comment_text: string;
+  status: string;
+  created_at: string;
+}
+
+export interface CompetitionReport {
+  id: string;
+  competition_id: string;
+  target_type: 'submission' | 'participant' | 'comment';
+  target_id: string;
+  reported_by_email?: string | null;
+  reason: string;
+  details?: string | null;
+  status: 'pending' | 'reviewed' | 'dismissed' | 'action_taken';
+  action_taken?: string | null;
+  reviewed_by?: string | null;
+  reviewer_name?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+}
+
+export interface CompetitionWinner {
+  id: string;
+  competition_id: string;
+  place: number;
+  prize_title: string;
+  prize_amount?: string | null;
+  submission_id?: string | null;
+  submission_title?: string;
+  media_url?: string;
+  media_type?: string;
+  registration_id?: string | null;
+  participant_name: string;
+  participant_avatar?: string;
+  final_likes: number;
+  final_score: number;
+  announced_at: string;
+  published_by?: string | null;
+  notes?: string | null;
+}
+
+export interface CompetitionDashboardStats {
+  total_registrations: number;
+  total_participants: number;
+  total_submissions: number;
+  approved_submissions: number;
+  pending_submissions: number;
+  rejected_submissions: number;
+  total_likes: number;
+  total_comments: number;
+  total_views: number;
+  pending_reports: number;
+  topSubmissions: CompetitionSubmission[];
+  recentActivities: {
+    id: string;
+    activity_type: string;
+    actor_name?: string;
+    actor_email?: string;
+    description: string;
+    created_at: string;
+  }[];
+  winners: CompetitionWinner[];
+}
